@@ -1,0 +1,72 @@
+{
+  "name": "sporto-registras-api",
+  "version": "1.0.0",
+  "description": "My Moleculer-based microservices project",
+  "private": true,
+  "prettier": "@aplinkosministerija/biip-prettier-config",
+  "scripts": {
+    "db:migrate": "knex migrate:latest",
+    "build": "tsc --build tsconfig.json",
+    "dev": "yarn run db:migrate && ts-node ./node_modules/moleculer/bin/moleculer-runner.js --env --hot --repl --config moleculer.config.ts services/**/*.service.ts",
+    "start": "yarn run db:migrate --knexfile ./dist/knexfile.js && moleculer-runner --config dist/moleculer.config.js",
+    "cli": "moleculer connect NATS",
+    "lint": "eslint --ext .js,.ts .",
+    "dc:up": "docker compose -p sporto-registras-api up --build -d",
+    "dc:down": "docker compose -p sporto-registras-api down",
+    "dc:logs": "docker compose -p sporto-registras-api logs -f",
+    "prepare": "husky install"
+  },
+  "keywords": [
+    "microservices",
+    "moleculer"
+  ],
+  "author": "",
+  "devDependencies": {
+    "@aplinkosministerija/biip-prettier-config": "^1.1.0",
+    "@aplinkosministerija/eslint-config-biip-api": "^1.0.0",
+    "@types/lodash": "^4.14.191",
+    "@types/node": "^18.15.3",
+    "@types/qs": "^6.9.9",
+    "@typescript-eslint/eslint-plugin": "^5.55.0",
+    "@typescript-eslint/parser": "^5.55.0",
+    "eslint": "^8.52.0",
+    "eslint-config-prettier": "^8.7.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
+    "lint-staged": "14.0.1",
+    "moleculer-repl": "^0.7.3",
+    "prettier": "2.8.4",
+    "prettier-plugin-organize-imports": "^3.2.2",
+    "ts-node": "^10.9.1",
+    "typescript": "5.1.6"
+  },
+  "dependencies": {
+    "@moleculer/database": "github:ambrazasp/moleculerjs-database",
+    "biip-auth-nodejs": "github:DadPatch/biip-auth-nodejs",
+    "dotenv": "^16.0.3",
+    "ioredis": "^5.3.1",
+    "knex": "^3.0.1",
+    "lodash": "^4.17.21",
+    "moleculer": "^0.14.32",
+    "moleculer-db": "^0.8.23",
+    "moleculer-decorators": "^1.3.0",
+    "moleculer-web": "^0.10.5",
+    "objection": "^3.0.1",
+    "pg": "^8.10.0"
+  },
+  "engines": {
+    "node": ">=20.0.0 <21.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint"
+    ],
+    "*.{md,html,css}": "prettier --write"
+  },
+  "eslintConfig": {
+    "extends": "@aplinkosministerija/eslint-config-biip-api"
+  }
+}

@@ -1,14 +1,14 @@
 'use strict';
 
-import moleculer from 'moleculer';
-import { Action, Service } from 'moleculer-decorators';
+import moleculer, { Context } from 'moleculer';
+import { Action, Method, Service } from 'moleculer-decorators';
 import ApiGateway from 'moleculer-web';
-import { RestrictionType } from '../types';
-import { User } from './users.service';
+import { RequestMessage, RestrictionType } from '../types';
+import { User, UserType } from './users.service';
 
 export interface UserAuthMeta {
   user: User;
-  app: any;
+  app: { id: number };
   authToken: string;
   authUser: any;
   profile: any;
@@ -17,6 +17,7 @@ export interface UserAuthMeta {
 export enum AuthUserRole {
   USER = 'USER',
   ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
 }
 
 @Service({
@@ -110,5 +111,80 @@ export default class ApiService extends moleculer.Service {
     return {
       timestamp: Date.now(),
     };
+  }
+
+  @Method
+  getRestrictionType(req: RequestMessage) {
+    return req.$action.auth || req.$action.service?.settings?.auth || RestrictionType.DEFAULT;
+  }
+
+  @Method
+  async authenticate(
+    ctx: Context<Record<string, unknown>, UserAuthMeta>,
+    _route: any,
+    req: RequestMessage,
+  ): Promise<unknown> {
+    const restrictionType = this.getRestrictionType(req);
+
+    if (restrictionType === RestrictionType.PUBLIC) {
+      return null;
+    }
+
+    // Read the token from header
+    const auth = req.headers.authorization;
+    if (!auth?.startsWith?.('Bearer')) {
+      throw new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN, null);
+    }
+
+    const token = auth.slice(7);
+
+    // it will throw error if token not valid
+    const authUser: any = await ctx.call('auth.users.resolveToken', null, {
+      meta: { authToken: token },
+    });
+
+    const app: any = await ctx.call('auth.apps.resolveToken');
+
+    let user: User;
+    if (authUser.type === AuthUserRole.USER) {
+      user = await ctx.call('users.findOne', {
+        query: { authUser: authUser.id },
+      });
+    }
+
+    ctx.meta.authUser = authUser;
+    ctx.meta.authToken = token;
+    ctx.meta.app = app;
+    ctx.meta.profile = req.headers['x-profile'];
+
+    return user;
+  }
+
+  @Method
+  async authorize(
+    ctx: Context<Record<string, unknown>, UserAuthMeta>,
+    _route: any,
+    req: RequestMessage,
+  ): Promise<unknown> {
+    const restrictionType = this.getRestrictionType(req);
+
+    if (restrictionType === RestrictionType.PUBLIC) {
+      return;
+    }
+
+    // Get the authenticated user.
+    const user = ctx.meta.user;
+
+    if (restrictionType === RestrictionType.ADMIN && user.type !== UserType.ADMIN) {
+      throw new ApiGateway.Errors.UnAuthorizedError('NO_RIGHTS', {
+        error: 'Unauthorized',
+      });
+    }
+
+    if (restrictionType === RestrictionType.USER && user.type !== UserType.USER) {
+      throw new ApiGateway.Errors.UnAuthorizedError('NO_RIGHTS', {
+        error: 'Unauthorized',
+      });
+    }
   }
 }

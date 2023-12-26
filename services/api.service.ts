@@ -3,8 +3,13 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
 import ApiGateway from 'moleculer-web';
-import { RequestMessage, RestrictionType } from '../types';
-import { User, UserType } from './users.service';
+import {
+  COMMON_DELETED_SCOPES,
+  RequestMessage,
+  RestrictionType,
+  throwUnauthorizedError,
+} from '../types';
+import { User } from './users.service';
 
 export interface UserAuthMeta {
   user: User;
@@ -39,6 +44,35 @@ export enum AuthUserRole {
       // Configures the Access-Control-Max-Age CORS header.
       maxAge: 3600,
     },
+
+    use: [
+      function (req: any, res: any, next: any) {
+        const removeScopes = (query: any) => {
+          if (!query) return query;
+
+          if (typeof query !== 'object') {
+            try {
+              query = JSON.parse(query);
+            } catch (err) {}
+          }
+
+          if (!query || typeof query !== 'object') return query;
+
+          if (query.scope === 'deleted') {
+            query.scope = COMMON_DELETED_SCOPES.join(',');
+          } else {
+            delete query.scope;
+          }
+
+          return query;
+        };
+
+        req.query = removeScopes(req.query);
+        req.body = removeScopes(req.body);
+
+        next();
+      },
+    ],
 
     routes: [
       {
@@ -145,12 +179,9 @@ export default class ApiService extends moleculer.Service {
 
     const app: any = await ctx.call('auth.apps.resolveToken');
 
-    let user: User;
-    if (authUser.type === AuthUserRole.USER) {
-      user = await ctx.call('users.findOne', {
-        query: { authUser: authUser.id },
-      });
-    }
+    const user: User = await ctx.call('users.resolveByAuthUser', {
+      authUser,
+    });
 
     ctx.meta.authUser = authUser;
     ctx.meta.authToken = token;
@@ -172,19 +203,17 @@ export default class ApiService extends moleculer.Service {
       return;
     }
 
-    // Get the authenticated user.
-    const user = ctx.meta.user;
+    const aAuth = Array.isArray(req.$action.auth) ? req.$action.auth : [req.$action.auth];
+    const oAuth = Array.isArray(req.$route.opts.auth)
+      ? req.$route.opts.auth
+      : [req.$route.opts.auth];
 
-    if (restrictionType === RestrictionType.ADMIN && user.type !== UserType.ADMIN) {
-      throw new ApiGateway.Errors.UnAuthorizedError('NO_RIGHTS', {
-        error: 'Unauthorized',
-      });
-    }
+    const allAuth = [...aAuth, ...oAuth].filter(Boolean);
+    const auth = [...new Set(allAuth)];
+    const valid = await ctx.call('auth.validateType', { auth });
 
-    if (restrictionType === RestrictionType.USER && user.type !== UserType.USER) {
-      throw new ApiGateway.Errors.UnAuthorizedError('NO_RIGHTS', {
-        error: 'Unauthorized',
-      });
+    if (!valid) {
+      return throwUnauthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN);
     }
   }
 }

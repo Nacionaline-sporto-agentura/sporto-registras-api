@@ -7,6 +7,8 @@ export enum RestrictionType {
   DEFAULT = 'DEFAULT',
   USER = 'USER',
   ADMIN = 'ADMIN',
+  TENANT_ADMIN = 'TENANT_ADMIN',
+  TENANT_USER = 'TENANT_USER',
   PUBLIC = 'PUBLIC',
 }
 
@@ -111,3 +113,6 @@ export function throwValidationError(message?: string, data?: any): Errors.Molec
 }
 
 export const COMMON_DEFAULT_SCOPES = ['notDeleted'];
+export const COMMON_DELETED_SCOPES = ['-notDeleted', 'deleted'];
+
+export const NSA_GROUP_ID = process.env.NSA_GROUP_ID;

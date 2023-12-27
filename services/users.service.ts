@@ -14,6 +14,8 @@ import {
 
 import DbConnection from '../mixins/database.mixin';
 import { AuthUserRole, UserAuthMeta } from './api.service';
+import { TenantUserRole } from './tenantUsers.service';
+import { Tenant } from './tenants.service';
 
 export enum UserType {
   ADMIN = 'ADMIN',
@@ -215,6 +217,10 @@ export const USERS_DEFAULT_SCOPES = [
     update: {
       rest: null,
     },
+
+    create: {
+      rest: null,
+    },
   },
 })
 export default class UsersService extends moleculer.Service {
@@ -246,21 +252,22 @@ export default class UsersService extends moleculer.Service {
 
   @Action({
     rest: 'POST /',
-    name: 'create',
     params: {
       firstName: 'string',
       lastName: 'string',
       email: 'string',
       personalCode: 'string|optional',
       phone: 'string|optional',
-      type: {
-        type: 'enum',
-        values: Object.values(UserType),
-        default: UserType.USER,
+      tenantId: 'number|optional|convert',
+      role: {
+        type: 'string',
+        optional: true,
+        default: TenantUserRole.USER,
       },
     },
+    auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
   })
-  async createAction(
+  async invite(
     ctx: Context<
       {
         firstName: string;
@@ -268,51 +275,109 @@ export default class UsersService extends moleculer.Service {
         email: string;
         personalCode?: string;
         phone?: string;
-        type: UserType;
+        role?: TenantUserRole;
+        tenantId?: number;
       },
       UserAuthMeta
     >,
   ) {
-    const { email, phone, personalCode, firstName, lastName, type } = ctx.params;
+    const { personalCode, role, tenantId } = ctx.params;
+    const { profile, user: authenticatedUser } = ctx.meta;
+
+    function getInviteData(data: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      personalCode?: string;
+      phone?: string;
+      role?: TenantUserRole;
+      tenantId?: number;
+    }) {
+      const inviteData: any = {
+        apps: [ctx.meta?.app?.id],
+      };
+
+      if (data.personalCode) {
+        inviteData.personalCode = data.personalCode;
+        inviteData.notify = [data.email];
+        if (data?.tenantId) {
+          inviteData.companyId = data.tenantId;
+          inviteData.role = data.role || TenantUserRole.USER;
+        } else {
+        }
+      } else {
+        inviteData.firstName = data.firstName;
+        inviteData.lastName = data.lastName;
+        inviteData.email = data.email;
+        inviteData.phone = data.phone;
+      }
+
+      return inviteData;
+    }
 
     let authUser: any;
 
-    if (type === UserType.USER) {
-      if (personalCode) {
-        authUser = await ctx.call('auth.users.invite', {
-          personalCode,
-          notify: [email],
-        });
-      } else {
-        authUser = await ctx.call('auth.users.create', {
-          email,
-          firstName,
-          lastName,
-          phone,
-          apps: [ctx.meta.app.id],
-          type: this.typeToAuthRole(type),
+    let authGroupId;
+    if (profile?.id) {
+      ctx.params.tenantId = profile.authGroup;
+      authGroupId = profile.authGroup;
+    }
+
+    let tenant: Tenant;
+    if (tenantId) {
+      tenant = await ctx.call('tenants.resolve', {
+        id: tenantId,
+      });
+
+      if (authenticatedUser?.type !== UserType.ADMIN || !tenant?.id) {
+        throw new moleculer.Errors.MoleculerClientError(
+          'Cannot assign user to tenant.',
+          401,
+          'UNAUTHORIZED',
+        );
+      }
+
+      ctx.params.tenantId = tenant.authGroup;
+      authGroupId = tenant.authGroup;
+    }
+
+    const userWithPassword = !personalCode;
+    const inviteData = getInviteData(ctx.params);
+
+    console.log(inviteData);
+    if (!userWithPassword) {
+      authUser = await ctx.call('auth.users.invite', inviteData);
+    } else {
+      authUser = await ctx.call('auth.users.create', inviteData);
+    }
+
+    const user: User = await ctx.call('users.findOrCreate', {
+      authUser,
+      firstName: ctx.params.firstName,
+      lastName: ctx.params.lastName,
+      email: ctx.params.email,
+      phone: ctx.params.phone,
+    });
+
+    if (authGroupId && !userWithPassword) {
+      const authGroup: any = await ctx.call('auth.groups.get', {
+        id: authGroupId,
+      });
+      if (authGroup && authGroup.id) {
+        await ctx.call('tenantUsers.createRelationshipsIfNeeded', {
+          authGroup: { ...authGroup, role },
+          userId: user.id,
         });
       }
-    } else {
-      authUser = await ctx.call('auth.users.create', {
-        email,
-        firstName,
-        lastName,
-        phone,
-        groups: [{ id: Number(process.env.NSA_GROUP_ID), role: AuthUserRole.ADMIN }],
-        type: this.typeToAuthRole(type),
+    } else if (tenantId) {
+      await ctx.call('tenantUsers.addUser', {
+        userId: user.id,
+        tenantId,
+        role,
       });
     }
 
-    return ctx.call('users.findOrCreate', {
-      authUser,
-      firstName,
-      lastName,
-      email,
-      phone,
-      type,
-      update: true,
-    });
+    return user;
   }
 
   @Action({

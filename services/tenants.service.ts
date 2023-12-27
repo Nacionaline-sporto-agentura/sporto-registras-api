@@ -229,27 +229,11 @@ export default class TenantsService extends moleculer.Service {
   @Action({
     rest: 'POST /',
     params: {
-      personalCode: {
-        type: 'string',
-        optional: true,
-        convert: true,
-      },
-      firstName: {
-        type: 'string',
-        optional: true,
-      },
-      lastName: {
-        type: 'string',
-        optional: true,
-      },
-      email: {
-        type: 'string',
-        optional: true,
-      },
-      phone: {
-        type: 'string',
-        optional: true,
-      },
+      personalCode: 'string|optional',
+      firstName: 'string|optional',
+      lastName: 'string|optional',
+      email: 'string|optional',
+      phone: 'string|optional',
       companyName: 'string',
       companyCode: 'string',
       companyPhone: 'string',

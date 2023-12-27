@@ -119,6 +119,12 @@ export default class TenantUsersService extends moleculer.Service {
       },
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
+
+    rest: {
+      method: 'GET',
+      path: '/tenants/:id/users',
+      basePath: '/',
+    },
   })
   async findByTenant(ctx: Context<{ id: number; query?: any; filter?: any }, UserAuthMeta>) {
     const { id, query, filter } = ctx.params;
@@ -154,6 +160,12 @@ export default class TenantUsersService extends moleculer.Service {
       },
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
+
+    rest: {
+      method: 'GET',
+      path: '/tenants/:id/users/:userId',
+      basePath: '/',
+    },
   })
   async getByTenant(
     ctx: Context<{ id: number; userId: number; query?: any; filter?: any }, UserAuthMeta>,
@@ -357,6 +369,11 @@ export default class TenantUsersService extends moleculer.Service {
       },
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
+    rest: {
+      method: 'DELETE',
+      path: '/tenants/:tenantId/users/:userId',
+      basePath: '/',
+    },
   })
   async removeUser(ctx: Context<{ userId: number; tenantId: number }, UserAuthMeta>) {
     const { tenantId, userId } = ctx.params;
@@ -505,6 +522,11 @@ export default class TenantUsersService extends moleculer.Service {
       role: 'string',
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
+    rest: {
+      method: 'PATCH',
+      path: '/tenants/:tenantId/users/:userId',
+      basePath: '/',
+    },
   })
   async updateUser(ctx: Context<{ userId: number; tenantId: number; role: string }, UserAuthMeta>) {
     const { profile } = ctx.meta;
@@ -568,6 +590,12 @@ export default class TenantUsersService extends moleculer.Service {
       },
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
+
+    rest: {
+      method: 'POST',
+      path: '/tenants/:tenantId/users/:userId',
+      basePath: '/',
+    },
   })
   async addUser(ctx: Context<{ userId: number; tenantId: number; role: string }, UserAuthMeta>) {
     const { profile } = ctx.meta;
@@ -579,8 +607,8 @@ export default class TenantUsersService extends moleculer.Service {
       return throwUnauthorizedError('Tenant is not accessable.');
     }
 
-    const user: User = await ctx.call('users.get', { id: userId });
-    const tenant: Tenant = await ctx.call('tenants.get', { id: tenantId });
+    const user: User = await ctx.call('users.resolve', { id: userId });
+    const tenant: Tenant = await ctx.call('tenants.resolve', { id: tenantId });
     if (!user || !tenant) {
       return throwNotFoundError('User/Tenant not found.');
     }

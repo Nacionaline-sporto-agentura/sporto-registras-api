@@ -136,6 +136,12 @@ export enum AuthUserRole {
       options: {},
     },
   },
+
+  actions: {
+    listAliases: {
+      rest: null,
+    },
+  },
 })
 export default class ApiService extends moleculer.Service {
   @Action({

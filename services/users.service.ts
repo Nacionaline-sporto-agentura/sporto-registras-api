@@ -33,11 +33,13 @@ export interface User {
 
 const VISIBLE_TO_USER_SCOPE = 'tenant';
 const NOT_ADMINS_SCOPE = 'notAdmins';
+const ADMINS_SCOPE = 'admins';
 
 const AUTH_PROTECTED_SCOPES = [...COMMON_DEFAULT_SCOPES, VISIBLE_TO_USER_SCOPE, NOT_ADMINS_SCOPE];
 
 export const USERS_WITHOUT_AUTH_SCOPES = [`-${VISIBLE_TO_USER_SCOPE}`];
 const USERS_WITHOUT_NOT_ADMINS_SCOPE = [`-${NOT_ADMINS_SCOPE}`];
+export const USERS_ADMINS_SCOPE = [`-${NOT_ADMINS_SCOPE}`, ADMINS_SCOPE];
 export const USERS_DEFAULT_SCOPES = [
   ...USERS_WITHOUT_AUTH_SCOPES,
   ...USERS_WITHOUT_NOT_ADMINS_SCOPE,
@@ -149,12 +151,12 @@ export const USERS_DEFAULT_SCOPES = [
     },
     scopes: {
       ...COMMON_SCOPES,
-      notAdmins(query: any, ctx: Context<null, UserAuthMeta>) {
-        // let admins filter out users & admins
-        // TODO: admins can see only "inner" admins
-        if (ctx?.meta?.user?.type === UserType.USER || !query.type) {
-          query.type = UserType.USER;
-        }
+      admins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+        query.type = UserType.ADMIN;
+        return query;
+      },
+      notAdmins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+        query.type = UserType.USER;
 
         return query;
       },
@@ -288,6 +290,7 @@ export default class UsersService extends moleculer.Service {
           lastName,
           phone,
           apps: [ctx.meta.app.id],
+          type: this.typeToAuthRole(type),
         });
       }
     } else {
@@ -297,6 +300,7 @@ export default class UsersService extends moleculer.Service {
         lastName,
         phone,
         groups: [{ id: Number(process.env.NSA_GROUP_ID), role: AuthUserRole.ADMIN }],
+        type: this.typeToAuthRole(type),
       });
     }
 
@@ -413,10 +417,10 @@ export default class UsersService extends moleculer.Service {
     };
 
     // let user to customize his phone and email
-    if (user?.email) {
+    if (user?.email && !authUserIsAdmin) {
       delete dataToSave.email;
     }
-    if (user?.phone) {
+    if (user?.phone && !authUserIsAdmin) {
       delete dataToSave.phone;
     }
 
@@ -445,30 +449,30 @@ export default class UsersService extends moleculer.Service {
         type: 'number',
         convert: true,
       },
+      scope: [
+        { type: 'string', optional: true },
+        { type: 'array', items: 'string', optional: true },
+      ],
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
   })
-  async removeUser(ctx: Context<{ id: number }, UserAuthMeta>) {
-    const { id } = ctx.params;
+  async removeUser(ctx: Context<{ id: number; scope: string | string[] }, UserAuthMeta>) {
+    const { id, scope } = ctx.params;
     const { profile } = ctx.meta;
-    const user = await ctx.call('users.resolve', { id });
-
-    if (!user) {
-      return throwNotFoundError('User not found.');
-    }
+    const user: User = await ctx.call('users.resolve', { id, scope, throwIfNotExist: true });
 
     if (profile?.id) {
       return ctx.call('tenantUsers.removeUser', {
         userId: id,
         tenantId: profile.id,
       });
-    } else if (ctx.meta.user.type === UserType.ADMIN) {
+    } else if (ctx.meta.user.type === UserType.ADMIN && user.type == UserType.USER) {
       await ctx.call('tenantUsers.removeTenants', {
         userId: id,
       });
     }
 
-    return ctx.call('users.remove', { id });
+    return this.removeEntity(ctx, { id }, { scope });
   }
 
   @Action({
@@ -487,6 +491,14 @@ export default class UsersService extends moleculer.Service {
         type: 'string',
         optional: true,
       },
+      firstName: {
+        type: 'string',
+        optional: true,
+      },
+      lastName: {
+        type: 'string',
+        optional: true,
+      },
       tenantId: {
         type: 'number',
         optional: true,
@@ -499,14 +511,16 @@ export default class UsersService extends moleculer.Service {
         id: number;
         role: string;
         email: string;
+        firstName: string;
+        lastName: string;
         phone: string;
         tenantId: number;
       },
       UserAuthMeta
     >,
   ) {
-    const { profile, user } = ctx.meta;
-    const { id, email, phone, role, tenantId } = ctx.params;
+    const { profile } = ctx.meta;
+    const { id, email, phone, role, tenantId, firstName, lastName } = ctx.params;
 
     const userToUpdate: User = await ctx.call('users.resolve', { id });
 
@@ -524,6 +538,8 @@ export default class UsersService extends moleculer.Service {
 
     return ctx.call('users.update', {
       id,
+      firstName,
+      lastName,
       email,
       phone,
     });

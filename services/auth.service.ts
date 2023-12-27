@@ -106,6 +106,7 @@ export default class AuthService extends moleculer.Service {
     cache: {
       keys: ['#user.id'],
     },
+    rest: getApiRest('/users/me'),
   })
   async me(ctx: Context<{}, UserAuthMeta>) {
     return ctx.meta.user;

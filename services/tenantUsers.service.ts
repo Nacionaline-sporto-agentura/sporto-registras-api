@@ -683,6 +683,11 @@ export default class TenantUsersService extends moleculer.Service {
     cache: {
       keys: ['#user.id'],
     },
+    rest: {
+      method: 'GET',
+      path: '/profiles',
+      basePath: '/',
+    },
   })
   async getProfiles(ctx: Context<{}, UserAuthMeta>) {
     const { user } = ctx.meta;

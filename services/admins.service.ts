@@ -4,7 +4,7 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 import { RestrictionType } from '../types';
 import { AuthUserRole } from './api.service';
-import { USERS_ADMINS_SCOPE } from './users.service';
+import { USERS_ADMINS_SCOPE, User } from './users.service';
 
 const scope = USERS_ADMINS_SCOPE;
 
@@ -85,7 +85,7 @@ export default class AdminService extends moleculer.Service {
     }>,
   ) {
     const { email, phone, firstName, lastName, groups } = ctx.params;
-    const authUser = await ctx.call('auth.users.create', {
+    const authUser: any = await ctx.call('auth.users.create', {
       email,
       firstName,
       lastName,
@@ -94,7 +94,7 @@ export default class AdminService extends moleculer.Service {
       type: AuthUserRole.ADMIN,
     });
 
-    return ctx.call('users.findOrCreate', {
+    const user: User = await ctx.call('users.findOrCreate', {
       authUser,
       firstName,
       lastName,
@@ -102,6 +102,12 @@ export default class AdminService extends moleculer.Service {
       phone,
       update: true,
     });
+
+    if (authUser?.url) {
+      return { ...user, url: authUser.url };
+    }
+
+    return user;
   }
 
   @Action({

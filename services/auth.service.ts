@@ -259,10 +259,16 @@ export default class AuthService extends moleculer.Service {
   }
 
   @Method
-  assignNsaAppIfNeeded(ctx: Context<{ apps: Array<any> }, UserAuthMeta>) {
-    const { apps } = ctx.params;
+  assignNsaAppIfNeeded(ctx: Context<{ apps: Array<any>; parent?: number }, UserAuthMeta>) {
+    const { apps, parent } = ctx.params;
     const nsaAppId = ctx.meta.app.id;
-    if (!apps || !apps.length || !nsaAppId) return ctx;
+
+    if (!nsaAppId) return ctx;
+
+    if (!parent && !apps?.length) {
+      ctx.params.apps = [nsaAppId];
+      return ctx;
+    }
 
     const hasNsaApp = apps.some((a) => a == nsaAppId);
     if (hasNsaApp) return ctx;

@@ -4,6 +4,7 @@ import moleculer, { Context, RestSchema } from 'moleculer';
 import { Action, Event, Method, Service } from 'moleculer-decorators';
 
 import authMixin from 'biip-auth-nodejs/mixin';
+import _ from 'lodash';
 import { NSA_GROUP_ID, RestrictionType } from '../types';
 import { UserAuthMeta } from './api.service';
 import { TenantUserRole } from './tenantUsers.service';
@@ -110,6 +111,31 @@ export default class AuthService extends moleculer.Service {
   })
   async me(ctx: Context<{}, UserAuthMeta>) {
     return ctx.meta.user;
+  }
+
+  @Action({
+    params: {
+      id: 'number|convert',
+    },
+    rest: getApiRest('/groups/:id/users'),
+  })
+  async groupUsers(ctx: Context<{ id: number }, UserAuthMeta>) {
+    const authGroup: any = await ctx.call('auth.groups.get', {
+      id: ctx.params.id,
+      populate: 'users',
+    });
+
+    delete ctx.params.id;
+
+    const authUserIds = authGroup?.users?.map((u: any) => u.id) || [];
+    return ctx.call(
+      'admins.list',
+      _.merge({}, ctx.params, {
+        query: {
+          authUser: { $in: authUserIds },
+        },
+      }),
+    );
   }
 
   @Action({

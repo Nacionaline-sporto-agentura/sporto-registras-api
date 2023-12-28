@@ -263,9 +263,9 @@ export default class AuthService extends moleculer.Service {
     const { apps, parent } = ctx.params;
     const nsaAppId = ctx.meta.app.id;
 
-    if (!nsaAppId) return ctx;
+    if (!nsaAppId || !!parent) return ctx;
 
-    if (!parent && !apps?.length) {
+    if (!apps?.length) {
       ctx.params.apps = [nsaAppId];
       return ctx;
     }

@@ -149,6 +149,33 @@ export const USERS_DEFAULT_SCOPES = [
         },
       },
 
+      groups: {
+        virtual: true,
+        type: 'array',
+        populate: {
+          keyField: 'authUser',
+          handler: async (ctx: Context<null, UserAuthMeta>, values: number[]) => {
+            if (ctx?.meta?.user?.type !== UserType.ADMIN) {
+              return [];
+            }
+
+            return Promise.all(
+              values.map(async (value) => {
+                try {
+                  const authUser: any = await ctx.call('auth.users.get', {
+                    id: value,
+                    populate: 'groups',
+                  });
+                  return authUser?.groups || [];
+                } catch (e) {
+                  return value;
+                }
+              }),
+            );
+          },
+        },
+      },
+
       ...COMMON_FIELDS,
     },
     scopes: {

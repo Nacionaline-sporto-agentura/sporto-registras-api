@@ -130,8 +130,11 @@ export default class AdminService extends moleculer.Service {
     }>,
   ) {
     const { id, email, password, oldPassword, firstName, lastName, phone, groups } = ctx.params;
+
+    const user: User = await ctx.call('users.resolve', { id, throwIfNotExist: true });
+
     const authUser = await ctx.call('auth.users.update', {
-      id,
+      id: user.authUser,
       email,
       firstName,
       lastName,

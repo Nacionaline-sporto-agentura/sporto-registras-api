@@ -38,6 +38,9 @@ export default class AdminService extends moleculer.Service {
 
   @Action({
     rest: 'GET /:id',
+    params: {
+      id: 'number|convert',
+    },
     auth: RestrictionType.ADMIN,
   })
   get(ctx: Context<{}>) {
@@ -112,6 +115,9 @@ export default class AdminService extends moleculer.Service {
 
   @Action({
     rest: 'PATCH /:id',
+    params: {
+      id: 'number|convert',
+    },
     auth: RestrictionType.ADMIN,
   })
   async update(
@@ -131,7 +137,7 @@ export default class AdminService extends moleculer.Service {
   ) {
     const { id, email, password, oldPassword, firstName, lastName, phone, groups } = ctx.params;
 
-    const user: User = await ctx.call('users.resolve', { id, throwIfNotExist: true });
+    const user: User = await ctx.call('users.resolve', { id, throwIfNotExist: true, scope });
 
     const authUser = await ctx.call('auth.users.update', {
       id: user.authUser,
@@ -156,6 +162,9 @@ export default class AdminService extends moleculer.Service {
 
   @Action({
     rest: 'DELETE /:id',
+    params: {
+      id: 'number|convert',
+    },
     auth: RestrictionType.ADMIN,
   })
   async remove(

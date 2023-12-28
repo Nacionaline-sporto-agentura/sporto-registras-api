@@ -99,10 +99,6 @@ export enum AuthUserRole {
         // The gateway will dynamically build the full routes from service schema.
         autoAliases: true,
 
-        aliases: {
-          'GET /ping': 'api.ping',
-        },
-
         // Calling options. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Calling-options
         callingOptions: {},
 
@@ -147,11 +143,28 @@ export enum AuthUserRole {
 export default class ApiService extends moleculer.Service {
   @Action({
     auth: RestrictionType.PUBLIC,
+    rest: {
+      method: 'GET',
+      path: '/ping',
+      basePath: '/',
+    },
   })
   ping() {
     return {
       timestamp: Date.now(),
     };
+  }
+
+  @Action({
+    rest: {
+      method: 'POST',
+      path: '/cache/clean',
+      basePath: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+  })
+  cleanCache() {
+    this.broker.cacher.clean();
   }
 
   @Method

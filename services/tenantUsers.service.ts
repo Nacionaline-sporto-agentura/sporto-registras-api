@@ -724,15 +724,7 @@ export default class TenantUsersService extends moleculer.Service {
       fields: ['id', 'name', 'role'],
     });
 
-    return [
-      {
-        id: 'freelancer',
-        name: `${user.firstName} ${user.lastName}`,
-        freelancer: true,
-        email: user.email,
-      },
-      ...tenants,
-    ];
+    return tenants;
   }
 
   @Event()

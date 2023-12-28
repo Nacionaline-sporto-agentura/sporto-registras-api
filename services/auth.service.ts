@@ -110,7 +110,13 @@ export default class AuthService extends moleculer.Service {
     rest: getApiRest('/users/me'),
   })
   async me(ctx: Context<{}, UserAuthMeta>) {
-    return ctx.meta.user;
+    const data: any = ctx.meta.user;
+
+    if (ctx.meta?.authUser?.permissions) {
+      data.permissions = ctx.meta.authUser.permissions;
+    }
+
+    return data;
   }
 
   @Action({
@@ -240,7 +246,6 @@ export default class AuthService extends moleculer.Service {
       data.profiles = data.profiles.map((i: any) => ({
         id: i.id,
         name: i.name,
-        freelancer: i.freelancer,
         email: i.email,
         phone: i.phone,
         role: i.role,

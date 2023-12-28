@@ -21,6 +21,10 @@ export enum UserType {
   ADMIN = 'ADMIN',
   USER = 'USER',
 }
+export enum UserAuthStrategy {
+  PASSWORD = 'PASSWORD',
+  EVARTAI = 'EVARTAI',
+}
 
 export interface User {
   id: number;
@@ -110,6 +114,12 @@ export const USERS_DEFAULT_SCOPES = [
         type: 'string',
         enum: Object.values(UserType),
         default: UserType.USER,
+      },
+
+      authStrategy: {
+        type: 'string',
+        enum: Object.values(UserAuthStrategy),
+        default: UserAuthStrategy.PASSWORD,
       },
 
       profiles: {
@@ -221,6 +231,16 @@ export const USERS_DEFAULT_SCOPES = [
 
         if (ctx?.meta?.profile?.id) {
           tenantId = ctx.meta.profile.id;
+          if (query.tenant) {
+            // it will throw an error if user cannot access this tenant (does not belong to it or it's childs)
+            await ctx.call('tenants.resolve', {
+              id: query.tenant,
+            });
+
+            tenantId = query.tenant;
+
+            delete query.tenant;
+          }
         } else if (ctx?.meta?.user?.type === UserType.ADMIN) {
           tenantId = query.tenant;
           delete query.tenant;

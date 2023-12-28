@@ -23,6 +23,12 @@ export interface Tenant extends CommonFields {
   name: string;
   role?: TenantUserRole;
   authGroup?: number;
+  parent: number;
+}
+
+export enum TenantTenantType {
+  MUNICIPALITY = 'MUNICIPALITY',
+  ORGANIZATION = 'ORGANIZATION',
 }
 
 @Service({
@@ -58,6 +64,26 @@ export interface Tenant extends CommonFields {
         populate: 'auth.groups.get',
         async onRemove({ ctx, entity }: FieldHookCallback) {
           await ctx.call('auth.groups.remove', { id: entity.authGroupId }, { meta: ctx?.meta });
+        },
+      },
+
+      tenantType: {
+        type: 'string',
+        enum: Object.values(TenantTenantType),
+        default: TenantTenantType.ORGANIZATION,
+      },
+
+      type: 'string',
+      legalForm: 'string',
+      address: 'string',
+      data: {
+        type: 'object',
+        properties: {
+          url: 'string',
+          foundedAt: 'date',
+          hasBeneficiaryStatus: 'boolean',
+          nonGovernmentalOrganization: 'boolean',
+          nonFormalEducation: 'boolean',
         },
       },
 
@@ -117,7 +143,7 @@ export interface Tenant extends CommonFields {
       },
       async user(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
         if (ctx?.meta?.user?.type === UserType.USER) {
-          const tenantsIds: number[] = await ctx.call('tenantUsers.findIdsByUser', {
+          const tenantsIds: number[] = await ctx.call('tenantUsers.findIdsByUserRecursive', {
             id: ctx.meta.user.id,
           });
 

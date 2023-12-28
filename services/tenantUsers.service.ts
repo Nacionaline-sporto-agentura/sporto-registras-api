@@ -238,6 +238,35 @@ export default class TenantUsersService extends moleculer.Service {
         type: 'number',
         convert: true,
       },
+    },
+  })
+  async findIdsByUserRecursive(ctx: Context<{ id: number }>) {
+    const tenantIds = await this.actions.findIdsByUser(ctx.params);
+
+    let parentIds = tenantIds;
+
+    while (parentIds.length) {
+      const childTenants: Tenant[] = await ctx.call('tenants.find', {
+        query: {
+          parent: { $in: parentIds },
+        },
+        scope: false,
+      });
+
+      const childIds = childTenants.map((t) => t.id);
+      tenantIds.push(...childIds);
+      parentIds = childIds;
+    }
+
+    return tenantIds;
+  }
+
+  @Action({
+    params: {
+      id: {
+        type: 'number',
+        convert: true,
+      },
       role: {
         type: 'string',
         optional: true,

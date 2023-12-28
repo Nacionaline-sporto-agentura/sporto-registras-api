@@ -227,17 +227,19 @@ export const USERS_DEFAULT_SCOPES = [
         return query;
       },
       async tenant(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
-        let tenantId: number;
+        let tenantId: any;
 
         if (ctx?.meta?.profile?.id) {
           tenantId = ctx.meta.profile.id;
           if (query.tenant) {
-            // it will throw an error if user cannot access this tenant (does not belong to it or it's childs)
-            await ctx.call('tenants.resolve', {
-              id: query.tenant,
+            const tenants: Tenant[] = await ctx.call('tenants.find', {
+              query: {
+                id: query.tenant,
+              },
+              scope: '-noParent',
             });
 
-            tenantId = query.tenant;
+            tenantId = { $in: tenants.map((t) => t.id) };
 
             delete query.tenant;
           }

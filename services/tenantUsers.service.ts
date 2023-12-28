@@ -263,10 +263,7 @@ export default class TenantUsersService extends moleculer.Service {
 
   @Action({
     params: {
-      id: {
-        type: 'number',
-        convert: true,
-      },
+      id: 'any', // number or object - {$in:[]}
       role: {
         type: 'string',
         optional: true,

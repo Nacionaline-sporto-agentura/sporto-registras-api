@@ -158,7 +158,11 @@ export enum TenantTenantType {
               throwUnauthorizedError(`Cannot access this tenant with ID: ${params.id}`);
             }
           } else {
-            query.id = { $in: tenantsIds };
+            if (query.id) {
+              query.id = { $and: [{ id: query.id }, { id: { $in: tenantsIds } }] };
+            } else {
+              query.id = { $in: tenantsIds };
+            }
           }
         }
         return query;

@@ -3,7 +3,7 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 
-import DbConnection from '../mixins/database.mixin';
+import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -61,35 +61,6 @@ export interface Tenant extends CommonFields {
         },
       },
 
-      users: {
-        virtual: true,
-        items: { type: 'object' },
-        type: 'array',
-        populate(ctx: any, _values: any, items: any[]) {
-          return Promise.all(
-            items.map((item: any) => {
-              return ctx.call('tenantUsers.findByTenant', { id: item.id });
-            }),
-          );
-        },
-      },
-
-      usersCount: {
-        virtual: true,
-        type: 'number',
-        populate(ctx: any, _values: any, items: any[]) {
-          return Promise.all(
-            items.map((item: any) => {
-              return ctx.call('tenantUsers.count', {
-                query: {
-                  tenant: item.id,
-                },
-              });
-            }),
-          );
-        },
-      },
-
       role: {
         virtual: true,
         type: TenantUserRole,
@@ -116,11 +87,34 @@ export interface Tenant extends CommonFields {
         populate: 'tenants.resolve',
       },
 
+      children: {
+        virtual: true,
+        type: 'array',
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('tenants.populateByProp'),
+          inheritPopulate: true,
+          params: {
+            sort: 'name',
+            mappingMulti: true,
+            queryKey: 'parent',
+            populate: 'children',
+          },
+        },
+      },
+
       ...COMMON_FIELDS,
     },
 
     scopes: {
       ...COMMON_SCOPES,
+      noParent(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+        // TODO: apply for visible subtenants for users
+        if (!params?.id && !query?.parent) {
+          query.parent = { $exists: false };
+        }
+        return query;
+      },
       async user(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
         if (ctx?.meta?.user?.type === UserType.USER) {
           const tenantsIds: number[] = await ctx.call('tenantUsers.findIdsByUser', {
@@ -145,7 +139,7 @@ export interface Tenant extends CommonFields {
       },
     },
 
-    defaultScopes: [...COMMON_DEFAULT_SCOPES, 'user'],
+    defaultScopes: [...COMMON_DEFAULT_SCOPES, 'user', 'noParent'],
   },
 
   actions: {
@@ -167,18 +161,10 @@ export default class TenantsService extends moleculer.Service {
   @Action({
     params: {
       authGroup: 'any',
-      email: {
-        type: 'string',
-        optional: true,
-      },
-      phone: {
-        type: 'string',
-        optional: true,
-      },
-      name: {
-        type: 'string',
-        optional: true,
-      },
+      email: 'string|optional',
+      phone: 'string|optional',
+      name: 'string|optional',
+      parent: 'number|optional|convert',
       update: {
         type: 'boolean',
         optional: true,
@@ -193,9 +179,10 @@ export default class TenantsService extends moleculer.Service {
       name?: string;
       phone?: string;
       email?: string;
+      parent?: number;
     }>,
   ) {
-    const { authGroup, update, name, phone, email } = ctx.params;
+    const { authGroup, update, name, phone, email, parent } = ctx.params;
     if (!authGroup || !authGroup.id) return;
 
     const tenant: Tenant = await ctx.call('tenants.findOne', {
@@ -222,6 +209,7 @@ export default class TenantsService extends moleculer.Service {
 
     return ctx.call('tenants.create', {
       authGroup: authGroup.id,
+      parent,
       ...dataToSave,
     });
   }
@@ -238,6 +226,7 @@ export default class TenantsService extends moleculer.Service {
       companyCode: 'string',
       companyPhone: 'string',
       companyEmail: 'string',
+      parent: 'number|optional|convert',
     },
     types: RestrictionType.ADMIN,
   })
@@ -253,6 +242,7 @@ export default class TenantsService extends moleculer.Service {
         lastName: string;
         companyEmail: string;
         companyPhone: string;
+        parent: number;
       },
       UserAuthMeta
     >,
@@ -267,6 +257,7 @@ export default class TenantsService extends moleculer.Service {
       lastName,
       companyEmail,
       companyPhone,
+      parent,
     } = ctx.params;
 
     const authGroup: any = await ctx.call('auth.users.invite', { companyCode });
@@ -303,13 +294,14 @@ export default class TenantsService extends moleculer.Service {
       email: companyEmail,
       phone: companyPhone,
       name: companyName,
+      parent,
     });
   }
 
   @Action({
     rest: 'DELETE /:id',
     params: {
-      id: 'any',
+      id: 'number|convert',
     },
     types: RestrictionType.ADMIN,
   })

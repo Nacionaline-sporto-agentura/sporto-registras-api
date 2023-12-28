@@ -3,6 +3,7 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 import { RestrictionType } from '../types';
+import { AuthUserRole } from './api.service';
 import { USERS_ADMINS_SCOPE } from './users.service';
 
 const scope = USERS_ADMINS_SCOPE;
@@ -90,7 +91,7 @@ export default class AdminService extends moleculer.Service {
       lastName,
       phone,
       groups,
-      type: 'ADMIN',
+      type: AuthUserRole.ADMIN,
     });
 
     return ctx.call('users.findOrCreate', {

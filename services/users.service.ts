@@ -344,7 +344,6 @@ export default class UsersService extends moleculer.Service {
     const userWithPassword = !personalCode;
     const inviteData = getInviteData(ctx.params);
 
-    console.log(inviteData);
     if (!userWithPassword) {
       authUser = await ctx.call('auth.users.invite', inviteData);
     } else {
@@ -375,6 +374,10 @@ export default class UsersService extends moleculer.Service {
         tenantId,
         role,
       });
+    }
+
+    if (authUser?.url) {
+      return { ...user, url: authUser.url };
     }
 
     return user;

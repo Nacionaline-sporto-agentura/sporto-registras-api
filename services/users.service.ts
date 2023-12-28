@@ -180,8 +180,35 @@ export const USERS_DEFAULT_SCOPES = [
     },
     scopes: {
       ...COMMON_SCOPES,
-      admins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+      async admins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
         query.type = UserType.ADMIN;
+
+        const authUserIds = query?.authUser ? [query.authUser] : [];
+        if (ctx?.meta?.authUser?.type !== AuthUserRole.SUPER_ADMIN) {
+          const authUsers: any = await ctx.call('auth.users.list', {
+            query: {
+              type: { $in: [AuthUserRole.ADMIN, AuthUserRole.SUPER_ADMIN] },
+            },
+            pageSize: 10000,
+          });
+
+          authUserIds.push({ $in: authUsers?.rows?.map((u: any) => u.id) || [] });
+        }
+
+        if (query.group) {
+          const authGroup: any = await ctx.call('auth.groups.get', {
+            id: query.group,
+            populate: 'users',
+          });
+
+          authUserIds.push({ $in: authGroup?.users?.map((u: any) => u.id) || [] });
+          delete query.group;
+        }
+
+        if (authUserIds?.length) {
+          query.authUser = { $and: authUserIds };
+        }
+
         return query;
       },
       notAdmins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {

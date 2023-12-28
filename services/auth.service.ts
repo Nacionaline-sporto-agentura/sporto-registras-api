@@ -120,19 +120,11 @@ export default class AuthService extends moleculer.Service {
     rest: getApiRest('/groups/:id/users'),
   })
   async groupUsers(ctx: Context<{ id: number }, UserAuthMeta>) {
-    const authGroup: any = await ctx.call('auth.groups.get', {
-      id: ctx.params.id,
-      populate: 'users',
-    });
-
-    delete ctx.params.id;
-
-    const authUserIds = authGroup?.users?.map((u: any) => u.id) || [];
     return ctx.call(
       'admins.list',
       _.merge({}, ctx.params, {
         query: {
-          authUser: { $in: authUserIds },
+          group: ctx.params.id,
         },
       }),
     );

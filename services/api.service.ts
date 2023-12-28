@@ -9,6 +9,7 @@ import {
   RestrictionType,
   throwUnauthorizedError,
 } from '../types';
+import { Tenant } from './tenants.service';
 import { User } from './users.service';
 
 export interface UserAuthMeta {
@@ -192,7 +193,21 @@ export default class ApiService extends moleculer.Service {
     ctx.meta.authUser = authUser;
     ctx.meta.authToken = token;
     ctx.meta.app = app;
-    ctx.meta.profile = req.headers['x-profile'];
+
+    const profile = req.headers['x-profile'];
+
+    if (profile) {
+      const tenantWithRole: Tenant = await ctx.call('tenantUsers.getProfile', {
+        id: user.id,
+        profile,
+      });
+
+      if (!tenantWithRole) {
+        throw new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN, null);
+      }
+
+      ctx.meta.profile = tenantWithRole;
+    }
 
     return user;
   }

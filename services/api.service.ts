@@ -3,8 +3,14 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
 import ApiGateway from 'moleculer-web';
-import { RequestMessage, RestrictionType } from '../types';
-import { User, UserType } from './users.service';
+import {
+  COMMON_DELETED_SCOPES,
+  RequestMessage,
+  RestrictionType,
+  throwUnauthorizedError,
+} from '../types';
+import { Tenant } from './tenants.service';
+import { User } from './users.service';
 
 export interface UserAuthMeta {
   user: User;
@@ -40,6 +46,35 @@ export enum AuthUserRole {
       maxAge: 3600,
     },
 
+    use: [
+      function (req: any, res: any, next: any) {
+        const removeScopes = (query: any) => {
+          if (!query) return query;
+
+          if (typeof query !== 'object') {
+            try {
+              query = JSON.parse(query);
+            } catch (err) {}
+          }
+
+          if (!query || typeof query !== 'object') return query;
+
+          if (query.scope === 'deleted') {
+            query.scope = COMMON_DELETED_SCOPES.join(',');
+          } else {
+            delete query.scope;
+          }
+
+          return query;
+        };
+
+        req.query = removeScopes(req.query);
+        req.body = removeScopes(req.body);
+
+        next();
+      },
+    ],
+
     routes: [
       {
         path: '/api',
@@ -63,10 +98,6 @@ export enum AuthUserRole {
         // The auto-alias feature allows you to declare your route alias directly in your services.
         // The gateway will dynamically build the full routes from service schema.
         autoAliases: true,
-
-        aliases: {
-          'GET /ping': 'api.ping',
-        },
 
         // Calling options. More info: https://moleculer.services/docs/0.14/moleculer-web.html#Calling-options
         callingOptions: {},
@@ -102,15 +133,38 @@ export enum AuthUserRole {
       options: {},
     },
   },
+
+  actions: {
+    listAliases: {
+      rest: null,
+    },
+  },
 })
 export default class ApiService extends moleculer.Service {
   @Action({
     auth: RestrictionType.PUBLIC,
+    rest: {
+      method: 'GET',
+      path: '/ping',
+      basePath: '/',
+    },
   })
   ping() {
     return {
       timestamp: Date.now(),
     };
+  }
+
+  @Action({
+    rest: {
+      method: 'POST',
+      path: '/cache/clean',
+      basePath: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+  })
+  cleanCache() {
+    this.broker.cacher.clean();
   }
 
   @Method
@@ -145,17 +199,28 @@ export default class ApiService extends moleculer.Service {
 
     const app: any = await ctx.call('auth.apps.resolveToken');
 
-    let user: User;
-    if (authUser.type === AuthUserRole.USER) {
-      user = await ctx.call('users.findOne', {
-        query: { authUser: authUser.id },
-      });
-    }
+    const user: User = await ctx.call('users.resolveByAuthUser', {
+      authUser,
+    });
 
     ctx.meta.authUser = authUser;
     ctx.meta.authToken = token;
     ctx.meta.app = app;
-    ctx.meta.profile = req.headers['x-profile'];
+
+    const profile = req.headers['x-profile'];
+
+    if (profile) {
+      const tenantWithRole: Tenant = await ctx.call('tenantUsers.getProfile', {
+        id: user.id,
+        profile,
+      });
+
+      if (!tenantWithRole) {
+        throw new ApiGateway.Errors.UnAuthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN, null);
+      }
+
+      ctx.meta.profile = tenantWithRole;
+    }
 
     return user;
   }
@@ -172,19 +237,17 @@ export default class ApiService extends moleculer.Service {
       return;
     }
 
-    // Get the authenticated user.
-    const user = ctx.meta.user;
+    const aAuth = Array.isArray(req.$action.auth) ? req.$action.auth : [req.$action.auth];
+    const oAuth = Array.isArray(req.$route.opts.auth)
+      ? req.$route.opts.auth
+      : [req.$route.opts.auth];
 
-    if (restrictionType === RestrictionType.ADMIN && user.type !== UserType.ADMIN) {
-      throw new ApiGateway.Errors.UnAuthorizedError('NO_RIGHTS', {
-        error: 'Unauthorized',
-      });
-    }
+    const allAuth = [...aAuth, ...oAuth].filter(Boolean);
+    const auth = [...new Set(allAuth)];
+    const valid = await ctx.call('auth.validateType', { auth });
 
-    if (restrictionType === RestrictionType.USER && user.type !== UserType.USER) {
-      throw new ApiGateway.Errors.UnAuthorizedError('NO_RIGHTS', {
-        error: 'Unauthorized',
-      });
+    if (!valid) {
+      return throwUnauthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN);
     }
   }
 }

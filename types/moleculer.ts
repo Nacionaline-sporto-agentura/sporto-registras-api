@@ -4,6 +4,7 @@ import { UserAuthMeta } from '../services/api.service';
 import { UserType } from '../services/users.service';
 
 import { DbAdapter, DbContextParameters, DbServiceSettings } from 'moleculer-db';
+import { RestrictionType } from './constants';
 
 export type MultipartMeta = {
   $multipart: Record<string, string>;
@@ -283,6 +284,7 @@ export interface RouteSchemaOpts {
   authorization?: boolean;
   authentication?: boolean;
   types?: UserType[];
+  auth?: RestrictionType[];
   aliases?: any;
 }
 

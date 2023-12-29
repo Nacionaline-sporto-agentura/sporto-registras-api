@@ -25,7 +25,7 @@
     "@aplinkosministerija/biip-prettier-config": "^1.1.0",
     "@aplinkosministerija/eslint-config-biip-api": "^1.0.0",
     "@types/lodash": "^4.14.191",
-    "@types/node": "^18.15.3",
+    "@types/node": "^20.10.5",
     "@types/qs": "^6.9.9",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
@@ -39,7 +39,7 @@
     "moleculer-repl": "^0.7.3",
     "prettier": "2.8.4",
     "prettier-plugin-organize-imports": "^3.2.2",
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
     "typescript": "5.1.6"
   },
   "dependencies": {
@@ -65,6 +65,26 @@
       "eslint"
     ],
     "*.{md,html,css}": "prettier --write"
+  },
+  "jest": {
+    "coverageDirectory": "<rootDir>/coverage",
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testMatch": [
+      "**/*.spec.(ts|js)"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsconfig": "tsconfig.json"
+      }
+    }
   },
   "eslintConfig": {
     "extends": "@aplinkosministerija/eslint-config-biip-api"

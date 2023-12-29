@@ -340,6 +340,11 @@ export default class UsersService extends moleculer.Service {
         optional: true,
         default: TenantUserRole.USER,
       },
+      throwErrors: {
+        type: 'boolean',
+        optional: true,
+        default: true,
+      },
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
   })
@@ -353,12 +358,15 @@ export default class UsersService extends moleculer.Service {
         phone?: string;
         role?: TenantUserRole;
         tenantId?: number;
+        throwErrors: boolean;
       },
       UserAuthMeta
     >,
   ) {
-    const { personalCode, role, tenantId } = ctx.params;
-    const { profile, user: authenticatedUser } = ctx.meta;
+    const { personalCode, role, throwErrors } = ctx.params;
+    const { profile } = ctx.meta;
+    let authGroupId: number;
+    let { tenantId } = ctx.params;
 
     function getInviteData(data: {
       firstName: string;
@@ -371,13 +379,14 @@ export default class UsersService extends moleculer.Service {
     }) {
       const inviteData: any = {
         apps: [ctx.meta?.app?.id],
+        throwErrors,
       };
 
       if (data.personalCode) {
         inviteData.personalCode = data.personalCode;
         inviteData.notify = [data.email];
-        if (data?.tenantId) {
-          inviteData.companyId = data.tenantId;
+        if (authGroupId) {
+          inviteData.companyId = authGroupId;
           inviteData.role = data.role || TenantUserRole.USER;
         } else {
         }
@@ -393,27 +402,17 @@ export default class UsersService extends moleculer.Service {
 
     let authUser: any;
 
-    let authGroupId;
-    if (profile?.id) {
-      ctx.params.tenantId = profile.authGroup;
+    if (profile?.id && !tenantId) {
+      tenantId = profile.id;
       authGroupId = profile.authGroup;
     }
 
-    let tenant: Tenant;
     if (tenantId) {
-      tenant = await ctx.call('tenants.resolve', {
+      const tenant: Tenant = await ctx.call('tenants.resolve', {
         id: tenantId,
+        throwIfNotExist: true,
       });
 
-      if (authenticatedUser?.type !== UserType.ADMIN || !tenant?.id) {
-        throw new moleculer.Errors.MoleculerClientError(
-          'Cannot assign user to tenant.',
-          401,
-          'UNAUTHORIZED',
-        );
-      }
-
-      ctx.params.tenantId = tenant.authGroup;
       authGroupId = tenant.authGroup;
     }
 

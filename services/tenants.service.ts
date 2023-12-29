@@ -212,7 +212,7 @@ export default class TenantsService extends moleculer.Service {
       parent?: number;
     }>,
   ) {
-    const { authGroup, update, name, phone, email, parent } = ctx.params;
+    const { authGroup, update, name, phone, email } = ctx.params;
     if (!authGroup || !authGroup.id) return;
 
     const tenant: Tenant = await ctx.call('tenants.findOne', {
@@ -223,109 +223,96 @@ export default class TenantsService extends moleculer.Service {
 
     if (!update && tenant && tenant.id) return tenant;
 
+    delete ctx.params.authGroup;
+
     const dataToSave = {
+      ...ctx.params,
       name: name || authGroup.name,
       email: email || authGroup.companyEmail,
       phone: phone || authGroup.companyPhone,
       code: authGroup.companyCode,
     };
 
-    if (tenant && tenant.id) {
+    if (tenant?.id) {
       return ctx.call('tenants.update', {
-        id: tenant.id,
         ...dataToSave,
+        id: tenant.id,
       });
     }
 
     return ctx.call('tenants.create', {
-      authGroup: authGroup.id,
-      parent,
       ...dataToSave,
+      authGroup: authGroup.id,
     });
   }
 
   @Action({
     rest: 'POST /',
     params: {
-      personalCode: 'string|optional',
-      firstName: 'string|optional',
-      lastName: 'string|optional',
-      email: 'string|optional',
-      phone: 'string|optional',
-      companyName: 'string',
-      companyCode: 'string',
-      companyPhone: 'string',
-      companyEmail: 'string',
-      parent: 'number|optional|convert',
+      code: 'string',
+      name: 'string',
+      email: 'string',
+      phone: 'string',
+      user: {
+        type: 'object',
+        optional: true,
+        properties: {
+          personalCode: 'string|optional',
+          firstName: 'string',
+          lastName: 'string',
+          email: 'string',
+          phone: 'string',
+        },
+      },
     },
     types: RestrictionType.ADMIN,
   })
   async invite(
     ctx: Context<
       {
-        personalCode: any;
-        phone: string;
+        code: string;
+        name: string;
         email: string;
-        companyCode: string;
-        companyName: string;
-        firstName: string;
-        lastName: string;
-        companyEmail: string;
-        companyPhone: string;
-        parent: number;
+        phone: string;
+        user: {
+          personalCode: string;
+          phone: string;
+          email: string;
+          firstName: string;
+          lastName: string;
+        };
       },
       UserAuthMeta
     >,
   ) {
-    const {
-      personalCode,
-      email,
-      companyCode,
-      companyName,
-      phone,
-      firstName,
-      lastName,
-      companyEmail,
-      companyPhone,
-      parent,
-    } = ctx.params;
+    const { code, email, user: owner } = ctx.params;
 
-    const authGroup: any = await ctx.call('auth.users.invite', { companyCode });
+    const companyInviteData: any = { companyCode: code };
 
-    if (personalCode) {
-      const authUser: any = await ctx.call('auth.users.invite', {
-        companyId: authGroup.id,
-        personalCode: personalCode,
-        role: TenantUserRole.ADMIN,
-        notify: [email],
-      });
-
-      const user: User = await ctx.call('users.findOrCreate', {
-        authUser,
-        firstName,
-        lastName,
-        email,
-        phone,
-      });
-
-      const tenantUser: TenantUser = await ctx.call('tenantUsers.createRelationshipsIfNeeded', {
-        companyName,
-        authGroup,
-        companyEmail,
-        companyPhone,
-        userId: user.id,
-      });
-
-      return ctx.call('tenants.resolve', { id: tenantUser.tenant });
+    if (!owner?.email) {
+      companyInviteData.notify = [email];
     }
 
-    return ctx.call('tenants.findOrCreate', {
-      authGroup: authGroup,
-      email: companyEmail,
-      phone: companyPhone,
-      name: companyName,
-      parent,
-    });
+    const authGroup: any = await ctx.call('auth.users.invite', companyInviteData);
+
+    const tenant: Tenant = await ctx.call('tenants.findOrCreate', { ...ctx.params, authGroup });
+
+    let user: User & { url?: string };
+
+    if (owner?.email) {
+      user = await ctx.call('users.invite', {
+        ...owner,
+        role: TenantUserRole.ADMIN,
+        tenantId: tenant.id,
+        throwErrors: false,
+      });
+    }
+
+    if (user?.url) {
+      return { ...tenant, url: user.url };
+    }
+
+    return tenant;
   }
 
   @Action({

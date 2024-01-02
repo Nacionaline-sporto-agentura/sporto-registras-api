@@ -189,7 +189,7 @@ export default class AuthService extends moleculer.Service {
     });
 
     if (authUserGroups && authUserGroups.length && user?.id) {
-      const authGroups = authUserGroups.filter((g) => g.id != NSA_GROUP_ID && !g.companyCode);
+      const authGroups = authUserGroups.filter((g) => g.id != NSA_GROUP_ID && !!g.companyCode);
 
       for (const group of authGroups) {
         await ctx.call('tenantUsers.createRelationshipsIfNeeded', {

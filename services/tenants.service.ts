@@ -11,7 +11,6 @@ import {
   CommonFields,
   FieldHookCallback,
   RestrictionType,
-  throwNotFoundError,
   throwUnauthorizedError,
 } from '../types';
 import { UserAuthMeta } from './api.service';
@@ -23,12 +22,6 @@ export interface Tenant extends CommonFields {
   name: string;
   role?: TenantUserRole;
   authGroup?: number;
-  parent: number;
-}
-
-export enum TenantTenantType {
-  MUNICIPALITY = 'MUNICIPALITY',
-  ORGANIZATION = 'ORGANIZATION',
 }
 
 @Service({
@@ -64,26 +57,6 @@ export enum TenantTenantType {
         populate: 'auth.groups.get',
         async onRemove({ ctx, entity }: FieldHookCallback) {
           await ctx.call('auth.groups.remove', { id: entity.authGroupId }, { meta: ctx?.meta });
-        },
-      },
-
-      tenantType: {
-        type: 'string',
-        enum: Object.values(TenantTenantType),
-        default: TenantTenantType.ORGANIZATION,
-      },
-
-      type: 'string',
-      legalForm: 'string',
-      address: 'string',
-      data: {
-        type: 'object',
-        properties: {
-          url: 'string',
-          foundedAt: 'date',
-          hasBeneficiaryStatus: 'boolean',
-          nonGovernmentalOrganization: 'boolean',
-          nonFormalEducation: 'boolean',
         },
       },
 
@@ -143,7 +116,7 @@ export enum TenantTenantType {
       },
       async user(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
         if (ctx?.meta?.user?.type === UserType.USER) {
-          const tenantsIds: number[] = await ctx.call('tenantUsers.findIdsByUserRecursive', {
+          const tenantsIds: number[] = await ctx.call('tenantUsers.findIdsByUser', {
             id: ctx.meta.user.id,
           });
 
@@ -158,11 +131,7 @@ export enum TenantTenantType {
               throwUnauthorizedError(`Cannot access this tenant with ID: ${params.id}`);
             }
           } else {
-            if (query.id) {
-              query.id = { $and: [{ id: query.id }, { id: { $in: tenantsIds } }] };
-            } else {
-              query.id = { $in: tenantsIds };
-            }
+            query.id = { $in: tenantsIds };
           }
         }
         return query;
@@ -212,7 +181,7 @@ export default class TenantsService extends moleculer.Service {
       parent?: number;
     }>,
   ) {
-    const { authGroup, update, name, phone, email } = ctx.params;
+    const { authGroup, update, name, phone, email, parent } = ctx.params;
     if (!authGroup || !authGroup.id) return;
 
     const tenant: Tenant = await ctx.call('tenants.findOne', {
@@ -223,96 +192,109 @@ export default class TenantsService extends moleculer.Service {
 
     if (!update && tenant && tenant.id) return tenant;
 
-    delete ctx.params.authGroup;
-
     const dataToSave = {
-      ...ctx.params,
       name: name || authGroup.name,
       email: email || authGroup.companyEmail,
       phone: phone || authGroup.companyPhone,
       code: authGroup.companyCode,
     };
 
-    if (tenant?.id) {
+    if (tenant && tenant.id) {
       return ctx.call('tenants.update', {
-        ...dataToSave,
         id: tenant.id,
+        ...dataToSave,
       });
     }
 
     return ctx.call('tenants.create', {
-      ...dataToSave,
       authGroup: authGroup.id,
+      parent,
+      ...dataToSave,
     });
   }
 
   @Action({
     rest: 'POST /',
     params: {
-      code: 'string',
-      name: 'string',
-      email: 'string',
-      phone: 'string',
-      user: {
-        type: 'object',
-        optional: true,
-        properties: {
-          personalCode: 'string|optional',
-          firstName: 'string',
-          lastName: 'string',
-          email: 'string',
-          phone: 'string',
-        },
-      },
+      personalCode: 'string|optional',
+      firstName: 'string|optional',
+      lastName: 'string|optional',
+      email: 'string|optional',
+      phone: 'string|optional',
+      companyName: 'string',
+      companyCode: 'string',
+      companyPhone: 'string',
+      companyEmail: 'string',
+      parent: 'number|optional|convert',
     },
     types: RestrictionType.ADMIN,
   })
   async invite(
     ctx: Context<
       {
-        code: string;
-        name: string;
-        email: string;
+        personalCode: any;
         phone: string;
-        user: {
-          personalCode: string;
-          phone: string;
-          email: string;
-          firstName: string;
-          lastName: string;
-        };
+        email: string;
+        companyCode: string;
+        companyName: string;
+        firstName: string;
+        lastName: string;
+        companyEmail: string;
+        companyPhone: string;
+        parent: number;
       },
       UserAuthMeta
     >,
   ) {
-    const { code, email, user: owner } = ctx.params;
+    const {
+      personalCode,
+      email,
+      companyCode,
+      companyName,
+      phone,
+      firstName,
+      lastName,
+      companyEmail,
+      companyPhone,
+      parent,
+    } = ctx.params;
 
-    const companyInviteData: any = { companyCode: code };
+    const authGroup: any = await ctx.call('auth.users.invite', { companyCode });
 
-    if (!owner?.email) {
-      companyInviteData.notify = [email];
-    }
-
-    const authGroup: any = await ctx.call('auth.users.invite', companyInviteData);
-
-    const tenant: Tenant = await ctx.call('tenants.findOrCreate', { ...ctx.params, authGroup });
-
-    let user: User & { url?: string };
-
-    if (owner?.email) {
-      user = await ctx.call('users.invite', {
-        ...owner,
+    if (personalCode) {
+      const authUser: any = await ctx.call('auth.users.invite', {
+        companyId: authGroup.id,
+        personalCode: personalCode,
         role: TenantUserRole.ADMIN,
-        tenantId: tenant.id,
-        throwErrors: false,
+        notify: [email],
       });
+
+      const user: User = await ctx.call('users.findOrCreate', {
+        authUser,
+        firstName,
+        lastName,
+        email,
+        phone,
+      });
+
+      const tenantUser: TenantUser = await ctx.call('tenantUsers.createRelationshipsIfNeeded', {
+        companyName,
+        authGroup,
+        companyEmail,
+        companyPhone,
+        userId: user.id,
+      });
+
+      return ctx.call('tenants.resolve', { id: tenantUser.tenant });
     }
 
-    if (user?.url) {
-      return { ...tenant, url: user.url };
-    }
-
-    return tenant;
+    return ctx.call('tenants.findOrCreate', {
+      authGroup: authGroup,
+      email: companyEmail,
+      phone: companyPhone,
+      name: companyName,
+      parent,
+    });
   }
 
   @Action({
@@ -332,10 +314,7 @@ export default class TenantsService extends moleculer.Service {
   ) {
     const { id } = ctx.params;
 
-    const tenant: Tenant = await ctx.call('tenants.get', { id });
-    if (!tenant) {
-      return throwNotFoundError('Tenant not found.');
-    }
+    const tenant: Tenant = await ctx.call('tenants.resolve', { id, throwIfNotExist: true });
 
     await ctx.call('tenantUsers.removeUsers', {
       tenantId: tenant.id,

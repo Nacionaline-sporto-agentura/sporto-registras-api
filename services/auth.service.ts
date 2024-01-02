@@ -178,7 +178,7 @@ export default class AuthService extends moleculer.Service {
   @Action({
     params: {
       authUser: 'any',
-      authUserGroups: 'array',
+      authUserGroups: 'array|optional',
     },
   })
   async createUserWithTenantsIfNeeded(ctx: Context<{ authUser: any; authUserGroups: any[] }>) {

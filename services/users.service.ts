@@ -388,13 +388,16 @@ export default class UsersService extends moleculer.Service {
         if (authGroupId) {
           inviteData.companyId = authGroupId;
           inviteData.role = data.role || TenantUserRole.USER;
-        } else {
         }
       } else {
         inviteData.firstName = data.firstName;
         inviteData.lastName = data.lastName;
         inviteData.email = data.email;
         inviteData.phone = data.phone;
+        if (authGroupId) {
+          inviteData.unassignExistingGroups = false;
+          inviteData.groups = [{ id: authGroupId, role: data.role || TenantUserRole.USER }];
+        }
       }
 
       return inviteData;

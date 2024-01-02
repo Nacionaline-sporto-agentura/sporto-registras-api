@@ -464,6 +464,7 @@ export default class UsersService extends moleculer.Service {
     params: {
       id: 'number|convert',
     },
+    auth: RestrictionType.ADMIN,
   })
   async impersonate(ctx: Context<{ id: number }, UserAuthMeta>) {
     const { id } = ctx.params;
@@ -614,6 +615,7 @@ export default class UsersService extends moleculer.Service {
       oldPassword: 'string|optional',
       tenantId: 'number|optional|convert',
     },
+    auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
   })
   async updateUser(
     ctx: Context<

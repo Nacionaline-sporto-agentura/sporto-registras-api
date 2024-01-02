@@ -11,7 +11,6 @@ import {
   CommonFields,
   FieldHookCallback,
   RestrictionType,
-  throwNotFoundError,
   throwUnauthorizedError,
 } from '../types';
 import { UserAuthMeta } from './api.service';
@@ -332,10 +331,7 @@ export default class TenantsService extends moleculer.Service {
   ) {
     const { id } = ctx.params;
 
-    const tenant: Tenant = await ctx.call('tenants.get', { id });
-    if (!tenant) {
-      return throwNotFoundError('Tenant not found.');
-    }
+    const tenant: Tenant = await ctx.call('tenants.resolve', { id, throwIfNotExist: true });
 
     await ctx.call('tenantUsers.removeUsers', {
       tenantId: tenant.id,

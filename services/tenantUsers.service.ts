@@ -202,7 +202,36 @@ export default class TenantUsersService extends moleculer.Service {
   @Action({
     params: {
       id: 'number|convert',
-      role: 'string|optional',
+    },
+  })
+  async findIdsByUserRecursive(ctx: Context<{ id: number }>) {
+    const tenantIds = await this.actions.findIdsByUser(ctx.params);
+
+    let parentIds = tenantIds;
+
+    while (parentIds.length) {
+      const childTenants: Tenant[] = await ctx.call('tenants.find', {
+        query: {
+          parent: { $in: parentIds },
+        },
+        scope: false,
+      });
+
+      const childIds = childTenants.map((t) => t.id);
+      tenantIds.push(...childIds);
+      parentIds = childIds;
+    }
+
+    return tenantIds;
+  }
+
+  @Action({
+    params: {
+      id: 'any', // number or object - {$in:[]}
+      role: {
+        type: 'string',
+        optional: true,
+      },
     },
   })
   async findIdsByTenant(ctx: Context<{ id: number; role?: string }>) {
@@ -608,15 +637,7 @@ export default class TenantUsersService extends moleculer.Service {
       fields: ['id', 'name', 'role'],
     });
 
-    return [
-      {
-        id: 'freelancer',
-        name: `${user.firstName} ${user.lastName}`,
-        freelancer: true,
-        email: user.email,
-      },
-      ...tenants,
-    ];
+    return tenants;
   }
 
   @Event()

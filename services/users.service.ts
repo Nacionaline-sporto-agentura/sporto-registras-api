@@ -8,7 +8,6 @@ import {
   COMMON_SCOPES,
   FieldHookCallback,
   RestrictionType,
-  throwNotFoundError,
   throwUnauthorizedError,
 } from '../types';
 
@@ -21,6 +20,10 @@ export enum UserType {
   ADMIN = 'ADMIN',
   USER = 'USER',
 }
+export enum UserAuthStrategy {
+  PASSWORD = 'PASSWORD',
+  EVARTAI = 'EVARTAI',
+}
 
 export interface User {
   id: number;
@@ -31,6 +34,7 @@ export interface User {
   phone: string;
   type: UserType;
   authUser: number;
+  authStrategy: string;
 }
 
 const VISIBLE_TO_USER_SCOPE = 'tenant';
@@ -112,6 +116,12 @@ export const USERS_DEFAULT_SCOPES = [
         default: UserType.USER,
       },
 
+      authStrategy: {
+        type: 'string',
+        enum: Object.values(UserAuthStrategy),
+        default: UserAuthStrategy.PASSWORD,
+      },
+
       profiles: {
         virtual: true,
         type: 'array',
@@ -149,12 +159,66 @@ export const USERS_DEFAULT_SCOPES = [
         },
       },
 
+      groups: {
+        virtual: true,
+        type: 'array',
+        populate: {
+          keyField: 'authUser',
+          handler: async (ctx: Context<null, UserAuthMeta>, values: number[]) => {
+            if (ctx?.meta?.user?.type !== UserType.ADMIN) {
+              return [];
+            }
+
+            return Promise.all(
+              values.map(async (value) => {
+                try {
+                  const authUser: any = await ctx.call('auth.users.get', {
+                    id: value,
+                    populate: 'groups',
+                  });
+                  return authUser?.groups || [];
+                } catch (e) {
+                  return value;
+                }
+              }),
+            );
+          },
+        },
+      },
+
       ...COMMON_FIELDS,
     },
     scopes: {
       ...COMMON_SCOPES,
-      admins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+      async admins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
         query.type = UserType.ADMIN;
+
+        const authUserIds = query?.authUser ? [query.authUser] : [];
+        if (ctx?.meta?.authUser?.type !== AuthUserRole.SUPER_ADMIN) {
+          const authUsers: any = await ctx.call('auth.users.list', {
+            query: {
+              type: { $in: [AuthUserRole.ADMIN, AuthUserRole.SUPER_ADMIN] },
+            },
+            pageSize: 10000,
+          });
+
+          authUserIds.push({ $in: authUsers?.rows?.map((u: any) => u.id) || [] });
+        }
+
+        if (query.group) {
+          const authGroup: any = await ctx.call('auth.groups.get', {
+            id: query.group,
+            populate: 'users',
+          });
+
+          authUserIds.push({ $in: authGroup?.users?.map((u: any) => u.id) || [] });
+          delete query.group;
+        }
+
+        if (authUserIds?.length) {
+          query.authUser = { $and: authUserIds };
+        }
+
         return query;
       },
       notAdmins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
@@ -163,10 +227,22 @@ export const USERS_DEFAULT_SCOPES = [
         return query;
       },
       async tenant(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
-        let tenantId: number;
+        let tenantId: any;
 
         if (ctx?.meta?.profile?.id) {
           tenantId = ctx.meta.profile.id;
+          if (query.tenant) {
+            const tenants: Tenant[] = await ctx.call('tenants.find', {
+              query: {
+                id: query.tenant,
+              },
+              scope: '-noParent',
+            });
+
+            tenantId = { $in: tenants.map((t) => t.id) };
+
+            delete query.tenant;
+          }
         } else if (ctx?.meta?.user?.type === UserType.ADMIN) {
           tenantId = query.tenant;
           delete query.tenant;
@@ -264,6 +340,11 @@ export default class UsersService extends moleculer.Service {
         optional: true,
         default: TenantUserRole.USER,
       },
+      throwErrors: {
+        type: 'boolean',
+        optional: true,
+        default: true,
+      },
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
   })
@@ -277,12 +358,15 @@ export default class UsersService extends moleculer.Service {
         phone?: string;
         role?: TenantUserRole;
         tenantId?: number;
+        throwErrors: boolean;
       },
       UserAuthMeta
     >,
   ) {
-    const { personalCode, role, tenantId } = ctx.params;
-    const { profile, user: authenticatedUser } = ctx.meta;
+    const { personalCode, role, throwErrors } = ctx.params;
+    const { profile } = ctx.meta;
+    let authGroupId: number;
+    let { tenantId } = ctx.params;
 
     function getInviteData(data: {
       firstName: string;
@@ -295,13 +379,14 @@ export default class UsersService extends moleculer.Service {
     }) {
       const inviteData: any = {
         apps: [ctx.meta?.app?.id],
+        throwErrors,
       };
 
       if (data.personalCode) {
         inviteData.personalCode = data.personalCode;
         inviteData.notify = [data.email];
-        if (data?.tenantId) {
-          inviteData.companyId = data.tenantId;
+        if (authGroupId) {
+          inviteData.companyId = authGroupId;
           inviteData.role = data.role || TenantUserRole.USER;
         } else {
         }
@@ -317,27 +402,17 @@ export default class UsersService extends moleculer.Service {
 
     let authUser: any;
 
-    let authGroupId;
-    if (profile?.id) {
-      ctx.params.tenantId = profile.authGroup;
+    if (profile?.id && !tenantId) {
+      tenantId = profile.id;
       authGroupId = profile.authGroup;
     }
 
-    let tenant: Tenant;
     if (tenantId) {
-      tenant = await ctx.call('tenants.resolve', {
+      const tenant: Tenant = await ctx.call('tenants.resolve', {
         id: tenantId,
+        throwIfNotExist: true,
       });
 
-      if (authenticatedUser?.type !== UserType.ADMIN || !tenant?.id) {
-        throw new moleculer.Errors.MoleculerClientError(
-          'Cannot assign user to tenant.',
-          401,
-          'UNAUTHORIZED',
-        );
-      }
-
-      ctx.params.tenantId = tenant.authGroup;
       authGroupId = tenant.authGroup;
     }
 
@@ -356,6 +431,7 @@ export default class UsersService extends moleculer.Service {
       lastName: ctx.params.lastName,
       email: ctx.params.email,
       phone: ctx.params.phone,
+      authStrategy: userWithPassword ? UserAuthStrategy.PASSWORD : UserAuthStrategy.EVARTAI,
     });
 
     if (authGroupId && !userWithPassword) {
@@ -426,6 +502,7 @@ export default class UsersService extends moleculer.Service {
       email: 'string|optional',
       phone: 'string|optional',
       type: 'string|optional',
+      authStrategy: 'string|optional',
     },
   })
   async findOrCreate(
@@ -437,9 +514,10 @@ export default class UsersService extends moleculer.Service {
       phone?: string;
       type?: string;
       update?: boolean;
+      authStrategy?: string;
     }>,
   ) {
-    const { authUser, update, firstName, lastName, email, phone, type } = ctx.params;
+    const { authUser, update, firstName, lastName, email, phone, type, authStrategy } = ctx.params;
     if (!authUser || !authUser.id) return;
 
     const scope = COMMON_DEFAULT_SCOPES;
@@ -465,6 +543,7 @@ export default class UsersService extends moleculer.Service {
       type: authUserIsAdmin ? UserType.ADMIN : UserType.USER,
       email: email || authUser.email,
       phone: phone || authUser.phone,
+      authStrategy: authStrategy || UserAuthStrategy.PASSWORD,
     };
 
     // let user to customize his phone and email
@@ -532,6 +611,8 @@ export default class UsersService extends moleculer.Service {
       phone: 'string|optional',
       firstName: 'string|optional',
       lastName: 'string|optional',
+      password: 'string|optional',
+      oldPassword: 'string|optional',
       tenantId: 'number|optional|convert',
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
@@ -546,6 +627,8 @@ export default class UsersService extends moleculer.Service {
         lastName: string;
         phone: string;
         tenantId: number;
+        password: string;
+        oldPassword: string;
       },
       UserAuthMeta
     >,
@@ -553,10 +636,18 @@ export default class UsersService extends moleculer.Service {
     const { profile } = ctx.meta;
     const { id, email, phone, role, tenantId, firstName, lastName } = ctx.params;
 
-    const userToUpdate: User = await ctx.call('users.resolve', { id });
+    const userToUpdate: User = await ctx.call('users.resolve', { id, throwIfNotExist: true });
 
-    if (!userToUpdate) {
-      return throwNotFoundError('User not found.');
+    if (userToUpdate.authStrategy === UserAuthStrategy.PASSWORD) {
+      await ctx.call('auth.users.update', {
+        id: userToUpdate.authUser,
+        email,
+        firstName,
+        lastName,
+        password: ctx.params.password,
+        oldPassword: ctx.params.oldPassword,
+        phone,
+      });
     }
 
     if (role) {

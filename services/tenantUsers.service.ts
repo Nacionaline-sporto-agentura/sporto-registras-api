@@ -3,6 +3,7 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Event, Service } from 'moleculer-decorators';
 
+import _ from 'lodash';
 import DbConnection from '../mixins/database.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
@@ -100,8 +101,6 @@ export default class TenantUsersService extends moleculer.Service {
   @Action({
     params: {
       id: 'number|convert',
-      filter: 'any|optional',
-      query: 'any|optional',
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_USER],
 
@@ -111,23 +110,21 @@ export default class TenantUsersService extends moleculer.Service {
       basePath: '/',
     },
   })
-  async findByTenant(ctx: Context<{ id: number; query?: any; filter?: any }, UserAuthMeta>) {
-    const { id, query, filter } = ctx.params;
+  async findByTenant(ctx: Context<{ id: number }, UserAuthMeta>) {
+    const { id } = ctx.params;
     const tenant: Tenant = await ctx.call('tenants.resolve', { id, throwIfNotExist: true });
 
-    return ctx.call(
-      'users.list',
-      {
-        query,
-        filter,
-        populate: 'role',
+    delete ctx.params.id;
+
+    const params = _.merge({}, ctx.params || {}, {
+      populate: 'role',
+    });
+
+    return ctx.call('users.list', params, {
+      meta: {
+        profile: ctx.meta.profile || tenant,
       },
-      {
-        meta: {
-          profile: ctx.meta.profile || tenant,
-        },
-      },
-    );
+    });
   }
 
   @Action({

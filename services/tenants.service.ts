@@ -3,6 +3,7 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 
+import _ from 'lodash';
 import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
@@ -342,5 +343,29 @@ export default class TenantsService extends moleculer.Service {
     return {
       success: true,
     };
+  }
+
+  @Action({
+    rest: 'GET /organizations',
+  })
+  async listOrganizations(ctx: Context<{}>) {
+    const params = _.merge({}, ctx.params || {}, {
+      scope: '-noParent',
+      query: { tenantType: TenantTenantType.ORGANIZATION },
+    });
+
+    return ctx.call('tenants.list', params);
+  }
+
+  @Action({
+    rest: 'GET /institutions',
+  })
+  async listInstitutions(ctx: Context<{}>) {
+    const params = _.merge({}, ctx.params || {}, {
+      scope: '-noParent',
+      query: { tenantType: { $in: [TenantTenantType.MUNICIPALITY] } },
+    });
+
+    return ctx.call('tenants.list', params);
   }
 }

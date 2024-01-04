@@ -100,21 +100,24 @@ export default class TenantUsersService extends moleculer.Service {
   }
   @Action({
     params: {
-      id: 'number|convert',
+      tenantId: 'number|convert',
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_USER],
 
     rest: {
       method: 'GET',
-      path: '/tenants/:id/users',
+      path: '/tenants/:tenantId/users',
       basePath: '/',
     },
   })
-  async findByTenant(ctx: Context<{ id: number }, UserAuthMeta>) {
-    const { id } = ctx.params;
-    const tenant: Tenant = await ctx.call('tenants.resolve', { id, throwIfNotExist: true });
+  async findByTenant(ctx: Context<{ tenantId: number }, UserAuthMeta>) {
+    const { tenantId } = ctx.params;
+    const tenant: Tenant = await ctx.call('tenants.resolve', {
+      id: tenantId,
+      throwIfNotExist: true,
+    });
 
-    delete ctx.params.id;
+    delete ctx.params.tenantId;
 
     const params = _.merge({}, ctx.params || {}, {
       populate: 'role',
@@ -122,7 +125,7 @@ export default class TenantUsersService extends moleculer.Service {
 
     return ctx.call('users.list', params, {
       meta: {
-        profile: ctx.meta.profile || tenant,
+        profile: tenant,
       },
     });
   }
@@ -130,36 +133,34 @@ export default class TenantUsersService extends moleculer.Service {
   @Action({
     params: {
       id: 'number|convert',
-      userId: 'number|convert',
+      tenantId: 'number|convert',
     },
     auth: [RestrictionType.ADMIN, RestrictionType.TENANT_USER],
 
     rest: {
       method: 'GET',
-      path: '/tenants/:id/users/:userId',
+      path: '/tenants/:tenantId/users/:id',
       basePath: '/',
     },
   })
-  async getByTenant(
-    ctx: Context<{ id: number; userId: number; query?: any; filter?: any }, UserAuthMeta>,
-  ) {
-    const { id, query, filter, userId } = ctx.params;
-    const tenant: Tenant = await ctx.call('tenants.resolve', { id, throwIfNotExist: true });
+  async getByTenant(ctx: Context<{ tenantId: number; id: number }, UserAuthMeta>) {
+    const { tenantId } = ctx.params;
+    const tenant: Tenant = await ctx.call('tenants.resolve', {
+      id: tenantId,
+      throwIfNotExist: true,
+    });
 
-    return ctx.call(
-      'users.get',
-      {
-        id: userId,
-        query,
-        filter,
-        populate: 'role',
+    delete ctx.params.tenantId;
+
+    const params = _.merge({}, ctx.params || {}, {
+      populate: 'role',
+    });
+
+    return ctx.call('users.get', params, {
+      meta: {
+        profile: tenant,
       },
-      {
-        meta: {
-          profile: ctx.meta.profile || tenant,
-        },
-      },
-    );
+    });
   }
 
   @Action({

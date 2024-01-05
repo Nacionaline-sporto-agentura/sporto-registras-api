@@ -178,7 +178,7 @@ export enum TenantTenantType {
     },
 
     update: {
-      auth: [RestrictionType.ADMIN, RestrictionType.TENANT_ADMIN],
+      auth: [RestrictionType.ADMIN, RestrictionType.TENANT_USER],
     },
 
     remove: {
@@ -253,6 +253,7 @@ export default class TenantsService extends moleculer.Service {
       name: 'string',
       email: 'string',
       phone: 'string',
+      parent: 'number|optional|convert',
       user: {
         type: 'object',
         optional: true,
@@ -265,7 +266,7 @@ export default class TenantsService extends moleculer.Service {
         },
       },
     },
-    types: RestrictionType.ADMIN,
+    auth: [RestrictionType.ADMIN, RestrictionType.TENANT_USER],
   })
   async invite(
     ctx: Context<
@@ -274,13 +275,14 @@ export default class TenantsService extends moleculer.Service {
         name: string;
         email: string;
         phone: string;
-        user: {
+        user?: {
           personalCode: string;
           phone: string;
           email: string;
           firstName: string;
           lastName: string;
         };
+        parent?: number;
       },
       UserAuthMeta
     >,
@@ -291,6 +293,17 @@ export default class TenantsService extends moleculer.Service {
 
     if (!owner?.email) {
       companyInviteData.notify = [email];
+    }
+
+    // pre-assign & validate parent for users
+    if (ctx?.meta?.user?.type === UserType.USER) {
+      const { parent: tenantId } = ctx.params;
+      if (!tenantId) {
+        ctx.params.parent = ctx.meta.profile.id;
+      } else {
+        // validates if user accesses this tenant
+        await ctx.call('tenants.resolve', { id: tenantId, throwIfNotExist: true });
+      }
     }
 
     const authGroup: any = await ctx.call('auth.users.invite', companyInviteData);
@@ -320,7 +333,7 @@ export default class TenantsService extends moleculer.Service {
     params: {
       id: 'number|convert',
     },
-    types: RestrictionType.ADMIN,
+    auth: [RestrictionType.ADMIN, RestrictionType.TENANT_USER],
   })
   async removeTenant(
     ctx: Context<

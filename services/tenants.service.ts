@@ -48,7 +48,6 @@ export enum TenantTenantType {
         primaryKey: true,
         secure: true,
       },
-
       name: 'string',
 
       email: 'string',

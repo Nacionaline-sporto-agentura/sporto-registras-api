@@ -24,11 +24,11 @@ jobs:
           environment: development
           push: true
 
-      # - name: Trigger deploy
-      #   uses: AplinkosMinisterija/reusable-workflows/.github/actions/trigger-workflow-and-wait@main
-      #   with:
-      #     application-id: ${{ secrets.SPORTO_REGISTRAS_TRIGGER_DEPLOY_APPLICATION_ID }}
-      #     application-private-key: ${{ secrets.SPORTO_REGISTRAS_TRIGGER_DEPLOY_APPLICATION_PRIVATE_KEY }}
-      #     repository: ${{ secrets.SPORTO_REGISTRAS_TRIGGER_DEPLOY_REPOSITORY }}
-      #     workflow-file-name: ${{ secrets.SPORTO_REGISTRAS_TRIGGER_DEPLOY_WORKFLOW_FILE_NAME }}
-      #     workflow-payload: '{"environment": "development"}'
+      - name: Trigger deploy
+        uses: AplinkosMinisterija/reusable-workflows/.github/actions/trigger-workflow-and-wait@main
+        with:
+          application-id: ${{ secrets.SPORTO_REGISTRAS_TRIGGER_DEPLOY_APPLICATION_ID }}
+          application-private-key: ${{ secrets.SPORTO_REGISTRAS_TRIGGER_DEPLOY_APPLICATION_PRIVATE_KEY }}
+          repository: ${{ secrets.SPORTO_REGISTRAS_TRIGGER_DEPLOY_REPOSITORY }}
+          workflow-file-name: ${{ secrets.SPORTO_REGISTRAS_TRIGGER_DEPLOY_WORKFLOW_FILE_NAME }}
+          workflow-payload: '{"environment": "development"}'

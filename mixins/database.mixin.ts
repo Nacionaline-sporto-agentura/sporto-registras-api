@@ -102,8 +102,20 @@ export default function (opts: any = {}) {
         return this.findEntity(ctx);
       },
 
+      async updateMany(ctx: any) {
+        const updatedItems = await Promise.all(
+          ctx.params.map(async (item: any) => await this.updateEntity(ctx, { ...item })),
+        );
+
+        return updatedItems;
+      },
+
+      async removeMany(ctx: any) {
+        return this.removeEntities(ctx);
+      },
+
       async removeAllEntities(ctx: any) {
-        return await this.clearEntities(ctx);
+        return this.clearEntities(ctx);
       },
 
       async populateByProp(

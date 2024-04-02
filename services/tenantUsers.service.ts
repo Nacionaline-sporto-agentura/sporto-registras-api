@@ -47,7 +47,6 @@ export interface TenantUser extends CommonFields {
         primaryKey: true,
         secure: true,
       },
-
       tenant: {
         type: 'number',
         columnName: 'tenantId',

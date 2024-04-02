@@ -13,8 +13,8 @@ import {
 
 import DbConnection from '../mixins/database.mixin';
 import { AuthUserRole, UserAuthMeta } from './api.service';
-import { TenantUserRole } from './tenantUsers.service';
 import { Tenant } from './tenants.service';
+import { TenantUserRole } from './tenantUsers.service';
 
 export enum UserType {
   ADMIN = 'ADMIN',
@@ -71,7 +71,6 @@ export const USERS_DEFAULT_SCOPES = [
         primaryKey: true,
         secure: true,
       },
-
       authUser: {
         type: 'number',
         columnType: 'integer',
@@ -95,33 +94,27 @@ export const USERS_DEFAULT_SCOPES = [
           );
         },
       },
-
       firstName: 'string',
       lastName: 'string',
       phone: 'string',
-
       email: {
         type: 'email',
         set: ({ value }: FieldHookCallback) => value?.toLowerCase().trim(),
       },
-
       fullName: {
         type: 'string',
         readonly: true,
       },
-
       type: {
         type: 'string',
         enum: Object.values(UserType),
         default: UserType.USER,
       },
-
       authStrategy: {
         type: 'string',
         enum: Object.values(UserAuthStrategy),
         default: UserAuthStrategy.PASSWORD,
       },
-
       profiles: {
         virtual: true,
         type: 'array',
@@ -142,7 +135,6 @@ export const USERS_DEFAULT_SCOPES = [
           );
         },
       },
-
       role: {
         virtual: true,
         type: 'string',
@@ -158,7 +150,6 @@ export const USERS_DEFAULT_SCOPES = [
           );
         },
       },
-
       groups: {
         virtual: true,
         type: 'array',
@@ -185,7 +176,6 @@ export const USERS_DEFAULT_SCOPES = [
           },
         },
       },
-
       ...COMMON_FIELDS,
     },
     scopes: {

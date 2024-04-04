@@ -136,9 +136,6 @@ export const ONLY_GET_REST_ENABLED: { [key: string]: { rest: any } } = {
   remove: {
     rest: null,
   },
-  find: {
-    rest: null,
-  },
   count: {
     rest: null,
   },

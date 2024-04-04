@@ -77,6 +77,7 @@ export enum AuthUserRole {
 
     routes: [
       {
+        path: '/api',
         whitelist: [
           // Access to any actions in all services under "/api" URL
           '**',

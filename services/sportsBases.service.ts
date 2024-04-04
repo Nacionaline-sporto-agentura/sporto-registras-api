@@ -19,6 +19,7 @@ import {
 } from '../types';
 
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
+import { UserAuthMeta } from './api.service';
 import { RequestEntityTypes, RequestStatus } from './requests.service';
 import { SportsBasesBuildingType } from './sportsBases.buildingTypes.service';
 import { SportBaseInvestment } from './sportsBases.investments.service';
@@ -291,24 +292,33 @@ export type SportsBase<
         type: 'boolean',
         populate: {
           keyField: 'id',
-          async handler(ctx: Context<{ populate: string | string[] }>, values: any[], docs: any[]) {
+          async handler(
+            ctx: Context<{ populate: string | string[] }, UserAuthMeta>,
+            values: any[],
+            docs: any[],
+          ) {
             const params = {
               id: values,
               sort: '-createdAt',
               queryKey: 'entity',
               mapping: true,
               mappingMulti: false,
-              mappingField: 'status',
             };
             const byKey: any = await ctx.call('requests.populateByProp', params);
+            const { user, profile } = ctx?.meta;
 
             return docs?.map((d) => {
               const fieldValue = d.id;
               if (!fieldValue) return false;
-              return (
-                !!byKey[fieldValue] &&
-                [RequestStatus.APPROVED, RequestStatus.REJECTED].includes(byKey[fieldValue])
-              );
+              const request = byKey[fieldValue];
+
+              const { tenant } = request;
+              const isCreatedByUser = !tenant && user?.id === request.createdBy;
+              const isCreatedByTenant = profile?.id === tenant;
+
+              if (!isCreatedByTenant && !isCreatedByUser) return false;
+
+              return [RequestStatus.APPROVED, RequestStatus.REJECTED].includes(request.status);
             });
           },
         },

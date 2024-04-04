@@ -276,6 +276,7 @@ export type SportsBase<
           keyField: 'id',
           handler: PopulateHandlerFn('requests.populateByProp'),
           params: {
+            queryKey: 'entity',
             query: {
               entityType: RequestEntityTypes.SPORTS_BASES,
             },

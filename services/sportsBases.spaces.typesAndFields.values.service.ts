@@ -6,8 +6,10 @@ import DbConnection from '../mixins/database.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
+  COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  ONLY_GET_REST_ENABLED,
   Table,
 } from '../types';
 
@@ -29,6 +31,7 @@ export type SportsBasesSpacesTypesAndFieldsValues<
   mixins: [
     DbConnection({
       collection: 'sportsBasesSpacesTypesAndFieldsValues',
+      rest: false,
     }),
   ],
   settings: {
@@ -56,25 +59,16 @@ export type SportsBasesSpacesTypesAndFieldsValues<
       value: 'any|required',
       ...COMMON_FIELDS,
     },
+
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
+    scopes: { ...COMMON_SCOPES },
   },
   actions: {
+    ...ONLY_GET_REST_ENABLED,
     get: {
       rest: null,
     },
-    find: {
-      rest: null,
-    },
     list: {
-      rest: null,
-    },
-    create: {
-      rest: null,
-    },
-    update: {
-      rest: null,
-    },
-    remove: {
       rest: null,
     },
   },

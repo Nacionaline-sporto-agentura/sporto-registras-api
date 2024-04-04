@@ -10,10 +10,11 @@ import {
   CommonFields,
   CommonPopulates,
   FieldHookCallback,
+  GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
+  ONLY_GET_REST_ENABLED,
   Table,
   throwValidationError,
 } from '../types';
-import { UserAuthMeta } from './api.service';
 import { SportsBasesBuildingType } from './sportsBases.buildingTypes.service';
 import { SportsBase } from './sportsBases.service';
 import { FieldTypes } from './sportsBases.spaces.fields.service';
@@ -21,13 +22,13 @@ import { SportBaseSpaceSportType } from './sportsBases.spaces.sportTypes.service
 import { SportBaseSpaceTypeAndField } from './sportsBases.spaces.typesAndFields.service';
 import { SportsBasesSpacesTypesAndFieldsValues } from './sportsBases.spaces.typesAndFields.values.service';
 import { SportsBasesType } from './sportsBases.types.service';
-import { UserType } from './users.service';
 
 interface Fields extends CommonFields {
   id: number;
   name: string;
+  technicalCondition: any;
   type: SportsBasesType['id'];
-  sportType: SportBaseSpaceSportType['id'][];
+  sportTypes: SportBaseSpaceSportType['id'][];
   sportBase: SportsBase;
   buildingType: SportsBasesBuildingType['id'];
   buildingNumber: string;
@@ -43,7 +44,12 @@ interface Fields extends CommonFields {
   };
 }
 
-interface Populates extends CommonPopulates {}
+interface Populates extends CommonPopulates {
+  technicalCondition: any;
+  type: SportsBasesType;
+  sportTypes: SportBaseSpaceSportType[];
+  buildingType: SportsBasesBuildingType;
+}
 
 export type SportBaseSpace<
   P extends keyof Populates = never,
@@ -70,14 +76,24 @@ export type SportBaseSpace<
         columnName: 'technicalConditionId',
         immutable: true,
         required: true,
-        populate: 'sportsBases.technicalConditions.resolve',
+        populate: {
+          action: 'sportsBases.technicalConditions.resolve',
+          params: {
+            fields: 'id,name',
+          },
+        },
       },
       type: {
         type: 'number',
         columnName: 'typeId',
         immutable: true,
         optional: true,
-        populate: 'sportsBases.spaces.types.resolve',
+        populate: {
+          action: 'sportsBases.spaces.types.resolve',
+          params: {
+            fields: 'id,type,name',
+          },
+        },
       },
       sportTypes: {
         type: 'array',
@@ -86,6 +102,9 @@ export type SportBaseSpace<
         items: { type: 'number' },
         populate: {
           action: 'sportsBases.spaces.sportTypes.resolve',
+          params: {
+            fields: 'id,name',
+          },
         },
       },
       sportBase: {
@@ -93,14 +112,19 @@ export type SportBaseSpace<
         columnName: 'sportBaseId',
         immutable: true,
         optional: true,
-        populate: 'sportsBase.resolve',
+        populate: 'sportsBases.resolve',
       },
       buildingType: {
         type: 'number',
         columnName: 'buildingTypeId',
         immutable: true,
         required: true,
-        populate: 'sportsBases.buildingTypes.resolve',
+        populate: {
+          action: 'sportsBases.buildingTypes.resolve',
+          params: {
+            fields: 'id,name',
+          },
+        },
       },
       buildingNumber: {
         type: 'string',
@@ -170,41 +194,13 @@ export type SportBaseSpace<
           return sportsBasesSpaces.map((sportBaseSpace) => mappedValues[sportBaseSpace.id]);
         },
       },
-      scopes: {
-        ...COMMON_SCOPES,
-        visibleToUser(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
-          const { user, profile } = ctx?.meta;
-          if (!user?.id) return query;
-
-          const createdByUserQuery = {
-            createdBy: user?.id,
-            tenant: { $exists: false },
-          };
-
-          if (profile?.id) {
-            return { ...query, tenant: profile.id };
-          } else if (user.type === UserType.USER || query.createdBy === user.id) {
-            return { ...query, ...createdByUserQuery };
-          }
-
-          return query;
-        },
-      },
       ...COMMON_FIELDS,
     },
-    defaultScopes: [...COMMON_DEFAULT_SCOPES, 'visibleToUser'],
+
+    defaultScopes: [...COMMON_DEFAULT_SCOPES],
+    scopes: { ...COMMON_SCOPES },
   },
-  actions: {
-    create: {
-      rest: null,
-    },
-    update: {
-      rest: null,
-    },
-    remove: {
-      rest: null,
-    },
-  },
+  actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
   hooks: {
     before: {
       remove: ['beforeRemove'],
@@ -212,9 +208,7 @@ export type SportBaseSpace<
   },
 })
 export default class SportsBasesService extends moleculer.Service {
-  @Action({
-    rest: 'POST /',
-  })
+  @Action()
   async createSportBaseSpace(
     ctx: Context<{
       additionalValues?: { [key: number]: any };
@@ -246,9 +240,7 @@ export default class SportsBasesService extends moleculer.Service {
     return { success: true };
   }
 
-  @Action({
-    rest: 'PATCH /:id',
-  })
+  @Action()
   async updateBaseSpace(
     ctx: Context<{
       id: number;

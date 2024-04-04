@@ -6,8 +6,11 @@ import DbConnection from '../mixins/database.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
+  COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
+  ONLY_GET_REST_ENABLED,
   Table,
 } from '../types';
 import { SportsBase } from './sportsBases.service';
@@ -70,18 +73,10 @@ export type SportsBaseTenant<
       },
       ...COMMON_FIELDS,
     },
+
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
+    scopes: { ...COMMON_SCOPES },
   },
-  actions: {
-    create: {
-      rest: null,
-    },
-    update: {
-      rest: null,
-    },
-    remove: {
-      rest: null,
-    },
-  },
+  actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
 export default class SportsBasesTenantsService extends moleculer.Service {}

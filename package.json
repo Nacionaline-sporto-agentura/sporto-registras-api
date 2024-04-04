@@ -25,6 +25,7 @@
     "@aplinkosministerija/biip-prettier-config": "^1.1.0",
     "@aplinkosministerija/eslint-config-biip-api": "^1.0.0",
     "@types/lodash": "^4.14.191",
+    "@types/mime-types": "^2.1.4",
     "@types/node": "^20.10.5",
     "@types/qs": "^6.9.9",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
@@ -43,15 +44,19 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@moleculer/database": "github:ambrazasp/moleculerjs-database",
     "biip-auth-nodejs": "github:DadPatch/biip-auth-nodejs",
     "dotenv": "^16.0.3",
+    "fast-json-patch": "^3.1.1",
     "ioredis": "^5.3.1",
     "knex": "^3.0.1",
     "lodash": "^4.17.21",
+    "mime-types": "^2.1.35",
     "moleculer": "^0.14.32",
     "moleculer-db": "^0.8.23",
     "moleculer-decorators": "^1.3.0",
+    "moleculer-minio": "github:zeckon/moleculer-minio",
     "moleculer-web": "^0.10.5",
     "objection": "^3.0.1",
     "pg": "^8.10.0"

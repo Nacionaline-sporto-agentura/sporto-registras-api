@@ -1,26 +1,45 @@
 'use strict';
-import moleculer from 'moleculer';
-import { Method, Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import { faker } from '@faker-js/faker';
+import moleculer, { Context } from 'moleculer';
+import { Action, Method, Service } from 'moleculer-decorators';
+import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
 
+import _ from 'lodash';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
+  COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
   FieldHookCallback,
+  ONLY_GET_REST_ENABLED,
+  TENANT_FIELD,
   Table,
 } from '../types';
+
+import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
+import { RequestEntityTypes } from './requests.service';
+import { SportsBasesBuildingType } from './sportsBases.buildingTypes.service';
+import { SportBaseInvestment } from './sportsBases.investments.service';
+import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
 import { SportsBasesLevel } from './sportsBases.levels.service';
-import { SportsBasesCondition } from './sportsBases.technicalConditions.service';
+import { SportsBaseOwner } from './sportsBases.owners.service';
+import { SportBaseSpace } from './sportsBases.spaces.service';
+import { SportBaseSpaceSportType } from './sportsBases.spaces.sportTypes.service';
+import { SportBaseSpaceType } from './sportsBases.spaces.types.service';
+import SportsBasesTechnicalConditionsService, {
+  SportsBasesTechicalCondition,
+} from './sportsBases.technicalConditions.service';
+import { SportsBaseTenant } from './sportsBases.tenants.service';
 import { SportsBasesType } from './sportsBases.types.service';
+import { Tenant } from './tenants.service';
 
 interface Fields extends CommonFields {
   id: number;
   name: string;
   type: SportsBasesType['id'];
   level: SportsBasesLevel['id'];
-  technicalCondition: SportsBasesCondition['id'];
+  technicalCondition: SportsBasesTechicalCondition['id'];
   address: string;
   coordinates: {
     x: number;
@@ -52,9 +71,22 @@ interface Fields extends CommonFields {
     name?: string;
     size?: number;
   }>;
+  spaces: undefined;
+  investments: undefined;
+  owners: undefined;
+  tenants: undefined;
+  tenant: Tenant['id'];
+  lastRequest: undefined;
 }
 
-interface Populates extends CommonPopulates {}
+interface Populates extends CommonPopulates {
+  spaces: SportBaseSpace<'technicalCondition' | 'type' | 'sportTypes' | 'buildingType'>[];
+  lastRequest: Request;
+  investments: SportBaseInvestment<'source'>[];
+  owners: SportsBaseOwner<'user' | 'tenant'>[];
+  tenants: SportsBaseTenant<'tenant'>[];
+  tenant: Tenant;
+}
 
 export type SportsBase<
   P extends keyof Populates = never,
@@ -154,24 +186,105 @@ export type SportsBase<
             size: 'number',
           },
         },
-        min: 1,
-        required: true,
+        min: 0,
+        default: [],
       },
+
+      spaces: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('sportsBases.spaces.populateByProp'),
+          params: {
+            queryKey: 'sportBase',
+            mappingMulti: true,
+            populate: ['technicalCondition', 'type', 'sportTypes', 'buildingType'],
+            sort: 'name',
+          },
+        },
+      },
+
+      investments: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('sportsBases.investments.populateByProp'),
+          params: {
+            queryKey: 'sportBase',
+            mappingMulti: true,
+            populate: ['source'],
+            sort: '-createdAt',
+          },
+        },
+      },
+
+      owners: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('sportsBases.owners.populateByProp'),
+          params: {
+            queryKey: 'sportBase',
+            mappingMulti: true,
+            populate: ['user', 'tenant'],
+            sort: '-createdAt',
+          },
+        },
+      },
+
+      tenants: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('sportsBases.tenants.populateByProp'),
+          params: {
+            queryKey: 'sportBase',
+            mappingMulti: true,
+            populate: ['tenant'],
+            sort: '-createdAt',
+          },
+        },
+      },
+
+      lastRequest: {
+        virtual: true,
+        type: 'object',
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('requests.populateByProp'),
+          params: {
+            queryKey: 'entity',
+            query: {
+              entityType: RequestEntityTypes.SPORTS_BASES,
+            },
+            mappingMulti: false,
+            sort: '-createdAt',
+          },
+        },
+      },
+      ...TENANT_FIELD,
       ...COMMON_FIELDS,
     },
-    defaultScopes: [...COMMON_DEFAULT_SCOPES],
-  },
-  actions: {
-    create: {
-      rest: null,
-    },
-    update: {
-      rest: null,
-    },
-    remove: {
-      rest: null,
+    defaultScopes: [...COMMON_DEFAULT_SCOPES, ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.names],
+    scopes: {
+      ...COMMON_SCOPES,
+      ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.scopes,
     },
   },
+  actions: ONLY_GET_REST_ENABLED,
 })
 export default class SportsBasesService extends moleculer.Service {
   @Method
@@ -187,5 +300,124 @@ export default class SportsBasesService extends moleculer.Service {
       }
     }
     return true;
+  }
+
+  @Action()
+  async fakeData(ctx: Context) {
+    const sportsBasesTypes: SportsBasesType[] = await ctx.call('sportsBases.types.find');
+    const sportsBasesLevels: SportsBasesLevel[] = await ctx.call('sportsBases.levels.find');
+    const sportsBasesTechnicalConditions: SportsBasesTechnicalConditionsService[] = await ctx.call(
+      'sportsBases.technicalConditions.find',
+    );
+    const sportsBasesSpacesTypes: SportBaseSpaceType[] = await ctx.call(
+      'sportsBases.spaces.types.find',
+    );
+    const sportsBasesSpacesSportTypes: SportBaseSpaceSportType[] = await ctx.call(
+      'sportsBases.spaces.sportTypes.find',
+    );
+
+    const sportsBasesBuildingTypes: SportsBasesBuildingType[] = await ctx.call(
+      'sportsBases.buildingTypes.find',
+    );
+
+    const sportsBasesInvestmentsSources: SportBaseInvestmentSource[] = await ctx.call(
+      'sportsBases.investments.sources.find',
+    );
+
+    function randomArray(length: number, cb: Function) {
+      return Array.apply(null, Array(faker.number.int({ min: 1, max: length }))).map(cb);
+    }
+
+    function getPhotos() {
+      return randomArray(5, (_: any, index: number) => ({
+        url: faker.image.url(),
+        description: faker.lorem.word(),
+        representative: index === 0,
+        public: faker.datatype.boolean(),
+      }));
+    }
+
+    return randomArray(3, () => ({
+      name: faker.lorem.words({ min: 1, max: 3 }),
+      type: faker.helpers.arrayElement(sportsBasesTypes).id,
+      level: faker.helpers.arrayElement(sportsBasesLevels).id,
+      technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions).id,
+      address: faker.location.streetAddress(),
+      coordinates: {
+        x: faker.number.float({ min: 53, max: 55 }),
+        y: faker.number.float({ min: 24, max: 27 }),
+      },
+      webPage: faker.internet.url(),
+      photos: getPhotos(),
+      plotNumber: `${faker.number.int(10000)}`,
+      disabledAccessible: faker.datatype.boolean(),
+      blindAccessible: faker.datatype.boolean(),
+      plotArea: faker.number.int(1000),
+      builtPlotArea: faker.number.int(1000),
+      audienceSeats: faker.number.int(1000),
+      parkingPlaces: faker.number.int(1000),
+      dressingRooms: faker.number.int(10),
+      methodicalClasses: faker.number.int(10),
+      saunas: faker.number.int(10),
+      diningPlaces: faker.number.int(5),
+      accommodationPlaces: faker.number.int(100),
+      publicWifi: faker.datatype.boolean(),
+      spaces: randomArray(3, () => ({
+        name: faker.lorem.words({ min: 1, max: 3 }),
+        technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions).id,
+        type: faker.helpers.arrayElement(sportsBasesSpacesTypes).id,
+        buildingType: faker.helpers.arrayElement(sportsBasesBuildingTypes).id,
+        sportTypes: faker.helpers.arrayElements(sportsBasesSpacesSportTypes).map((i) => i.id),
+        buildingNumber: faker.number.int(10000),
+        buildingPurpose: faker.lorem.sentence(),
+        buildingArea: faker.number.int(1000),
+        photos: getPhotos(),
+        energyClassCertificate: {
+          url: faker.internet.url(),
+        },
+      })),
+      investments: randomArray(3, () => ({
+        source: faker.helpers.arrayElement(sportsBasesInvestmentsSources).id,
+        fundsAmount: faker.number.int({ min: 10000, max: 1000000 }),
+        improvements: faker.lorem.sentence(),
+        appointedAt: faker.date.anytime(),
+      })),
+    }));
+  }
+
+  @Method
+  async seedDB() {
+    if (process.env.NODE_ENV !== 'local') return;
+
+    await this.broker.waitForServices([
+      'sportsBases.spaces',
+      'sportsBases.investments',
+      'sportsBases.types',
+      'sportsBases.levels',
+      'sportsBases.technicalConditions',
+      'sportsBases.spaces.types',
+      'sportsBases.spaces.sportTypes',
+      'sportsBases.buildingTypes',
+      'sportsBases.investments.sources',
+    ]);
+
+    const sportsBasesData = await this.actions.fakeData();
+
+    for (const sportBaseData of sportsBasesData) {
+      const sportBase: SportsBase = await this.createEntity(null, _.cloneDeep(sportBaseData));
+
+      for (const space of sportBaseData.spaces) {
+        await this.broker.call('sportsBases.spaces.create', {
+          ...space,
+          sportBase: sportBase.id,
+        });
+      }
+      for (const investment of sportBaseData.investments) {
+        await this.broker.call('sportsBases.investments.create', {
+          ...investment,
+          sportBase: sportBase.id,
+        });
+      }
+    }
   }
 }

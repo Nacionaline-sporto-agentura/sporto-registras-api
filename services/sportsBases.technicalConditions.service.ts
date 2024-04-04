@@ -3,9 +3,14 @@ import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 
-import { COMMON_DEFAULT_SCOPES, COMMON_FIELDS, CommonFields } from '../types';
+import {
+  COMMON_DEFAULT_SCOPES,
+  COMMON_FIELDS,
+  CommonFields,
+  ONLY_GET_REST_ENABLED,
+} from '../types';
 
-export interface SportsBasesCondition extends CommonFields {
+export interface SportsBasesTechicalCondition extends CommonFields {
   id: number;
   name: string;
 }
@@ -30,17 +35,7 @@ export interface SportsBasesCondition extends CommonFields {
     },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
   },
-  actions: {
-    create: {
-      rest: null,
-    },
-    update: {
-      rest: null,
-    },
-    remove: {
-      rest: null,
-    },
-  },
+  actions: ONLY_GET_REST_ENABLED,
 })
 export default class SportsBasesTechnicalConditionsService extends moleculer.Service {
   @Method

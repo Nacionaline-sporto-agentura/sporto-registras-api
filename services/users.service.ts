@@ -660,20 +660,20 @@ export default class UsersService extends moleculer.Service {
     });
   }
 
-  @Method
-  async seedDB() {
-    await this.broker.waitForServices(['auth', 'tenants', 'tenantUsers']);
-    const data: Array<any> = await this.broker.call('auth.getSeedData', {
-      timeout: 120 * 1000,
-    });
-
-    for (const authUser of data) {
-      await this.broker.call('auth.createUserWithTenantsIfNeeded', {
-        authUser,
-        authUserGroups: authUser?.groups,
-      });
-    }
-  }
+  // @Method
+  // async seedDB() {
+  //   await this.broker.waitForServices(['auth', 'tenants', 'tenantUsers']);
+  //   const data: Array<any> = await this.broker.call('auth.getSeedData', {
+  //     timeout: 120 * 1000,
+  //   });
+  //
+  //   for (const authUser of data) {
+  //     await this.broker.call('auth.createUserWithTenantsIfNeeded', {
+  //       authUser,
+  //       authUserGroups: authUser?.groups,
+  //     });
+  //   }
+  // }
 
   @Event()
   async 'users.**'() {

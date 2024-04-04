@@ -19,7 +19,7 @@ import {
 } from '../types';
 
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
-import { RequestEntityTypes } from './requests.service';
+import { RequestEntityTypes, RequestStatus } from './requests.service';
 import { SportsBasesBuildingType } from './sportsBases.buildingTypes.service';
 import { SportBaseInvestment } from './sportsBases.investments.service';
 import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
@@ -276,12 +276,39 @@ export type SportsBase<
           keyField: 'id',
           handler: PopulateHandlerFn('requests.populateByProp'),
           params: {
-            queryKey: 'entity',
             query: {
               entityType: RequestEntityTypes.SPORTS_BASES,
             },
             mappingMulti: false,
             sort: '-createdAt',
+          },
+        },
+      },
+
+      canCreateRequest: {
+        virtual: true,
+        type: 'boolean',
+        populate: {
+          keyField: 'id',
+          async handler(ctx: Context<{ populate: string | string[] }>, values: any[], docs: any[]) {
+            const params = {
+              id: values,
+              sort: '-createdAt',
+              queryKey: 'entity',
+              mapping: true,
+              mappingMulti: false,
+              mappingField: 'status',
+            };
+            const byKey: any = await ctx.call('requests.populateByProp', params);
+
+            return docs?.map((d) => {
+              const fieldValue = d.id;
+              if (!fieldValue) return false;
+              return (
+                !!byKey[fieldValue] &&
+                [RequestStatus.APPROVED, RequestStatus.REJECTED].includes(byKey[fieldValue])
+              );
+            });
           },
         },
       },

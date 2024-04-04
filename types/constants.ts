@@ -142,16 +142,16 @@ export const ONLY_GET_REST_ENABLED: { [key: string]: { rest: any } } = {
 };
 
 export const GET_REST_ONLY_ACCESSIBLE_TO_ADMINS: { [key: string]: { rest: any } } = {
-  get: {
-    rest: {
-      auth: RestrictionType.ADMIN,
-    },
-  },
-  list: {
-    rest: {
-      auth: RestrictionType.ADMIN,
-    },
-  },
+  // get: {
+  //   rest: {
+  //     auth: RestrictionType.ADMIN,
+  //   },
+  // },
+  // list: {
+  //   rest: {
+  //     auth: RestrictionType.ADMIN,
+  //   },
+  // },
 };
 
 export const NSA_GROUP_ID = process.env.NSA_GROUP_ID;

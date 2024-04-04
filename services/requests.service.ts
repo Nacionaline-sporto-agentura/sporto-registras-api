@@ -306,7 +306,17 @@ export default class RequestsServices extends moleculer.Service {
       const entity = jsonpatch.applyPatch(oldEntity, request.changes, false, false).newDocument;
 
       const serviceName = SERVICE_BY_REQUEST_TYPE[request.entityType];
-      await ctx.call(`${serviceName}.applyRequestChanges`, { entity, oldEntity });
+      const entityWithId: { id: number } = await ctx.call(`${serviceName}.applyRequestChanges`, {
+        entity,
+        oldEntity,
+      });
+
+      if (!request.entity) {
+        await this.updateEntity(ctx, {
+          id: request.id,
+          entity: entityWithId.id,
+        });
+      }
     }
   }
 }

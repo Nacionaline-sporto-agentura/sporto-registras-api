@@ -44,6 +44,15 @@ const RequestMixin = {
       async handler(ctx: Context<{ entity?: any; oldEntity?: any }>) {
         const { id, ...serviceFields } = ctx.service.settings.fields;
         const { entity, oldEntity } = ctx.params;
+
+        const fixValue = (value: any, settings: any) => {
+          if (settings.type === 'array' && typeof value === 'object') {
+            return Object.values(value);
+          }
+
+          return value;
+        };
+
         // ==============================
         // Handle current service changes
         // ==============================
@@ -66,7 +75,7 @@ const RequestMixin = {
             continue;
 
           if (entity[fieldName] !== oldEntity?.[fieldName]) {
-            updateData[fieldName] = entity[fieldName];
+            updateData[fieldName] = fixValue(entity[fieldName], field);
           }
         }
 
@@ -93,7 +102,7 @@ const RequestMixin = {
             // TODO: simplify ifs
             if (field.type === 'array') {
               // Handle inserts and updates
-              for (const childEntity of entity[fieldName]) {
+              for (const childEntity of fixValue(entity[fieldName], field)) {
                 const oldChildEntity =
                   childEntity.id &&
                   oldEntity?.[fieldName]?.find((e: any) => childEntity.id === e.id);
@@ -128,6 +137,8 @@ const RequestMixin = {
             }
           }
         }
+
+        return entityWithId;
       },
     },
   },

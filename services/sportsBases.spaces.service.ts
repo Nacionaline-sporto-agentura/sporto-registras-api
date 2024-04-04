@@ -212,7 +212,7 @@ export type SportBaseSpace<
 })
 export default class SportsBasesService extends moleculer.Service {
   @Action()
-  async createSportBaseSpace(
+  async create(
     ctx: Context<{
       additionalValues?: { [key: number]: any };
       [key: string]: any;
@@ -233,7 +233,7 @@ export default class SportsBasesService extends moleculer.Service {
       additionalValues,
     });
 
-    const sportBaseSpace: SportBaseSpace = await ctx.call('sportsBases.spaces.create', rest);
+    const sportBaseSpace: SportBaseSpace = await this.createEntity(ctx, rest);
 
     await ctx.call(
       'sportsBases.spaces.typesAndFields.values.createMany',
@@ -244,7 +244,7 @@ export default class SportsBasesService extends moleculer.Service {
   }
 
   @Action()
-  async updateBaseSpace(
+  async update(
     ctx: Context<{
       id: number;
       additionalValues?: { [key: number]: any };
@@ -296,7 +296,7 @@ export default class SportsBasesService extends moleculer.Service {
       sportBaseSpace: sportBaseSpace.id,
     }));
 
-    await ctx.call('sportsBases.spaces.update', { id: sportBaseSpace.id, ...rest });
+    await this.updateEntity(ctx, { id: sportBaseSpace.id, ...rest });
 
     await ctx.call('sportsBases.spaces.typesAndFields.values.updateMany', newAdditionalValues);
 

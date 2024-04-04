@@ -3,6 +3,7 @@ import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 
+import RequestMixin from '../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -11,6 +12,7 @@ import {
   CommonPopulates,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
+  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../types';
 import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
@@ -39,6 +41,7 @@ export type SportBaseInvestment<
     DbConnection({
       collection: 'sportsBasesInvestments',
     }),
+    RequestMixin,
   ],
   settings: {
     fields: {
@@ -49,7 +52,7 @@ export type SportBaseInvestment<
         secure: true,
       },
       source: {
-        type: 'number',
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sourceId',
         required: true,
         populate: {

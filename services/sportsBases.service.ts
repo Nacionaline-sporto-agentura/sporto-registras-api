@@ -4,7 +4,7 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
 import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
 
-import _ from 'lodash';
+import RequestMixin from '../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -14,6 +14,7 @@ import {
   FieldHookCallback,
   ONLY_GET_REST_ENABLED,
   TENANT_FIELD,
+  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../types';
 
@@ -99,6 +100,7 @@ export type SportsBase<
     DbConnection({
       collection: 'sportsBases',
     }),
+    RequestMixin,
   ],
   settings: {
     fields: {
@@ -110,21 +112,21 @@ export type SportsBase<
       },
       name: 'string|required',
       type: {
-        type: 'number',
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'typeId',
         immutable: true,
         required: true,
         populate: 'sportsBases.types.resolve',
       },
       level: {
-        type: 'number',
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'levelId',
         immutable: true,
         required: true,
         populate: 'sportsBases.levels.resolve',
       },
       technicalCondition: {
-        type: 'number',
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'technicalConditionId',
         immutable: true,
         required: true,
@@ -205,6 +207,10 @@ export type SportsBase<
             sort: 'name',
           },
         },
+        requestHandler: {
+          service: 'sportsBases.spaces',
+          relationField: 'sportBase',
+        },
       },
 
       investments: {
@@ -221,6 +227,10 @@ export type SportsBase<
             populate: ['source'],
             sort: '-createdAt',
           },
+        },
+        requestHandler: {
+          service: 'sportsBases.investments',
+          relationField: 'sportBase',
         },
       },
 
@@ -278,6 +288,7 @@ export type SportsBase<
       ...TENANT_FIELD,
       ...COMMON_FIELDS,
     },
+    defaultPopulates: ['type', 'level', 'technicalCondition', 'spaces'],
     defaultScopes: [...COMMON_DEFAULT_SCOPES, ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.names],
     scopes: {
       ...COMMON_SCOPES,
@@ -339,9 +350,9 @@ export default class SportsBasesService extends moleculer.Service {
 
     return randomArray(3, () => ({
       name: faker.lorem.words({ min: 1, max: 3 }),
-      type: faker.helpers.arrayElement(sportsBasesTypes).id,
-      level: faker.helpers.arrayElement(sportsBasesLevels).id,
-      technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions).id,
+      type: faker.helpers.arrayElement(sportsBasesTypes),
+      level: faker.helpers.arrayElement(sportsBasesLevels),
+      technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions),
       address: faker.location.streetAddress(),
       coordinates: {
         x: faker.number.float({ min: 53, max: 55 }),
@@ -364,10 +375,10 @@ export default class SportsBasesService extends moleculer.Service {
       publicWifi: faker.datatype.boolean(),
       spaces: randomArray(3, () => ({
         name: faker.lorem.words({ min: 1, max: 3 }),
-        technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions).id,
-        type: faker.helpers.arrayElement(sportsBasesSpacesTypes).id,
-        buildingType: faker.helpers.arrayElement(sportsBasesBuildingTypes).id,
-        sportTypes: faker.helpers.arrayElements(sportsBasesSpacesSportTypes).map((i) => i.id),
+        technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions),
+        type: faker.helpers.arrayElement(sportsBasesSpacesTypes),
+        buildingType: faker.helpers.arrayElement(sportsBasesBuildingTypes),
+        sportTypes: faker.helpers.arrayElements(sportsBasesSpacesSportTypes),
         buildingNumber: faker.number.int(10000),
         buildingPurpose: faker.lorem.sentence(),
         buildingArea: faker.number.int(1000),
@@ -377,7 +388,7 @@ export default class SportsBasesService extends moleculer.Service {
         },
       })),
       investments: randomArray(3, () => ({
-        source: faker.helpers.arrayElement(sportsBasesInvestmentsSources).id,
+        source: faker.helpers.arrayElement(sportsBasesInvestmentsSources),
         fundsAmount: faker.number.int({ min: 10000, max: 1000000 }),
         improvements: faker.lorem.sentence(),
         appointedAt: faker.date.anytime(),
@@ -404,20 +415,9 @@ export default class SportsBasesService extends moleculer.Service {
     const sportsBasesData = await this.actions.fakeData();
 
     for (const sportBaseData of sportsBasesData) {
-      const sportBase: SportsBase = await this.createEntity(null, _.cloneDeep(sportBaseData));
-
-      for (const space of sportBaseData.spaces) {
-        await this.broker.call('sportsBases.spaces.create', {
-          ...space,
-          sportBase: sportBase.id,
-        });
-      }
-      for (const investment of sportBaseData.investments) {
-        await this.broker.call('sportsBases.investments.create', {
-          ...investment,
-          sportBase: sportBase.id,
-        });
-      }
+      await this.actions.applyRequestChanges({
+        entity: sportBaseData,
+      });
     }
   }
 }

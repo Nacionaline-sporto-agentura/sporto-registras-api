@@ -1,7 +1,8 @@
 'use strict';
+import * as jsonpatch from 'fast-json-patch';
 import { Operation } from 'fast-json-patch';
 import moleculer, { Context } from 'moleculer';
-import { Action, Method, Service } from 'moleculer-decorators';
+import { Action, Event, Method, Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 
 import _ from 'lodash';
@@ -11,6 +12,7 @@ import {
   COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  EntityChangedParams,
   FieldHookCallback,
   RestrictionType,
   TENANT_FIELD,
@@ -37,6 +39,11 @@ const adminEditStatuses = [RequestStatus.CREATED, RequestStatus.SUBMITTED];
 export enum RequestEntityTypes {
   SPORTS_BASES = 'SPORTS_BASES',
 }
+
+export const SERVICE_BY_REQUEST_TYPE = {
+  [RequestEntityTypes.SPORTS_BASES]: 'sportsBases',
+};
+
 const nonEditableStatuses = [RequestStatus.APPROVED, RequestStatus.REJECTED];
 
 type JsonableObj = { [key: string]: Jsonable };
@@ -46,7 +53,7 @@ type Jsonable = JsonableArr | JsonableObj | string | number | boolean | null;
 interface Fields extends CommonFields {
   id: number;
   status: RequestStatus;
-  entityType: 'sportsBases';
+  entityType: RequestEntityTypes;
   entity: SportsBase['id'];
   changes: Operation[];
   tenant: Tenant['id'];
@@ -77,6 +84,7 @@ const populatePermissions = (field: string) => {
   mixins: [
     DbConnection({
       collection: 'requests',
+      entityChangedOldEntity: true,
     }),
   ],
   settings: {
@@ -115,7 +123,6 @@ const populatePermissions = (field: string) => {
               // TODO: populate based on type
               return ctx.call('sportsBases.resolve', {
                 id: request.entityId,
-                populate: ['owners', 'tenants', 'investments', 'spaces'],
               });
             }),
           );
@@ -168,7 +175,7 @@ const populatePermissions = (field: string) => {
 
         return query;
       },
-      tasks(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+      tasks(query: any, ctx: Context<null, UserAuthMeta>) {
         const { user } = ctx?.meta;
         if (!user?.id) return query;
 
@@ -284,5 +291,22 @@ export default class RequestsServices extends moleculer.Service {
     }
 
     return error;
+  }
+
+  @Event()
+  async 'requests.updated'(ctx: Context<EntityChangedParams<Request>>) {
+    const { oldData, data } = ctx.params;
+
+    if (oldData?.status !== data.status && data.status === RequestStatus.APPROVED) {
+      const request: Request<'entity'> = await this.resolveEntities(ctx, {
+        id: data.id,
+        populate: 'entity',
+      });
+      const oldEntity = request.entity;
+      const entity = jsonpatch.applyPatch(oldEntity, request.changes, false, false).newDocument;
+
+      const serviceName = SERVICE_BY_REQUEST_TYPE[request.entityType];
+      await ctx.call(`${serviceName}.applyRequestChanges`, { entity, oldEntity });
+    }
   }
 }

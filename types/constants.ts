@@ -45,12 +45,14 @@ export const COMMON_FIELDS = {
         scope: false,
       },
     },
+    requestHandler: false,
   },
   createdAt: {
     type: 'date',
     columnType: 'datetime',
     readonly: true,
     onCreate: () => new Date(),
+    requestHandler: false,
   },
   updatedBy: {
     type: 'number',
@@ -63,6 +65,7 @@ export const COMMON_FIELDS = {
         scope: false,
       },
     },
+    requestHandler: false,
   },
   updatedAt: {
     type: 'date',
@@ -70,6 +73,7 @@ export const COMMON_FIELDS = {
     hidden: 'byDefault',
     readonly: true,
     onUpdate: () => new Date(),
+    requestHandler: false,
   },
   deletedBy: {
     type: 'number',
@@ -81,12 +85,14 @@ export const COMMON_FIELDS = {
         scope: false,
       },
     },
+    requestHandler: false,
   },
   deletedAt: {
     type: 'date',
     columnType: 'datetime',
     readonly: true,
     onRemove: () => new Date(),
+    requestHandler: false,
   },
 };
 
@@ -99,6 +105,37 @@ export const TENANT_FIELD = {
     populate: 'tenants.resolve',
     onCreate: ({ ctx }: FieldHookCallback) => ctx.meta.profile?.id,
   },
+};
+
+export const TYPE_ID_OR_OBJECT_WITH_ID = {
+  type: 'multi',
+  rules: [
+    { type: 'number' },
+    {
+      type: 'object',
+      properties: {
+        id: 'number',
+      },
+    },
+  ],
+  set: ({ value }: FieldHookCallback) => value?.id || value,
+};
+
+export const TYPE_MULTI_ID_OR_OBJECT_WITH_ID = {
+  type: 'array',
+  items: {
+    type: 'multi',
+    rules: [
+      { type: 'number' },
+      {
+        type: 'object',
+        properties: {
+          id: 'number',
+        },
+      },
+    ],
+  },
+  set: ({ value }: FieldHookCallback) => value.map((v: any) => v?.id || v),
 };
 
 export const COMMON_SCOPES = {

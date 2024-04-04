@@ -3,6 +3,7 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 
+import RequestMixin from '../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -12,6 +13,8 @@ import {
   FieldHookCallback,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
+  TYPE_ID_OR_OBJECT_WITH_ID,
+  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
   throwValidationError,
 } from '../types';
@@ -62,6 +65,7 @@ export type SportBaseSpace<
     DbConnection({
       collection: 'sportsBasesSpaces',
     }),
+    RequestMixin,
   ],
   settings: {
     fields: {
@@ -72,7 +76,7 @@ export type SportBaseSpace<
         secure: true,
       },
       technicalCondition: {
-        type: 'number',
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'technicalConditionId',
         immutable: true,
         required: true,
@@ -84,7 +88,7 @@ export type SportBaseSpace<
         },
       },
       type: {
-        type: 'number',
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'typeId',
         immutable: true,
         optional: true,
@@ -96,10 +100,9 @@ export type SportBaseSpace<
         },
       },
       sportTypes: {
-        type: 'array',
+        ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
         columnType: 'json',
         required: true,
-        items: { type: 'number' },
         populate: {
           action: 'sportsBases.spaces.sportTypes.resolve',
           params: {
@@ -115,7 +118,7 @@ export type SportBaseSpace<
         populate: 'sportsBases.resolve',
       },
       buildingType: {
-        type: 'number',
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'buildingTypeId',
         immutable: true,
         required: true,

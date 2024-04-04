@@ -12,6 +12,7 @@ import {
   CommonFields,
   CommonPopulates,
   FieldHookCallback,
+  RestrictionType,
   TENANT_FIELD,
   Table,
 } from '../types';
@@ -147,6 +148,11 @@ const populatePermissions = (field: string) => {
       ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.names,
       'invisibleDraftsForAdmins',
     ],
+    actions: {
+      create: {
+        auth: RestrictionType.USER,
+      },
+    },
     scopes: {
       ...COMMON_SCOPES,
       ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.scopes,
@@ -190,7 +196,7 @@ export default class RequestsServices extends moleculer.Service {
   async listNewRequests(ctx: Context<{}>) {
     const params = _.merge({}, ctx.params, {
       query: {
-        entity: { $exists: true },
+        entity: { $exists: false },
       },
     });
 

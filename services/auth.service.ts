@@ -32,7 +32,7 @@ function getApiRest(
   name: 'auth',
   mixins: [
     authMixin(process.env.AUTH_API_KEY, {
-      host: process.env.AUTH_HOST || 'https://auth.registras.ltusportas.lt',
+      host: process.env.APP_HOST || 'https://registras.ltusportas.lt',
     }),
   ],
 

@@ -8,6 +8,7 @@ import {
   COMMON_FIELDS,
   CommonFields,
   CommonPopulates,
+  ONLY_GET_REST_ENABLED,
   Table,
 } from '../types';
 import { SportsBasesType } from './sportsBases.types.service';
@@ -44,17 +45,7 @@ export type SportBaseSpaceSportType<
     },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
   },
-  actions: {
-    create: {
-      rest: null,
-    },
-    update: {
-      rest: null,
-    },
-    remove: {
-      rest: null,
-    },
-  },
+  actions: ONLY_GET_REST_ENABLED,
 })
 export default class SportsTypesService extends moleculer.Service {
   @Method

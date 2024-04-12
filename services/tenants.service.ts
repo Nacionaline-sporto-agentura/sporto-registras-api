@@ -10,21 +10,34 @@ import {
   COMMON_FIELDS,
   COMMON_SCOPES,
   CommonFields,
+  CommonPopulates,
   FieldHookCallback,
   RestrictionType,
+  Table,
   throwUnauthorizedError,
 } from '../types';
 import { UserAuthMeta } from './api.service';
 import { TenantUser, TenantUserRole } from './tenantUsers.service';
 import { User, UserType } from './users.service';
 
-export interface Tenant extends CommonFields {
+interface Fields extends CommonFields {
   id: number;
   name: string;
-  role?: TenantUserRole;
-  authGroup?: number;
+  role: undefined;
+  authGroup: number;
   parent: number;
 }
+
+interface Populates extends CommonPopulates {
+  role: TenantUserRole;
+  authGroup: any;
+  parent: Tenant;
+}
+
+export type Tenant<
+  P extends keyof Populates = never,
+  F extends keyof (Fields & Populates) = keyof Fields,
+> = Table<Fields, Populates, P, F>;
 
 export enum TenantTenantType {
   MUNICIPALITY = 'MUNICIPALITY',
@@ -294,15 +307,18 @@ export default class TenantsService extends moleculer.Service {
       companyInviteData.notify = [email];
     }
 
-    // pre-assign & validate parent for users
-    if (ctx?.meta?.user?.type === UserType.USER) {
-      const { parent: tenantId } = ctx.params;
-      if (!tenantId) {
-        ctx.params.parent = ctx.meta.profile.id;
-      } else {
-        // validates if user accesses this tenant
-        await ctx.call('tenants.resolve', { id: tenantId, throwIfNotExist: true });
-      }
+    // pre-assign parent
+    if (ctx?.meta?.user?.type === UserType.USER && !ctx.params.parent) {
+      ctx.params.parent = ctx.meta.profile.id;
+    }
+
+    // validate parent & assign parent company
+    if (ctx.params.parent) {
+      const tenant: Tenant = await ctx.call('tenants.resolve', {
+        id: ctx.params.parent,
+        throwIfNotExist: true,
+      });
+      companyInviteData.companyId = tenant.authGroup;
     }
 
     const authGroup: any = await ctx.call('auth.users.invite', companyInviteData);

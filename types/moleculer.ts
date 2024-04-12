@@ -312,6 +312,6 @@ export interface RequestMessage extends IncomingMessage {
 
 export interface EntityChangedParams<T> {
   type: 'create' | 'update' | 'replace' | 'remove' | 'clear';
-  data: T | T[] | null;
+  data: T | null;
   oldData?: T;
 }

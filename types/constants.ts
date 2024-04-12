@@ -45,12 +45,14 @@ export const COMMON_FIELDS = {
         scope: false,
       },
     },
+    requestHandler: false,
   },
   createdAt: {
     type: 'date',
     columnType: 'datetime',
     readonly: true,
     onCreate: () => new Date(),
+    requestHandler: false,
   },
   updatedBy: {
     type: 'number',
@@ -63,6 +65,7 @@ export const COMMON_FIELDS = {
         scope: false,
       },
     },
+    requestHandler: false,
   },
   updatedAt: {
     type: 'date',
@@ -70,6 +73,7 @@ export const COMMON_FIELDS = {
     hidden: 'byDefault',
     readonly: true,
     onUpdate: () => new Date(),
+    requestHandler: false,
   },
   deletedBy: {
     type: 'number',
@@ -81,13 +85,57 @@ export const COMMON_FIELDS = {
         scope: false,
       },
     },
+    requestHandler: false,
   },
   deletedAt: {
     type: 'date',
     columnType: 'datetime',
     readonly: true,
     onRemove: () => new Date(),
+    requestHandler: false,
   },
+};
+
+export const TENANT_FIELD = {
+  tenant: {
+    type: 'number',
+    columnType: 'integer',
+    columnName: 'tenantId',
+    readonly: true,
+    populate: 'tenants.resolve',
+    onCreate: ({ ctx }: FieldHookCallback) => ctx.meta.profile?.id,
+  },
+};
+
+export const TYPE_ID_OR_OBJECT_WITH_ID = {
+  type: 'multi',
+  rules: [
+    { type: 'number' },
+    {
+      type: 'object',
+      properties: {
+        id: 'number',
+      },
+    },
+  ],
+  set: ({ value }: FieldHookCallback) => value?.id || value,
+};
+
+export const TYPE_MULTI_ID_OR_OBJECT_WITH_ID = {
+  type: 'array',
+  items: {
+    type: 'multi',
+    rules: [
+      { type: 'number' },
+      {
+        type: 'object',
+        properties: {
+          id: 'number',
+        },
+      },
+    ],
+  },
+  set: ({ value }: FieldHookCallback) => value.map((v: any) => v?.id || v),
 };
 
 export const COMMON_SCOPES = {
@@ -105,7 +153,7 @@ export function throwNotFoundError(message?: string): Errors.MoleculerError {
 }
 
 export function throwNoRightsError(message?: string): Errors.MoleculerError {
-  throw new Moleculer.Errors.MoleculerClientError(message || `No rights.`, 401, 'NO_RIGHTS');
+  throw new Moleculer.Errors.MoleculerClientError(message || `No rights.`, 403, 'NO_RIGHTS');
 }
 
 export function throwValidationError(message?: string, data?: any): Errors.MoleculerError {
@@ -114,5 +162,33 @@ export function throwValidationError(message?: string, data?: any): Errors.Molec
 
 export const COMMON_DEFAULT_SCOPES = ['notDeleted'];
 export const COMMON_DELETED_SCOPES = ['-notDeleted', 'deleted'];
+
+export const ONLY_GET_REST_ENABLED: { [key: string]: { rest: any } } = {
+  create: {
+    rest: null,
+  },
+  update: {
+    rest: null,
+  },
+  remove: {
+    rest: null,
+  },
+  count: {
+    rest: null,
+  },
+};
+
+export const GET_REST_ONLY_ACCESSIBLE_TO_ADMINS: { [key: string]: { rest: any } } = {
+  // get: {
+  //   rest: {
+  //     auth: RestrictionType.ADMIN,
+  //   },
+  // },
+  // list: {
+  //   rest: {
+  //     auth: RestrictionType.ADMIN,
+  //   },
+  // },
+};
 
 export const NSA_GROUP_ID = process.env.NSA_GROUP_ID;

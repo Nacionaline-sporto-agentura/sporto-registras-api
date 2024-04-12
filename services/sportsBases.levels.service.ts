@@ -2,7 +2,12 @@
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
-import { COMMON_DEFAULT_SCOPES, COMMON_FIELDS, CommonFields } from '../types';
+import {
+  COMMON_DEFAULT_SCOPES,
+  COMMON_FIELDS,
+  CommonFields,
+  ONLY_GET_REST_ENABLED,
+} from '../types';
 
 export interface SportsBasesLevel extends CommonFields {
   id: number;
@@ -29,17 +34,7 @@ export interface SportsBasesLevel extends CommonFields {
     },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
   },
-  actions: {
-    create: {
-      rest: null,
-    },
-    update: {
-      rest: null,
-    },
-    remove: {
-      rest: null,
-    },
-  },
+  actions: ONLY_GET_REST_ENABLED,
 })
 export default class SportsBasesLevelsService extends moleculer.Service {
   @Method

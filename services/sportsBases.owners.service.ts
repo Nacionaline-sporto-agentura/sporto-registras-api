@@ -6,11 +6,15 @@ import DbConnection from '../mixins/database.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
+  COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
+  ONLY_GET_REST_ENABLED,
   Table,
   throwValidationError,
 } from '../types';
+import { SportsBase } from './sportsBases.service';
 import { Tenant } from './tenants.service';
 import { User } from './users.service';
 
@@ -38,7 +42,7 @@ interface Populates extends CommonPopulates {
   sportBase: SportsBase;
 }
 
-export type SportsBase<
+export type SportsBaseOwner<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
@@ -82,18 +86,9 @@ export type SportsBase<
       ...COMMON_FIELDS,
     },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
+    scopes: { ...COMMON_SCOPES },
   },
-  actions: {
-    create: {
-      rest: null,
-    },
-    update: {
-      rest: null,
-    },
-    remove: {
-      rest: null,
-    },
-  },
+  actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
 export default class SportsBasesOwnerService extends moleculer.Service {
   @Action({

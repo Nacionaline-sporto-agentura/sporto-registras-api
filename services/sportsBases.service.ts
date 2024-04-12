@@ -250,6 +250,10 @@ export type SportsBase<
             sort: '-createdAt',
           },
         },
+        requestHandler: {
+          service: 'sportsBases.owners',
+          relationField: 'sportBase',
+        },
       },
 
       tenants: {

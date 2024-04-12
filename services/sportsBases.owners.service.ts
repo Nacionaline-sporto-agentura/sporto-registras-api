@@ -1,8 +1,9 @@
 'use strict';
-import moleculer, { Context } from 'moleculer';
-import { Action, Service } from 'moleculer-decorators';
+import moleculer from 'moleculer';
+import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 
+import RequestMixin, { RequestMutationPreHook } from '../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -26,12 +27,14 @@ interface Fields extends CommonFields {
 }
 
 interface ViispUser {
+  sportBase: SportsBaseOwner['sportBase'];
   personalCode: string;
   firstName: string;
   lastName: string;
 }
 
 interface ViispCompany {
+  sportBase: SportsBaseOwner['sportBase'];
   companyCode: string;
   name: string;
 }
@@ -53,6 +56,7 @@ export type SportsBaseOwner<
     DbConnection({
       collection: 'sportsBasesOwners',
     }),
+    RequestMixin,
   ],
   settings: {
     fields: {
@@ -91,66 +95,51 @@ export type SportsBaseOwner<
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
 export default class SportsBasesOwnerService extends moleculer.Service {
-  @Action({
-    params: {
-      owner: [
+  @Method
+  async requestMutationPreHook({
+    type,
+    ctx,
+    data,
+  }: RequestMutationPreHook<ViispUser & ViispCompany>) {
+    if (['create', 'update'].includes(type)) {
+      const owner: Partial<SportsBaseOwner> = {};
+      owner.sportBase = data.sportBase;
+
+      const authUser = await ctx.call(
+        'auth.users.invite',
         {
-          type: 'object',
-          properties: {
-            personalCode: 'string',
-            firstName: 'string',
-            lastName: 'string',
-          },
+          ...data,
+          throwErrors: false,
         },
-        {
-          type: 'object',
-          properties: {
-            companyCode: 'string',
-            name: 'string',
-          },
-        },
-      ],
-      sportBase: 'number|required',
-    },
-  })
-  async assign(
-    ctx: Context<{
-      owner: ViispUser & ViispCompany;
-      sportBase: number;
-    }>,
-  ) {
-    const { sportBase, owner } = ctx.params;
-    let user = null;
-    let tenant = null;
+        { meta: { authToken: ctx.meta.authToken } },
+      );
 
-    const authUser = await ctx.call('auth.users.invite', {
-      ...owner,
-      throwErrors: false,
-    });
+      if (!!data?.personalCode) {
+        const { firstName, lastName } = data;
 
-    if (!!owner?.personalCode) {
-      const { firstName, lastName } = owner;
+        const newOrExistingUser: User = await ctx.call('users.findOrCreate', {
+          authUser,
+          firstName,
+          lastName,
+        });
 
-      const newOrExistingUser: User = await ctx.call('users.findOrCreate', {
-        authUser,
-        firstName,
-        lastName,
-      });
+        owner.user = newOrExistingUser.id;
+      } else if (!!data?.companyCode) {
+        const { name } = data;
 
-      user = newOrExistingUser.id;
-    } else if (!!owner?.companyCode) {
-      const { name } = owner;
+        const newOrExistingTenant: Tenant = await ctx.call('tenants.findOrCreate', {
+          authGroup: authUser,
+          name,
+        });
 
-      const newOrExistingTenant: Tenant = await ctx.call('tenants.findOrCreate', {
-        authGroup: authUser,
-        name,
-      });
+        owner.tenant = newOrExistingTenant.id;
+      } else {
+        throwValidationError('invalid owner');
+      }
 
-      tenant = newOrExistingTenant.id;
-    } else {
-      throwValidationError('invalid owner');
+      return owner;
     }
 
-    return this.createEntity(ctx, { sportBase, user, tenant });
+    return data;
   }
 }

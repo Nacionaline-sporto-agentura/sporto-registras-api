@@ -1,6 +1,8 @@
 'use strict';
 
+import _ from 'lodash';
 import { Context, Validator } from 'moleculer';
+import { UserAuthMeta } from '../services/api.service';
 
 const {
   validator: { parseShortHand },
@@ -14,6 +16,13 @@ type Field = {
     relationField?: 'string';
     ignoreField?: boolean;
   };
+};
+
+export type RequestMutationPreHook<T = object> = {
+  ctx: Context<unknown, UserAuthMeta>;
+  type: 'remove' | 'update' | 'create';
+  data: Partial<T>;
+  oldData?: Partial<T>;
 };
 
 const getFieldSettings = (fieldSettings: any) => {
@@ -43,7 +52,7 @@ const RequestMixin = {
       },
       async handler(ctx: Context<{ entity?: any; oldEntity?: any }>) {
         const { id, ...serviceFields } = ctx.service.settings.fields;
-        const { entity, oldEntity } = ctx.params;
+        let { entity, oldEntity } = ctx.params;
 
         const fixValue = (value: any, settings: any) => {
           if (settings.type === 'array' && typeof value === 'object') {
@@ -57,15 +66,33 @@ const RequestMixin = {
         // Handle current service changes
         // ==============================
 
+        let opertion: RequestMutationPreHook['type'];
         if (!entity && oldEntity?.id) {
+          opertion = 'remove';
+        } else if (oldEntity?.id) {
+          opertion = 'update';
+        } else {
+          opertion = 'create';
+        }
+
+        if (_.isFunction(this.requestMutationPreHook)) {
+          entity = await this.requestMutationPreHook({
+            ctx,
+            type: opertion,
+            data: entity,
+            oldData: oldEntity,
+          });
+        }
+
+        if (opertion === 'remove') {
           return await this.removeEntity(ctx, {
-            id: entity.id,
+            id: oldEntity.id,
           });
         }
 
         let entityWithId: any;
 
-        const updateData: any = {};
+        let updateData: any = {};
         for (const fieldName in serviceFields) {
           // field settings object
           const field: Field = getFieldSettings(serviceFields[fieldName]);
@@ -81,8 +108,8 @@ const RequestMixin = {
 
         if (oldEntity?.id) {
           entityWithId = await this.updateEntity(ctx, {
-            id: oldEntity.id,
             ...updateData,
+            id: oldEntity.id,
           });
         } else {
           entityWithId = await this.createEntity(ctx, updateData);

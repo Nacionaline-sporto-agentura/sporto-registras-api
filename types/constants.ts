@@ -135,7 +135,7 @@ export const TYPE_MULTI_ID_OR_OBJECT_WITH_ID = {
       },
     ],
   },
-  set: ({ value }: FieldHookCallback) => value.map((v: any) => v?.id || v),
+  set: ({ value }: FieldHookCallback) => value?.map((v: any) => v?.id || v),
 };
 
 export const COMMON_SCOPES = {

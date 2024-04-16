@@ -1,6 +1,6 @@
 'use strict';
-import moleculer, { Context } from 'moleculer';
-import { Action, Method, Service } from 'moleculer-decorators';
+import moleculer from 'moleculer';
+import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 
 import RequestMixin from '../mixins/request.mixin';
@@ -23,7 +23,6 @@ import { SportsBase } from './sportsBases.service';
 import { FieldTypes } from './sportsBases.spaces.fields.service';
 import { SportBaseSpaceSportType } from './sportsBases.spaces.sportTypes.service';
 import { SportBaseSpaceTypeAndField } from './sportsBases.spaces.typesAndFields.service';
-import { SportsBasesSpacesTypesAndFieldsValues } from './sportsBases.spaces.typesAndFields.values.service';
 import { SportsBasesType } from './sportsBases.types.service';
 
 interface Fields extends CommonFields {
@@ -172,30 +171,8 @@ export type SportBaseSpace<
       },
       name: 'string',
       additionalValues: {
-        virtual: true,
+        //        validate: 'validateAdditionalValues',
         type: 'object',
-        async populate(ctx: any, _values: any, sportsBasesSpaces: any[]) {
-          const values: SportsBasesSpacesTypesAndFieldsValues[] = await ctx.call(
-            'sportsBases.spaces.typesAndFields.values.find',
-            {
-              query: {
-                sportBaseSpace: {
-                  $in: sportsBasesSpaces.map((sportBaseSpace) => sportBaseSpace.id),
-                },
-              },
-            },
-          );
-
-          const mappedValues = values.reduce((acc, curr) => {
-            acc[curr.sportBaseSpace] = acc[curr.sportBaseSpace] || {};
-
-            acc[curr.sportBaseSpace][curr.typeAndField] = curr.value;
-
-            return acc;
-          }, {} as any);
-
-          return sportsBasesSpaces.map((sportBaseSpace) => mappedValues[sportBaseSpace.id]);
-        },
       },
       ...COMMON_FIELDS,
     },
@@ -204,105 +181,8 @@ export type SportBaseSpace<
     scopes: { ...COMMON_SCOPES },
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
-  hooks: {
-    before: {
-      remove: ['beforeRemove'],
-    },
-  },
 })
 export default class SportsBasesService extends moleculer.Service {
-  @Action()
-  async create(
-    ctx: Context<{
-      additionalValues?: { [key: number]: any };
-      [key: string]: any;
-    }>,
-  ) {
-    const { additionalValues, ...rest } = ctx.params;
-
-    const typesAndFields: SportBaseSpaceTypeAndField[] = await ctx.call(
-      'sportsBases.spaces.typesAndFields.find',
-      {
-        query: { type: rest?.type },
-        populate: 'field',
-      },
-    );
-
-    const values = this.getAdditionalFields({
-      typeAndField: typesAndFields,
-      additionalValues,
-    });
-
-    const sportBaseSpace: SportBaseSpace = await this.createEntity(ctx, rest);
-
-    await ctx.call(
-      'sportsBases.spaces.typesAndFields.values.createMany',
-      values.map((value) => ({ ...value, sportBaseSpace: sportBaseSpace.id })),
-    );
-
-    return { success: true };
-  }
-
-  @Action()
-  async update(
-    ctx: Context<{
-      id: number;
-      additionalValues?: { [key: number]: any };
-      [key: string]: any;
-    }>,
-  ) {
-    const { id, additionalValues, ...rest } = ctx.params;
-
-    const sportBaseSpace: SportBaseSpace = await ctx.call('sportsBases.spaces.resolve', {
-      id,
-      throwIfNotExist: true,
-    });
-
-    const typesAndFields: SportBaseSpaceTypeAndField[] = await ctx.call(
-      'sportsBases.spaces.typesAndFields.find',
-      {
-        query: { type: rest?.type || sportBaseSpace.type },
-        populate: 'field',
-      },
-    );
-
-    const filteredTypesAndFields = typesAndFields.filter(
-      (item) => typeof additionalValues?.[item.id] !== 'undefined',
-    );
-
-    const values = this.getAdditionalFields({
-      typeAndField: filteredTypesAndFields,
-      additionalValues,
-    });
-
-    const oldAdditionalValues: SportsBasesSpacesTypesAndFieldsValues[] = await ctx.call(
-      'sportsBases.spaces.typesAndFields.values.find',
-      {
-        query: {
-          sportBaseSpace: id,
-          typeAndField: { $in: filteredTypesAndFields.map((item) => item.id) },
-        },
-      },
-    );
-
-    const oldAdditionalValuesIds = oldAdditionalValues.reduce(
-      (acc, item) => ({ ...acc, [item.typeAndField]: item.id }),
-      {} as any,
-    );
-
-    const newAdditionalValues = values.map((value) => ({
-      id: oldAdditionalValuesIds[value.typeAndField],
-      ...value,
-      sportBaseSpace: sportBaseSpace.id,
-    }));
-
-    await this.updateEntity(ctx, { id: sportBaseSpace.id, ...rest });
-
-    await ctx.call('sportsBases.spaces.typesAndFields.values.updateMany', newAdditionalValues);
-
-    return { success: true };
-  }
-
   @Method
   validatePhotos({ value }: FieldHookCallback) {
     return (
@@ -325,14 +205,34 @@ export default class SportsBasesService extends moleculer.Service {
   }
 
   @Method
-  getAdditionalFields({
-    typeAndField,
-    additionalValues,
-  }: {
-    typeAndField: SportBaseSpaceTypeAndField[];
-    additionalValues: { [key: number]: any };
-  }) {
-    const values = typeAndField.map((item) => {
+  async validateAdditionalValues({
+    ctx,
+    value: additionalValues,
+    entity,
+    params,
+  }: FieldHookCallback<SportBaseSpace | SportBaseSpace<'type'>>) {
+    let type: SportBaseSpace['type'];
+    if (typeof params?.type === 'object') {
+      type = params.type.id;
+    } else if (typeof params?.type === 'number') {
+      type = params.type;
+    } else {
+      type = entity?.type;
+    }
+
+    if (!type) {
+      return true;
+    }
+
+    const typesAndFields: SportBaseSpaceTypeAndField[] = await ctx.call(
+      'sportsBases.spaces.typesAndFields.find',
+      {
+        query: { type },
+        populate: 'field',
+      },
+    );
+
+    for (const item of typesAndFields) {
       const { title, type, scale, precision, options } = item?.field;
       const value = additionalValues?.[item.id];
       if (typeof value === 'undefined') {
@@ -356,22 +256,8 @@ export default class SportsBasesService extends moleculer.Service {
       } else if (type === FieldTypes.SELECT && options.length && !options.includes(value)) {
         throwValidationError(`Invalid value for ${title}`);
       }
+    }
 
-      return {
-        value: JSON.stringify(value),
-        typeAndField: item.id,
-      };
-    });
-
-    return values;
-  }
-
-  @Method
-  async beforeRemove(ctx: Context<{ id: number }>) {
-    return await ctx.call('sportsBases.spaces.typesAndFields.values.removeMany', {
-      query: {
-        sportBaseSpace: ctx.params.id,
-      },
-    });
+    return true;
   }
 }

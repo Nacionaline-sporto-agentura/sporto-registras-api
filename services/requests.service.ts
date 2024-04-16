@@ -20,6 +20,7 @@ import {
 } from '../types';
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
 import { UserAuthMeta } from './api.service';
+import { RequestHistoryTypes } from './requests.histories.service';
 import { SportsBase } from './sportsBases.service';
 import { Tenant } from './tenants.service';
 import { User, UserType } from './users.service';
@@ -105,6 +106,7 @@ const populatePermissions = (field: string) => {
 
       entityType: {
         type: 'string',
+        immutable: true,
         enum: Object.values(RequestEntityTypes),
         default: RequestEntityTypes.SPORTS_BASES,
       },
@@ -112,6 +114,7 @@ const populatePermissions = (field: string) => {
       entity: {
         type: 'number',
         columnName: 'entityId',
+        immutable: true,
         async populate(
           ctx: Context,
           _values: Request['entity'][],
@@ -186,6 +189,34 @@ const populatePermissions = (field: string) => {
   },
 })
 export default class RequestsServices extends moleculer.Service {
+  @Action({
+    rest: 'GET /:id/history',
+    params: {
+      id: {
+        type: 'number',
+        convert: true,
+      },
+    },
+  })
+  async getHistory(
+    ctx: Context<{
+      id: number;
+      type?: string;
+      page?: number;
+      pageSize?: number;
+    }>,
+  ) {
+    return ctx.call(`requests.histories.${ctx.params.type || 'list'}`, {
+      sort: '-createdAt',
+      query: {
+        request: ctx.params.id,
+      },
+      page: ctx.params.page,
+      pageSize: ctx.params.pageSize,
+      populate: 'createdBy',
+    });
+  }
+
   @Action({
     rest: 'GET /tasks',
   })
@@ -293,46 +324,86 @@ export default class RequestsServices extends moleculer.Service {
     return error;
   }
 
+  @Method
+  createRequestHistory(ctx: Context, request: Request, type: string, data: any = {}) {
+    const { comment } = ctx.options?.parentCtx?.params as any;
+    return ctx.call('requests.histories.create', {
+      request: request.id,
+      changes: request.changes,
+      comment,
+      ...data,
+      type,
+    });
+  }
+
+  @Event()
+  async 'requests.created'(ctx: Context<EntityChangedParams<Request>>) {
+    const { data: request } = ctx.params;
+
+    if (request.status === RequestStatus.CREATED) {
+      await this.createRequestHistory(ctx, request, RequestHistoryTypes.CREATED);
+    }
+  }
+
   @Event()
   async 'requests.updated'(ctx: Context<EntityChangedParams<Request>>) {
     const { oldData, data } = ctx.params;
 
-    if (oldData?.status !== data.status && data.status === RequestStatus.APPROVED) {
-      const request: Request<'entity'> = await this.resolveEntities(ctx, {
-        id: data.id,
-        populate: 'entity',
-      });
-      const oldEntity = request.entity;
-      const entity = jsonpatch.applyPatch(oldEntity, request.changes, false, false).newDocument;
+    if (data.status !== oldData.status) {
+      const typesByStatus: any = {
+        [RequestStatus.CREATED]: RequestHistoryTypes.CREATED,
+        [RequestStatus.SUBMITTED]: RequestHistoryTypes.SUBMITTED,
+        [RequestStatus.REJECTED]: RequestHistoryTypes.REJECTED,
+        [RequestStatus.RETURNED]: RequestHistoryTypes.RETURNED,
+        [RequestStatus.APPROVED]: RequestHistoryTypes.APPROVED,
+      };
 
-      const serviceName = SERVICE_BY_REQUEST_TYPE[request.entityType];
+      await this.createRequestHistory(ctx, data, typesByStatus[data.status]);
 
-      const meta: Partial<UserAuthMeta> = {};
-
-      if (request.createdBy) {
-        meta.user = await ctx.call('users.resolve', { id: request.createdBy });
-      }
-      if (request.tenant) {
-        meta.profile = await ctx.call('tenants.resolve', { id: request.tenant });
-      }
-
-      const entityWithId: { id: number } = await ctx.call(
-        `${serviceName}.applyRequestChanges`,
-        {
-          entity,
-          oldEntity,
-        },
-        {
-          meta,
-        },
-      );
-
-      if (!request.entity?.id) {
-        await this.updateEntity(ctx, {
-          id: request.id,
-          entity: entityWithId.id,
+      if (data.status === RequestStatus.APPROVED) {
+        const request: Request<'entity'> = await this.resolveEntities(ctx, {
+          id: data.id,
+          populate: 'entity',
         });
+        const oldEntity = request.entity;
+        const entity = jsonpatch.applyPatch(oldEntity, request.changes, false, false).newDocument;
+
+        const serviceName = SERVICE_BY_REQUEST_TYPE[request.entityType];
+
+        const meta: Partial<UserAuthMeta> = {};
+
+        if (request.createdBy) {
+          meta.user = await ctx.call('users.resolve', { id: request.createdBy });
+        }
+        if (request.tenant) {
+          meta.profile = await ctx.call('tenants.resolve', { id: request.tenant });
+        }
+
+        const entityWithId: { id: number } = await ctx.call(
+          `${serviceName}.applyRequestChanges`,
+          {
+            entity,
+            oldEntity,
+          },
+          {
+            meta,
+          },
+        );
+
+        if (!request.entity?.id) {
+          await this.updateEntity(ctx, {
+            id: request.id,
+            entity: entityWithId.id,
+          });
+        }
       }
     }
+  }
+
+  @Event()
+  async 'requests.removed'(ctx: Context<EntityChangedParams<Request>>) {
+    const { data: request } = ctx.params;
+
+    await this.createRequestHistory(ctx, request, RequestHistoryTypes.DELETED);
   }
 }

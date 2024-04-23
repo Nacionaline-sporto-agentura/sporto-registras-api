@@ -326,7 +326,14 @@ export default class RequestsServices extends moleculer.Service {
 
   @Method
   createRequestHistory(ctx: Context, request: Request, type: string, data: any = {}) {
-    const { comment } = ctx.options?.parentCtx?.params as any;
+    // get top ctx (api.service in most cases) to get raw params
+    let topCtx = ctx;
+    while (topCtx.options?.parentCtx) {
+      topCtx = topCtx.options.parentCtx;
+    }
+
+    const { comment } = (topCtx.params as any)?.req?.body || {};
+
     return ctx.call('requests.histories.create', {
       request: request.id,
       changes: request.changes,

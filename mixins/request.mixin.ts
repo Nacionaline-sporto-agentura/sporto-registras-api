@@ -54,9 +54,18 @@ const RequestMixin = {
         const { id, ...serviceFields } = ctx.service.settings.fields;
         let { entity, oldEntity } = ctx.params;
 
+        // Frontend converts arrays to objects to better track changes
         const fixValue = (value: any, settings: any) => {
-          if (settings.type === 'array' && typeof value === 'object') {
-            return Object.values(value);
+          if (settings.type === 'array') {
+            if (Array.isArray(value)) {
+              return value;
+            }
+
+            if (typeof value === 'object') {
+              return Object.values(value);
+            }
+
+            return [];
           }
 
           return value;

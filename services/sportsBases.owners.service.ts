@@ -111,7 +111,7 @@ export default class SportsBasesOwnerService extends moleculer.Service {
           ...data,
           throwErrors: false,
         },
-        { meta: { authToken: ctx.meta.authToken } },
+        { meta: ctx.meta },
       );
 
       if (!!data?.personalCode) {

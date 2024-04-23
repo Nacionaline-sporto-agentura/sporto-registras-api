@@ -65,6 +65,10 @@ function makeMapping(
       };
     }
 
+    if (acc[item[mapping]]) {
+      return acc;
+    }
+
     return { ...acc, [`${item[mapping]}`]: value };
   }, {});
 }

@@ -457,8 +457,9 @@ export default class SportsBasesService extends moleculer.Service {
     const sportsBasesData = await this.actions.fakeData();
 
     for (const sportBaseData of sportsBasesData) {
-      await this.actions.applyRequestChanges({
+      await this.actions.applyOrValidateRequestChanges({
         entity: sportBaseData,
+        apply: true,
       });
     }
   }

@@ -44,32 +44,40 @@ const getFieldSettings = (fieldSettings: any) => {
 };
 
 const RequestMixin = {
+  methods: {
+    // Frontend converts arrays to objects to better track changes
+    fixArrayValue(value: any, settings: any) {
+      if (settings.type === 'array') {
+        if (Array.isArray(value)) {
+          return value;
+        }
+
+        if (typeof value === 'object') {
+          return Object.values(value);
+        }
+
+        return [];
+      }
+
+      return value;
+    },
+  },
+
   actions: {
-    applyRequestChanges: {
+    applyOrValidateRequestChanges: {
       params: {
         entity: 'object|optional',
         oldEntity: 'object|optional',
+        apply: {
+          type: 'boolean',
+          validate: false,
+        },
       },
-      async handler(ctx: Context<{ entity?: any; oldEntity?: any }>) {
+      async handler(ctx: Context<{ entity?: any; oldEntity?: any; apply: boolean }>) {
         const { id, ...serviceFields } = ctx.service.settings.fields;
-        let { entity, oldEntity } = ctx.params;
-
-        // Frontend converts arrays to objects to better track changes
-        const fixValue = (value: any, settings: any) => {
-          if (settings.type === 'array') {
-            if (Array.isArray(value)) {
-              return value;
-            }
-
-            if (typeof value === 'object') {
-              return Object.values(value);
-            }
-
-            return [];
-          }
-
-          return value;
-        };
+        let { entity, oldEntity, apply } = ctx.params;
+        const validate = !apply;
+        const invalidFields: Record<string, any> = {};
 
         // ==============================
         // Handle current service changes
@@ -94,12 +102,14 @@ const RequestMixin = {
         }
 
         if (opertion === 'remove') {
-          return await this.removeEntity(ctx, {
-            id: oldEntity.id,
-          });
+          return validate
+            ? true
+            : this.removeEntity(ctx, {
+                id: oldEntity.id,
+              });
         }
 
-        let entityWithId: any;
+        let entityWithId: any = {};
 
         let updateData: any = {};
         for (const fieldName in serviceFields) {
@@ -111,17 +121,42 @@ const RequestMixin = {
             continue;
 
           if (entity[fieldName] !== oldEntity?.[fieldName]) {
-            updateData[fieldName] = fixValue(entity[fieldName], field);
+            updateData[fieldName] = this.fixArrayValue(entity[fieldName], field);
           }
         }
 
         if (oldEntity?.id) {
-          entityWithId = await this.updateEntity(ctx, {
-            ...updateData,
-            id: oldEntity.id,
-          });
+          if (validate) {
+            const res = this.$validators.update(updateData);
+            if (Array.isArray(res)) {
+              for (const er of res) {
+                invalidFields[er.field] = er.message;
+              }
+            }
+          } else {
+            entityWithId = await this.updateEntity(ctx, {
+              ...updateData,
+              id: oldEntity.id,
+            });
+          }
         } else {
-          entityWithId = await this.createEntity(ctx, updateData);
+          if (validate) {
+            // https://github.com/moleculerjs/database/blob/master/src/validation.js#L39
+            //            const check = compile(
+            //              generateValidatorSchemaFromFields(ctx.service.settings.fields, {
+            //                type: 'create',
+            //              }),
+            //            );
+
+            const res = this.$validators.create(updateData);
+            if (Array.isArray(res)) {
+              for (const er of res) {
+                invalidFields[er.field] = er.message;
+              }
+            }
+          } else {
+            entityWithId = await this.createEntity(ctx, updateData);
+          }
         }
 
         // ==============================
@@ -133,26 +168,38 @@ const RequestMixin = {
           const field: Field = getFieldSettings(serviceFields[fieldName]);
 
           if (field.requestHandler?.service) {
-            const handlerAction = `${field.requestHandler.service}.applyRequestChanges`;
+            const handlerAction = `${field.requestHandler.service}.applyOrValidateRequestChanges`;
 
             // TODO: simplify ifs
             if (field.type === 'array') {
               // Handle inserts and updates
-              for (const childEntity of fixValue(entity[fieldName], field)) {
+              const arrValues = this.fixArrayValue(entity[fieldName], field);
+              for (const childEntityKey in arrValues) {
+                const childEntity = arrValues[childEntityKey];
                 const oldChildEntity =
                   childEntity.id &&
                   oldEntity?.[fieldName]?.find((e: any) => childEntity.id === e.id);
 
                 if (field.requestHandler.relationField) {
-                  childEntity[field.requestHandler.relationField] = entityWithId.id;
+                  if (validate) {
+                    // TODO: de-hardcode 111, better remove from validation fields
+                    childEntity[field.requestHandler.relationField] = 111;
+                  } else {
+                    childEntity[field.requestHandler.relationField] = entityWithId.id;
+                  }
                 }
 
                 // updates creates
-                // TODO: hooks
-                await ctx.call(handlerAction, {
+                const response: boolean | Record<string, any> = await ctx.call(handlerAction, {
                   entity: childEntity,
                   oldEntity: oldChildEntity,
+                  apply,
                 });
+
+                if (validate && response !== true) {
+                  invalidFields[fieldName] ||= {};
+                  invalidFields[fieldName][childEntityKey] = response;
+                }
               }
 
               // Handle removes
@@ -166,6 +213,7 @@ const RequestMixin = {
                     //removes
                     await ctx.call(handlerAction, {
                       oldEntity: oldChildEntity,
+                      apply,
                     });
                   }
                 }
@@ -174,7 +222,15 @@ const RequestMixin = {
           }
         }
 
-        return entityWithId;
+        if (validate) {
+          if (Object.keys(invalidFields).length) {
+            return invalidFields;
+          }
+
+          return true;
+        } else {
+          return entityWithId;
+        }
       },
     },
   },

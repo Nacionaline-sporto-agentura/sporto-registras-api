@@ -135,6 +135,7 @@ const populatePermissions = (field: string) => {
       changes: {
         type: 'array',
         default: [],
+        validate: 'validateChanges',
       },
 
       canEdit: {
@@ -352,6 +353,36 @@ export default class RequestsServices extends moleculer.Service {
     }
   }
 
+  @Method
+  async validateChanges({ ctx, value, entity: request }: FieldHookCallback<Request>) {
+    const entityType: RequestEntityTypes = ctx.params?.entityType || request?.entityType;
+    const entityId: Request['entity'] = ctx.params?.entity || request?.entity;
+    const status: RequestStatus = ctx.params?.status || request?.status;
+
+    // do not validate if Draft, and admin actions
+    if ([RequestStatus.DRAFT, RequestStatus.REJECTED, RequestStatus.RETURNED].includes(status))
+      return true;
+
+    if (!entityType) return 'entityType is missing';
+
+    const serviceName = SERVICE_BY_REQUEST_TYPE[entityType];
+
+    let oldEntity: any = {};
+    if (entityId) {
+      oldEntity = await ctx.call(`${serviceName}.resolve`, { id: entityId });
+    }
+
+    const entity = jsonpatch.applyPatch(oldEntity, value, false, false).newDocument;
+
+    const foo = await ctx.call(`${serviceName}.applyOrValidateRequestChanges`, {
+      entity,
+      oldEntity,
+      apply: false,
+    });
+
+    return foo;
+  }
+
   @Event()
   async 'requests.updated'(ctx: Context<EntityChangedParams<Request>>) {
     const { oldData, data } = ctx.params;
@@ -387,10 +418,11 @@ export default class RequestsServices extends moleculer.Service {
         }
 
         const entityWithId: { id: number } = await ctx.call(
-          `${serviceName}.applyRequestChanges`,
+          `${serviceName}.applyOrValidateRequestChanges`,
           {
             entity,
             oldEntity,
+            apply: true,
           },
           {
             meta,

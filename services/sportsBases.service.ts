@@ -170,7 +170,7 @@ export type SportsBase<
       blindAccessible: 'boolean|required', // for blind people
       plotArea: 'number|required',
       builtPlotArea: 'number|required',
-      audienceSeats: 'number|required',
+
       parkingPlaces: 'number|required',
       dressingRooms: 'number|required',
       methodicalClasses: 'number|required',

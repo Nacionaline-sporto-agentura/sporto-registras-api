@@ -32,6 +32,7 @@ export interface User {
   fullName: string;
   email: string;
   phone: string;
+  duties?: string;
   type: UserType;
   authUser: number;
   authStrategy: string;
@@ -97,6 +98,7 @@ export const USERS_DEFAULT_SCOPES = [
       firstName: 'string',
       lastName: 'string',
       phone: 'string',
+      duties: 'string|optional',
       email: {
         type: 'email',
         set: ({ value }: FieldHookCallback) => value?.toLowerCase().trim(),
@@ -492,6 +494,7 @@ export default class UsersService extends moleculer.Service {
       },
       firstName: 'string|optional',
       lastName: 'string|optional',
+      duties: 'string|optional',
       email: 'string|optional',
       phone: 'string|optional',
       type: 'string|optional',
@@ -507,10 +510,12 @@ export default class UsersService extends moleculer.Service {
       phone?: string;
       type?: string;
       update?: boolean;
+      duties?: string;
       authStrategy?: string;
     }>,
   ) {
-    const { authUser, update, firstName, lastName, email, phone, type, authStrategy } = ctx.params;
+    const { authUser, update, firstName, lastName, email, phone, type, authStrategy, duties } =
+      ctx.params;
     if (!authUser || !authUser.id) return;
 
     const scope = COMMON_DEFAULT_SCOPES;
@@ -536,6 +541,7 @@ export default class UsersService extends moleculer.Service {
       type: authUserIsAdmin ? UserType.ADMIN : UserType.USER,
       email: email || authUser.email,
       phone: phone || authUser.phone,
+      duties,
       authStrategy: authStrategy || UserAuthStrategy.PASSWORD,
     };
 

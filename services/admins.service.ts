@@ -79,6 +79,7 @@ export default class AdminService extends moleculer.Service {
     ctx: Context<{
       firstName: string;
       lastName: string;
+      duties: string;
       phone: string;
       email: string;
       groups: Array<{
@@ -87,7 +88,7 @@ export default class AdminService extends moleculer.Service {
       }>;
     }>,
   ) {
-    const { email, phone, firstName, lastName, groups } = ctx.params;
+    const { email, phone, firstName, lastName, groups, duties } = ctx.params;
     const authUser: any = await ctx.call('auth.users.create', {
       email,
       firstName,
@@ -103,6 +104,7 @@ export default class AdminService extends moleculer.Service {
       lastName,
       email,
       phone,
+      duties,
       update: true,
     });
 

@@ -237,7 +237,7 @@ export default class SportsBasesService extends moleculer.Service {
       const value = additionalValues?.[item.id];
       if (typeof value === 'undefined') {
         throwValidationError(`${title} is a required value`);
-      } else if (type === FieldTypes.TEXT && typeof value !== 'string') {
+      } else if (type === FieldTypes.TEXT_AREA && typeof value !== 'string') {
         throwValidationError(`${title} must be a string`);
       } else if (type === FieldTypes.BOOLEAN && typeof value !== 'boolean') {
         throwValidationError(`${title} ${typeof value} must be a boolean`);

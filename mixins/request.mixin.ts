@@ -1,8 +1,6 @@
 'use strict';
 
-import _ from 'lodash';
 import { Context, Validator } from 'moleculer';
-import { UserAuthMeta } from '../services/api.service';
 
 const {
   validator: { parseShortHand },
@@ -16,13 +14,6 @@ type Field = {
     relationField?: 'string';
     ignoreField?: boolean;
   };
-};
-
-export type RequestMutationPreHook<T = object> = {
-  ctx: Context<unknown, UserAuthMeta>;
-  type: 'remove' | 'update' | 'create';
-  data: Partial<T>;
-  oldData?: Partial<T>;
 };
 
 const getFieldSettings = (fieldSettings: any) => {
@@ -83,22 +74,13 @@ const RequestMixin = {
         // Handle current service changes
         // ==============================
 
-        let opertion: RequestMutationPreHook['type'];
+        let opertion: 'remove' | 'update' | 'create';
         if (!entity && oldEntity?.id) {
           opertion = 'remove';
         } else if (oldEntity?.id) {
           opertion = 'update';
         } else {
           opertion = 'create';
-        }
-
-        if (_.isFunction(this.requestMutationPreHook)) {
-          entity = await this.requestMutationPreHook({
-            ctx,
-            type: opertion,
-            data: entity,
-            oldData: oldEntity,
-          });
         }
 
         if (opertion === 'remove') {

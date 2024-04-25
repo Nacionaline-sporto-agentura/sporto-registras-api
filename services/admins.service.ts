@@ -56,6 +56,7 @@ export default class AdminService extends moleculer.Service {
     params: {
       firstName: 'string',
       lastName: 'string',
+      duties: 'string|optional',
       email: 'string',
       phone: 'string|optional',
       groups: {

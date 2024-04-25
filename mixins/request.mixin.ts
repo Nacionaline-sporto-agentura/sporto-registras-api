@@ -108,6 +108,8 @@ const RequestMixin = {
         }
 
         if (oldEntity?.id) {
+          updateData.id = oldEntity.id;
+
           if (validate) {
             const res = this.$validators.update(updateData);
             if (Array.isArray(res)) {
@@ -116,10 +118,7 @@ const RequestMixin = {
               }
             }
           } else {
-            entityWithId = await this.updateEntity(ctx, {
-              ...updateData,
-              id: oldEntity.id,
-            });
+            entityWithId = await this.updateEntity(ctx, updateData);
           }
         } else {
           if (validate) {

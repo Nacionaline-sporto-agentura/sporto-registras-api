@@ -56,6 +56,7 @@ export default class AdminService extends moleculer.Service {
     params: {
       firstName: 'string',
       lastName: 'string',
+      duties: 'string|optional',
       email: 'string',
       phone: 'string|optional',
       groups: {
@@ -127,6 +128,7 @@ export default class AdminService extends moleculer.Service {
       id: number;
       email: string;
       password: string;
+      duties: string;
       oldPassword: string;
       firstName: string;
       lastName: string;
@@ -137,7 +139,8 @@ export default class AdminService extends moleculer.Service {
       }>;
     }>,
   ) {
-    const { id, email, password, oldPassword, firstName, lastName, phone, groups } = ctx.params;
+    const { id, email, password, oldPassword, firstName, lastName, phone, groups, duties } =
+      ctx.params;
 
     const user: User = await ctx.call('users.resolve', { id, throwIfNotExist: true, scope });
 
@@ -156,6 +159,7 @@ export default class AdminService extends moleculer.Service {
       authUser,
       firstName,
       lastName,
+      duties,
       email,
       phone,
       update: true,

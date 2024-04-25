@@ -166,8 +166,8 @@ export type SportsBase<
         required: true,
       },
       plotNumber: 'string|required',
-      disabledAccessible: 'boolean|required', // for people with physical disability
-      blindAccessible: 'boolean|required', // for blind people
+      disabledAccessible: 'boolean', // for people with physical disability
+      blindAccessible: 'boolean', // for blind people
       plotArea: 'number|required',
       builtPlotArea: 'number|required',
 
@@ -177,7 +177,7 @@ export type SportsBase<
       saunas: 'number|required',
       diningPlaces: 'number|required',
       accommodationPlaces: 'number|required',
-      publicWifi: 'boolean|required',
+      publicWifi: 'boolean',
 
       plans: {
         type: 'array',

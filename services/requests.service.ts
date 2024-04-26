@@ -123,8 +123,7 @@ const populatePermissions = (field: string) => {
           return Promise.all(
             entities.map(async (request) => {
               if (!request.entityId) return {};
-              // TODO: populate based on type
-              return ctx.call('sportsBases.resolve', {
+              return ctx.call('sportsBases.base', {
                 id: request.entityId,
               });
             }),
@@ -369,18 +368,16 @@ export default class RequestsServices extends moleculer.Service {
 
     let oldEntity: any = {};
     if (entityId) {
-      oldEntity = await ctx.call(`${serviceName}.resolve`, { id: entityId });
+      oldEntity = await ctx.call(`${serviceName}.base`, { id: entityId });
     }
 
     const entity = jsonpatch.applyPatch(oldEntity, value, false, false).newDocument;
 
-    const foo = await ctx.call(`${serviceName}.applyOrValidateRequestChanges`, {
+    return ctx.call(`${serviceName}.applyOrValidateRequestChanges`, {
       entity,
       oldEntity,
       apply: false,
     });
-
-    return foo;
   }
 
   @Event()

@@ -330,7 +330,6 @@ export type SportsBase<
       ...TENANT_FIELD,
       ...COMMON_FIELDS,
     },
-    defaultPopulates: ['type', 'level', 'technicalCondition', 'spaces'],
     defaultScopes: [...COMMON_DEFAULT_SCOPES, ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.names],
     scopes: {
       ...COMMON_SCOPES,
@@ -340,6 +339,30 @@ export type SportsBase<
   actions: ONLY_GET_REST_ENABLED,
 })
 export default class SportsBasesService extends moleculer.Service {
+  @Action({
+    rest: 'GET /:id/base',
+    params: {
+      id: 'number|convert',
+    },
+  })
+  base(ctx: Context<{ id: SportsBase['id'] }>) {
+    return this.resolveEntities(ctx, {
+      id: ctx.params.id,
+      populate: [
+        'lastRequest',
+        'type',
+        'level',
+        'technicalCondition',
+        'spaces',
+        'investments',
+        'owners',
+        'canEdit',
+        'canCreateRequest',
+        'canValidate',
+      ],
+    });
+  }
+
   @Method
   async validatePhotos({ value, operation }: FieldHookCallback) {
     if (operation === 'create' || operation === 'update') {

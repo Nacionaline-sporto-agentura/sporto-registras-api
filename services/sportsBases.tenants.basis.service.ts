@@ -2,6 +2,7 @@
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
+
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
   COMMON_DEFAULT_SCOPES,
@@ -10,16 +11,16 @@ import {
   CommonFields,
 } from '../types';
 
-export interface SportsBasesType extends CommonFields {
+export interface SportsBasesTenantsBasis extends CommonFields {
   id: number;
   name: string;
 }
 
 @Service({
-  name: 'sportsBases.types',
+  name: 'sportsBases.tenants.basis',
   mixins: [
     DbConnection({
-      collection: 'sportsBasesTypes',
+      collection: 'sportsBasesTenantsBasis',
     }),
   ],
   settings: {
@@ -38,24 +39,14 @@ export interface SportsBasesType extends CommonFields {
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsBasesTypesService extends moleculer.Service {
+export default class SportsBasesTenantsBasisService extends moleculer.Service {
   @Method
   async seedDB() {
     const data = [
-      { name: 'Uždarų patalpų erdvės' },
-      { name: 'Baseinai' },
-      { name: 'Šaudyklos' },
-      { name: 'Auto / Moto sporto trasos' },
-      { name: 'Slidinėjimo trasos' },
-      { name: 'Kitos sporto šakų erdvės' },
-      { name: 'Kitos lauko sporto erdvės' },
-      { name: 'Ledo arenos' },
-      { name: 'Žirginis sportas' },
-      { name: 'Kitos vidaus sporto erdvės' },
-      { name: 'Pagalbinės patalpos' },
-      { name: 'Stadionas ' },
-      { name: 'Lauko aikštynai' },
-      { name: 'Dviračių trekas' },
+      { name: 'TODO: Basis 1' },
+      { name: 'TODO: Basis 2' },
+      { name: 'TODO: Basis 3' },
+      { name: 'TODO: Basis 4' },
     ];
     await this.createEntities(null, data);
   }

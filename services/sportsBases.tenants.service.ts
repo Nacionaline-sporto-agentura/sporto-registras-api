@@ -3,6 +3,7 @@ import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 
+import RequestMixin from '../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -11,6 +12,7 @@ import {
   CommonPopulates,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
+  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../types';
 import { SportsBase } from './sportsBases.service';
@@ -38,8 +40,9 @@ export type SportsBaseTenant<
   name: 'sportsBases.tenants',
   mixins: [
     DbConnection({
-      collection: 'sportsBases',
+      collection: 'sportsBasesTenants',
     }),
+    RequestMixin,
   ],
   settings: {
     fields: {
@@ -49,19 +52,19 @@ export type SportsBaseTenant<
         primaryKey: true,
         secure: true,
       },
-      tenant: {
-        type: 'number',
-        columnName: 'tenantId',
-        immutable: true,
-        optional: true,
-        populate: 'tenants.resolve',
-      },
       sportBase: {
         type: 'number',
         columnName: 'sportBaseId',
         immutable: true,
-        optional: true,
         populate: 'sportsBases.resolve',
+      },
+      companyName: 'string|required',
+      companyCode: 'string|required',
+      basis: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
+        columnName: 'sportsBasesTenantsBasisId',
+        immutable: true,
+        populate: 'sportsBases.tenants.basis.resolve',
       },
       startAt: {
         type: 'date',

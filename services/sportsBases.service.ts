@@ -21,11 +21,11 @@ import {
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
 import { UserAuthMeta } from './api.service';
 import { RequestEntityTypes, RequestStatus } from './requests.service';
-import { SportsBasesBuildingType } from './sportsBases.buildingTypes.service';
 import { SportBaseInvestment } from './sportsBases.investments.service';
 import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
 import { SportsBasesLevel } from './sportsBases.levels.service';
 import { SportsBaseOwner } from './sportsBases.owners.service';
+import { SportsBasesSpacesBuildingType } from './sportsBases.spaces.buildingTypes.service';
 import { SportBaseSpace } from './sportsBases.spaces.service';
 import { SportBaseSpaceSportType } from './sportsBases.spaces.sportTypes.service';
 import { SportBaseSpaceType } from './sportsBases.spaces.types.service';
@@ -114,21 +114,21 @@ export type SportsBase<
       name: 'string|required',
       type: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'typeId',
+        columnName: 'sportBaseTypeId',
         immutable: true,
         required: true,
         populate: 'sportsBases.types.resolve',
       },
       level: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'levelId',
+        columnName: 'sportBaseLevelId',
         immutable: true,
         required: true,
         populate: 'sportsBases.levels.resolve',
       },
       technicalCondition: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'technicalConditionId',
+        columnName: 'sportBaseTechnicalConditionId',
         immutable: true,
         required: true,
         populate: 'sportsBases.technicalConditions.resolve',
@@ -267,9 +267,13 @@ export type SportsBase<
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
-            populate: ['tenant'],
+            populate: ['basis'],
             sort: '-createdAt',
           },
+        },
+        requestHandler: {
+          service: 'sportsBases.tenants',
+          relationField: 'sportBase',
         },
       },
 
@@ -359,6 +363,7 @@ export default class SportsBasesService extends moleculer.Service {
         'canEdit',
         'canCreateRequest',
         'canValidate',
+        'tenants',
       ],
     });
   }
@@ -392,8 +397,8 @@ export default class SportsBasesService extends moleculer.Service {
       'sportsBases.spaces.sportTypes.find',
     );
 
-    const sportsBasesBuildingTypes: SportsBasesBuildingType[] = await ctx.call(
-      'sportsBases.buildingTypes.find',
+    const sportsBasesBuildingTypes: SportsBasesSpacesBuildingType[] = await ctx.call(
+      'sportsBases.spaces.buildingTypes.find',
     );
 
     const sportsBasesInvestmentsSources: SportBaseInvestmentSource[] = await ctx.call(
@@ -473,7 +478,7 @@ export default class SportsBasesService extends moleculer.Service {
       'sportsBases.technicalConditions',
       'sportsBases.spaces.types',
       'sportsBases.spaces.sportTypes',
-      'sportsBases.buildingTypes',
+      'sportsBases.spaces.buildingTypes',
       'sportsBases.investments.sources',
     ]);
 

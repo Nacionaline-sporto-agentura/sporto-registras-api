@@ -4,11 +4,12 @@ import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../mixins/database.mixin';
 
 import {
+  ACTIONS_MUTATE_ADMIN_ONLY,
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
+  COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
-  ONLY_GET_REST_ENABLED,
   Table,
 } from '../types';
 import { SportsBasesType } from './sportsBases.types.service';
@@ -41,15 +42,16 @@ export type SportBaseSpaceType<
       },
       type: {
         type: 'number',
-        columnName: 'typeId',
+        columnName: 'sportBaseTypeId',
         populate: 'sportsBases.types.resolve',
       },
       name: 'string',
       ...COMMON_FIELDS,
     },
+    scopes: { ...COMMON_SCOPES },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
   },
-  actions: ONLY_GET_REST_ENABLED,
+  actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
 export default class SportsTypesService extends moleculer.Service {
   @Method

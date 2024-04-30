@@ -178,9 +178,22 @@ export const ONLY_GET_REST_ENABLED: { [key: string]: { rest: any } } = {
   },
 };
 
+export const ACTIONS_MUTATE_ADMIN_ONLY = {
+  create: {
+    auth: RestrictionType.ADMIN,
+  },
+  update: {
+    auth: RestrictionType.ADMIN,
+  },
+  remove: {
+    auth: RestrictionType.ADMIN,
+  },
+};
+
 export const GET_REST_ONLY_ACCESSIBLE_TO_ADMINS: { [key: string]: { rest: any } } = {
   // get: {
   //   rest: {
+  //   // NE `rest.auth` o tiesiog `auth` turi buti
   //     auth: RestrictionType.ADMIN,
   //   },
   // },

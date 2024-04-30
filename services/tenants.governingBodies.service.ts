@@ -12,34 +12,36 @@ import {
   CommonPopulates,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
-  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../types';
-import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
+import { Tenant } from './tenants.service';
 
 interface Fields extends CommonFields {
   id: number;
-  fundsAmount: number;
-  improvements: string;
-  appointedAt: Date;
-  sportBase: Date;
-  source: number;
+  tenant: Tenant['id'];
+  name: string;
+  users: {
+    firstName: string;
+    lastName: string;
+    duties: string;
+    personalCode: string;
+  }[];
 }
 
 interface Populates extends CommonPopulates {
-  source: SportBaseInvestmentSource;
+  tenant: Tenant;
 }
 
-export type SportBaseInvestment<
+export type TenantGoverningBody<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
 @Service({
-  name: 'sportsBases.investments',
+  name: 'tenants.governingBodies',
   mixins: [
     DbConnection({
-      collection: 'sportsBasesInvestments',
+      collection: 'tenantGoverningBodies',
     }),
     RequestMixin,
   ],
@@ -51,28 +53,33 @@ export type SportBaseInvestment<
         primaryKey: true,
         secure: true,
       },
-      source: {
-        ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportBaseInvestmentSourceId',
+      tenant: {
+        type: 'number',
+        columnName: 'tenantId',
         required: true,
-        populate: {
-          action: 'sportsBases.investments.sources.resolve',
-          params: {
-            fields: 'id,name',
+        populate: 'tenants.resolve',
+      },
+      name: 'string|required',
+      users: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            firstName: 'string|required',
+            lastName: 'string|required',
+            duties: 'string|required',
+            personalCode: {
+              type: 'string',
+              required: true,
+              get: ({ value }: any) => {
+                if (!value) return;
+                //mask the last 4 digits
+                return value.slice(0, -4).padEnd(value.length, '*');
+              },
+            },
           },
         },
-      },
-      sportBase: {
-        type: 'number',
-        columnName: 'sportBaseId',
-        required: true,
-        populate: 'sportsBases.resolve',
-      },
-      fundsAmount: 'number',
-      improvements: 'string',
-      appointedAt: {
-        type: 'date',
-        columnType: 'datetime',
+        min: 1,
       },
       ...COMMON_FIELDS,
     },
@@ -82,4 +89,4 @@ export type SportBaseInvestment<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class SportsBasesInvestmentsService extends moleculer.Service {}
+export default class TenantsGoverningBodiesService extends moleculer.Service {}

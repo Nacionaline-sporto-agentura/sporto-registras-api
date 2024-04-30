@@ -18,8 +18,8 @@ import {
   Table,
   throwValidationError,
 } from '../types';
-import { SportsBasesBuildingType } from './sportsBases.buildingTypes.service';
 import { SportsBase } from './sportsBases.service';
+import { SportsBasesSpacesBuildingType } from './sportsBases.spaces.buildingTypes.service';
 import { FieldTypes } from './sportsBases.spaces.fields.service';
 import { SportBaseSpaceSportType } from './sportsBases.spaces.sportTypes.service';
 import { SportBaseSpaceTypeAndField } from './sportsBases.spaces.typesAndFields.service';
@@ -32,7 +32,7 @@ interface Fields extends CommonFields {
   type: SportsBasesType['id'];
   sportTypes: SportBaseSpaceSportType['id'][];
   sportBase: SportsBase;
-  buildingType: SportsBasesBuildingType['id'];
+  buildingType: SportsBasesSpacesBuildingType['id'];
   buildingNumber: string;
   buildingPurpose: string;
   buildingArea: number;
@@ -50,7 +50,7 @@ interface Populates extends CommonPopulates {
   technicalCondition: any;
   type: SportsBasesType;
   sportTypes: SportBaseSpaceSportType[];
-  buildingType: SportsBasesBuildingType;
+  buildingType: SportsBasesSpacesBuildingType;
 }
 
 export type SportBaseSpace<
@@ -76,7 +76,7 @@ export type SportBaseSpace<
       },
       technicalCondition: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'technicalConditionId',
+        columnName: 'sportBaseTechnicalConditionId',
         immutable: true,
         required: true,
         populate: {
@@ -88,7 +88,7 @@ export type SportBaseSpace<
       },
       type: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'typeId',
+        columnName: 'sportBaseSpaceTypeId',
         immutable: true,
         optional: true,
         populate: {
@@ -101,6 +101,7 @@ export type SportBaseSpace<
       sportTypes: {
         ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
         columnType: 'json',
+        columnName: 'sportBaseSpaceSportTypes',
         required: true,
         populate: {
           action: 'sportsBases.spaces.sportTypes.resolve',
@@ -118,11 +119,11 @@ export type SportBaseSpace<
       },
       buildingType: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'buildingTypeId',
+        columnName: 'sportBaseSpaceBuildingTypeId',
         immutable: true,
         required: true,
         populate: {
-          action: 'sportsBases.buildingTypes.resolve',
+          action: 'sportsBases.spaces.buildingTypes.resolve',
           params: {
             fields: 'id,name',
           },

@@ -15,31 +15,33 @@ import {
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../types';
-import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
+import { TenantInvestmentSource } from './tenants.investments.sources.service';
+import { Tenant } from './tenants.service';
 
 interface Fields extends CommonFields {
   id: number;
+  tenant: Tenant['id'];
   fundsAmount: number;
-  improvements: string;
+  description: string;
   appointedAt: Date;
-  sportBase: Date;
-  source: number;
+  source: TenantInvestmentSource['id'];
 }
 
 interface Populates extends CommonPopulates {
-  source: SportBaseInvestmentSource;
+  source: TenantInvestmentSource;
+  tenant: Tenant;
 }
 
-export type SportBaseInvestment<
+export type TenantInvestment<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
 @Service({
-  name: 'sportsBases.investments',
+  name: 'tenants.investments',
   mixins: [
     DbConnection({
-      collection: 'sportsBasesInvestments',
+      collection: 'tenantInvestments',
     }),
     RequestMixin,
   ],
@@ -53,23 +55,23 @@ export type SportBaseInvestment<
       },
       source: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportBaseInvestmentSourceId',
+        columnName: 'tenantInvestmentSourceId',
         required: true,
         populate: {
-          action: 'sportsBases.investments.sources.resolve',
+          action: 'tenants.investments.sources.resolve',
           params: {
             fields: 'id,name',
           },
         },
       },
-      sportBase: {
+      tenant: {
         type: 'number',
-        columnName: 'sportBaseId',
+        columnName: 'tenantId',
         required: true,
-        populate: 'sportsBases.resolve',
+        populate: 'tenants.resolve',
       },
-      fundsAmount: 'number',
-      improvements: 'string',
+      fundsAmount: 'number|required',
+      description: 'string',
       appointedAt: {
         type: 'date',
         columnType: 'datetime',
@@ -82,4 +84,4 @@ export type SportBaseInvestment<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class SportsBasesInvestmentsService extends moleculer.Service {}
+export default class TenantsInvestmentsService extends moleculer.Service {}

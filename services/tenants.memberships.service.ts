@@ -12,34 +12,40 @@ import {
   CommonPopulates,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
-  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../types';
-import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
+import { Tenant } from './tenants.service';
+
+export enum MembershipTypes {
+  LITHUANIAN = 'LITHUANIAN',
+  INTERNATIONAL = 'INTERNATIONAL',
+}
 
 interface Fields extends CommonFields {
   id: number;
-  fundsAmount: number;
+  tenant: Tenant['id'];
   improvements: string;
-  appointedAt: Date;
-  sportBase: Date;
-  source: number;
+  type: MembershipTypes;
+  name: string;
+  companyCode: string;
+  startAt: Date;
+  endAt: Date;
 }
 
 interface Populates extends CommonPopulates {
-  source: SportBaseInvestmentSource;
+  tenant: Tenant;
 }
 
-export type SportBaseInvestment<
+export type TenantMembership<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
 @Service({
-  name: 'sportsBases.investments',
+  name: 'tenants.memberships',
   mixins: [
     DbConnection({
-      collection: 'sportsBasesInvestments',
+      collection: 'tenantMemberships',
     }),
     RequestMixin,
   ],
@@ -51,28 +57,27 @@ export type SportBaseInvestment<
         primaryKey: true,
         secure: true,
       },
-      source: {
-        ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportBaseInvestmentSourceId',
-        required: true,
-        populate: {
-          action: 'sportsBases.investments.sources.resolve',
-          params: {
-            fields: 'id,name',
-          },
-        },
+      type: {
+        type: 'string',
+        enum: Object.values(MembershipTypes),
       },
-      sportBase: {
+      tenant: {
         type: 'number',
-        columnName: 'sportBaseId',
+        columnName: 'tenantId',
+        populate: 'tenants.resolve',
         required: true,
-        populate: 'sportsBases.resolve',
       },
-      fundsAmount: 'number',
-      improvements: 'string',
-      appointedAt: {
+      name: 'string|required',
+      companyCode: 'string',
+      startAt: {
         type: 'date',
         columnType: 'datetime',
+        required: true,
+      },
+      endAt: {
+        type: 'date',
+        columnType: 'datetime',
+        required: true,
       },
       ...COMMON_FIELDS,
     },
@@ -82,4 +87,4 @@ export type SportBaseInvestment<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class SportsBasesInvestmentsService extends moleculer.Service {}
+export default class TenantsMembershipsService extends moleculer.Service {}

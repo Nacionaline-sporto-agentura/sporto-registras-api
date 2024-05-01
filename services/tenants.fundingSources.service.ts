@@ -15,7 +15,7 @@ import {
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../types';
-import { TenantInvestmentSource } from './tenants.investments.sources.service';
+import { TenantFundingSourceType } from './tenants.fundingSources.types.service';
 import { Tenant } from './tenants.service';
 
 interface Fields extends CommonFields {
@@ -24,24 +24,24 @@ interface Fields extends CommonFields {
   fundsAmount: number;
   description: string;
   appointedAt: Date;
-  source: TenantInvestmentSource['id'];
+  type: TenantFundingSourceType['id'];
 }
 
 interface Populates extends CommonPopulates {
-  source: TenantInvestmentSource;
+  type: TenantFundingSourceType;
   tenant: Tenant;
 }
 
-export type TenantInvestment<
+export type TenantFundingSource<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
 @Service({
-  name: 'tenants.investments',
+  name: 'tenants.fundingSources',
   mixins: [
     DbConnection({
-      collection: 'tenantInvestments',
+      collection: 'tenantFundingSources',
     }),
     RequestMixin,
   ],
@@ -53,12 +53,12 @@ export type TenantInvestment<
         primaryKey: true,
         secure: true,
       },
-      source: {
+      type: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'tenantInvestmentSourceId',
+        columnName: 'tenantFundingSourceTypeId',
         required: true,
         populate: {
-          action: 'tenants.investments.sources.resolve',
+          action: 'tenants.fundingSources.types.resolve',
           params: {
             fields: 'id,name',
           },
@@ -84,4 +84,4 @@ export type TenantInvestment<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class TenantsInvestmentsService extends moleculer.Service {}
+export default class TenantsFundingSourceService extends moleculer.Service {}

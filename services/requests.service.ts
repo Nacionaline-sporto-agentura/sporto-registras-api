@@ -39,10 +39,12 @@ const adminEditStatuses = [RequestStatus.CREATED, RequestStatus.SUBMITTED];
 
 export enum RequestEntityTypes {
   SPORTS_BASES = 'SPORTS_BASES',
+  TENANTS = 'TENANTS',
 }
 
 export const SERVICE_BY_REQUEST_TYPE = {
   [RequestEntityTypes.SPORTS_BASES]: 'sportsBases',
+  [RequestEntityTypes.TENANTS]: 'tenants',
 };
 
 const nonEditableStatuses = [RequestStatus.APPROVED, RequestStatus.REJECTED];
@@ -106,9 +108,9 @@ const populatePermissions = (field: string) => {
 
       entityType: {
         type: 'string',
-        immutable: true,
         enum: Object.values(RequestEntityTypes),
-        default: RequestEntityTypes.SPORTS_BASES,
+        immutable: true,
+        required: true,
       },
 
       entity: {

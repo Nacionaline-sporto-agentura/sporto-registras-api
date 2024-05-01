@@ -19,16 +19,16 @@ interface Fields extends CommonFields {
 
 interface Populates extends CommonPopulates {}
 
-export type TenantInvestmentSource<
+export type TenantFundingSourceType<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
 @Service({
-  name: 'tenants.investments.sources',
+  name: 'tenants.fundingSources.types',
   mixins: [
     DbConnection({
-      collection: 'tenantInvestmentSources',
+      collection: 'tenantFundingSourcesTypes',
     }),
   ],
   settings: {
@@ -46,7 +46,7 @@ export type TenantInvestmentSource<
   },
   actions: ONLY_GET_REST_ENABLED,
 })
-export default class TenantsInvestmentsSourcesService extends moleculer.Service {
+export default class TenantsFundingSourcesTypesService extends moleculer.Service {
   async seedDB() {
     const data = [
       { name: 'Valstybės biudžetas' },

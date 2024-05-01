@@ -6,6 +6,7 @@ import { Action, Service } from 'moleculer-decorators';
 import _ from 'lodash';
 import filtersMixin from 'moleculer-knex-filters';
 import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
+import RequestMixin from '../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -18,7 +19,11 @@ import {
   throwUnauthorizedError,
 } from '../types';
 import { UserAuthMeta } from './api.service';
+import { RequestEntityTypes } from './requests.service';
 import { TenantUser, TenantUserRole } from './tenantUsers.service';
+import { TenantFundingSource } from './tenants.fundingSources.service';
+import { TenantGoverningBody } from './tenants.governingBodies.service';
+import { TenantMembership } from './tenants.memberships.service';
 import { User, UserType } from './users.service';
 
 interface Fields extends CommonFields {
@@ -27,12 +32,18 @@ interface Fields extends CommonFields {
   role: undefined;
   authGroup: number;
   parent: number;
+  fundingSources: undefined;
+  governingBodies: undefined;
+  memberships: undefined;
 }
 
 interface Populates extends CommonPopulates {
   role: TenantUserRole;
   authGroup: any;
   parent: Tenant;
+  fundingSources: Array<TenantFundingSource<'type'>>;
+  governingBodies: TenantGoverningBody[];
+  memberships: TenantMembership[];
 }
 
 export type Tenant<
@@ -52,6 +63,7 @@ export enum TenantTenantType {
     DbConnection({
       collection: 'tenants',
     }),
+    RequestMixin,
     filtersMixin(),
   ],
 
@@ -63,13 +75,14 @@ export enum TenantTenantType {
         primaryKey: true,
         secure: true,
       },
+
       name: 'string',
-
       email: 'string',
-
       phone: 'string',
-
       code: 'string',
+      type: 'string',
+      legalForm: 'string',
+      address: 'string',
 
       authGroup: {
         type: 'number',
@@ -87,9 +100,6 @@ export enum TenantTenantType {
         default: TenantTenantType.ORGANIZATION,
       },
 
-      type: 'string',
-      legalForm: 'string',
-      address: 'string',
       data: {
         type: 'object',
         properties: {
@@ -140,6 +150,85 @@ export enum TenantTenantType {
             queryKey: 'parent',
             populate: 'children',
           },
+        },
+      },
+
+      lastRequest: {
+        virtual: true,
+        type: 'object',
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('requests.populateByProp'),
+          params: {
+            queryKey: 'entity',
+            query: {
+              entityType: RequestEntityTypes.TENANTS,
+            },
+            mappingMulti: false,
+            sort: '-createdAt',
+          },
+        },
+      },
+
+      fundingSources: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('tenants.fundingSources.populateByProp'),
+          params: {
+            queryKey: 'tenant',
+            mappingMulti: true,
+            populate: ['type'],
+            sort: '-createdAt',
+          },
+        },
+        requestHandler: {
+          service: 'tenants.fundingSources',
+          relationField: 'tenant',
+        },
+      },
+
+      governingBodies: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('tenants.governingBodies.populateByProp'),
+          params: {
+            queryKey: 'tenant',
+            mappingMulti: true,
+            sort: '-createdAt',
+          },
+        },
+        requestHandler: {
+          service: 'tenants.governingBodies',
+          relationField: 'tenant',
+        },
+      },
+
+      memberships: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('tenants.memberships.populateByProp'),
+          params: {
+            queryKey: 'tenant',
+            mappingMulti: true,
+            sort: '-createdAt',
+          },
+        },
+        requestHandler: {
+          service: 'tenants.memberships',
+          relationField: 'tenant',
         },
       },
 
@@ -202,6 +291,19 @@ export enum TenantTenantType {
   },
 })
 export default class TenantsService extends moleculer.Service {
+  @Action({
+    rest: 'GET /:id/base',
+    params: {
+      id: 'number|convert',
+    },
+  })
+  base(ctx: Context<{ id: Tenant['id'] }>) {
+    return this.resolveEntities(ctx, {
+      id: ctx.params.id,
+      populate: ['lastRequest', 'fundingSources', 'governingBodies', 'memberships'],
+    });
+  }
+
   @Action({
     params: {
       authGroup: 'any',

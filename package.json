@@ -60,7 +60,8 @@
     "moleculer-minio": "github:zeckon/moleculer-minio",
     "moleculer-web": "^0.10.5",
     "objection": "^3.0.1",
-    "pg": "^8.10.0"
+    "pg": "^8.10.0",
+    "postmark": "^4.0.2"
   },
   "engines": {
     "node": ">=20.0.0 <21.0.0"

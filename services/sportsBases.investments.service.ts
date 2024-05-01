@@ -1,7 +1,7 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
 
 import RequestMixin from '../mixins/request.mixin';
 import {
@@ -12,22 +12,22 @@ import {
   CommonPopulates,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
-  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../types';
-import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
+import { SportBaseInvestmentItem } from './sportsBases.investments.items.service';
+import { SportsBase } from './sportsBases.service';
 
 interface Fields extends CommonFields {
   id: number;
-  fundsAmount: number;
   improvements: string;
   appointedAt: Date;
-  sportBase: Date;
-  source: number;
+  sportBase: SportsBase['id'];
+  items: undefined;
 }
 
 interface Populates extends CommonPopulates {
-  source: SportBaseInvestmentSource;
+  sportBase: SportsBase;
+  items: Array<SportBaseInvestmentItem<'source'>>;
 }
 
 export type SportBaseInvestment<
@@ -51,29 +51,42 @@ export type SportBaseInvestment<
         primaryKey: true,
         secure: true,
       },
-      source: {
-        ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportBaseInvestmentSourceId',
-        required: true,
-        populate: {
-          action: 'sportsBases.investments.sources.resolve',
-          params: {
-            fields: 'id,name',
-          },
-        },
-      },
+
       sportBase: {
         type: 'number',
         columnName: 'sportBaseId',
         required: true,
         populate: 'sportsBases.resolve',
       },
-      fundsAmount: 'number',
+
       improvements: 'string',
+
       appointedAt: {
         type: 'date',
         columnType: 'datetime',
       },
+
+      items: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('sportsBases.investments.items.populateByProp'),
+          params: {
+            queryKey: 'sportBaseInvestment',
+            mappingMulti: true,
+            populate: ['source'],
+            sort: '-createdAt',
+          },
+        },
+        requestHandler: {
+          service: 'sportsBases.investments.items',
+          relationField: 'sportBaseInvestment',
+        },
+      },
+
       ...COMMON_FIELDS,
     },
 

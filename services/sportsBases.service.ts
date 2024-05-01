@@ -18,6 +18,7 @@ import {
   Table,
 } from '../types';
 
+import filtersMixin from 'moleculer-knex-filters';
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
 import { UserAuthMeta } from './api.service';
 import { RequestEntityTypes, RequestStatus } from './requests.service';
@@ -42,7 +43,13 @@ interface Fields extends CommonFields {
   type: SportsBasesType['id'];
   level: SportsBasesLevel['id'];
   technicalCondition: SportsBasesTechicalCondition['id'];
-  address: string;
+  address: {
+    municipality: string;
+    city: string;
+    street: string;
+    house: string;
+    apartment?: string;
+  };
   coordinates: {
     x: number;
     y: number;
@@ -84,7 +91,7 @@ interface Fields extends CommonFields {
 interface Populates extends CommonPopulates {
   spaces: SportBaseSpace<'technicalCondition' | 'type' | 'sportTypes' | 'buildingType'>[];
   lastRequest: Request;
-  investments: SportBaseInvestment<'source'>[];
+  investments: SportBaseInvestment<'items'>[];
   owners: SportsBaseOwner<'user' | 'tenant'>[];
   tenants: SportsBaseTenant<'tenant'>[];
   tenant: Tenant;
@@ -102,6 +109,7 @@ export type SportsBase<
       collection: 'sportsBases',
     }),
     RequestMixin,
+    filtersMixin(),
   ],
   settings: {
     fields: {
@@ -134,7 +142,17 @@ export type SportsBase<
         populate: 'sportsBases.technicalConditions.resolve',
       },
 
-      address: 'string|required',
+      address: {
+        type: 'object',
+        required: true,
+        properties: {
+          municipality: 'string|required',
+          city: 'string|required',
+          street: 'string|required',
+          house: 'string|required',
+          apartment: 'string',
+        },
+      },
       coordinates: {
         type: 'object',
         properties: {
@@ -225,7 +243,7 @@ export type SportsBase<
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
-            populate: ['source'],
+            populate: ['items'],
             sort: '-createdAt',
           },
         },
@@ -423,7 +441,13 @@ export default class SportsBasesService extends moleculer.Service {
       type: faker.helpers.arrayElement(sportsBasesTypes),
       level: faker.helpers.arrayElement(sportsBasesLevels),
       technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions),
-      address: faker.location.streetAddress(),
+      address: {
+        municipality: faker.location.county(),
+        city: faker.location.city(),
+        street: faker.location.streetName(),
+        house: faker.location.buildingNumber(),
+        apartment: faker.location.buildingNumber(),
+      },
       coordinates: {
         x: faker.number.float({ min: 53, max: 55 }),
         y: faker.number.float({ min: 24, max: 27 }),

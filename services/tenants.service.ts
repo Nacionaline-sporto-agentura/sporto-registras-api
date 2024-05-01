@@ -4,6 +4,7 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 
 import _ from 'lodash';
+import filtersMixin from 'moleculer-knex-filters';
 import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
@@ -51,6 +52,7 @@ export enum TenantTenantType {
     DbConnection({
       collection: 'tenants',
     }),
+    filtersMixin(),
   ],
 
   settings: {

@@ -1544,6 +1544,11 @@ fast-xml-parser@^4.2.2:
   dependencies:
     strnum "^1.0.5"
 
+fastest-validator@^1.12.0:
+  version "1.18.0"
+  resolved "https://registry.yarnpkg.com/fastest-validator/-/fastest-validator-1.18.0.tgz#77a51fa09de13727f3216827a2cbd9f90e09a84c"
+  integrity sha512-3v6UJF1U/b56GqzDZqEtgPi2g261eGI9zQWDUrmOVKHiAktFIsHklp4XViX+a4yF7S5JjPm4KKmkgCsaara03g==
+
 fastest-validator@^1.16.0, fastest-validator@^1.17.0:
   version "1.17.0"
   resolved "https://registry.yarnpkg.com/fastest-validator/-/fastest-validator-1.17.0.tgz#0c032e9c42c40a237d24b20be187f732ebdcc062"
@@ -2599,6 +2604,13 @@ moleculer-decorators@^1.3.0:
   integrity sha512-zU0catv3rMYz+8rCSgK6l9q3ilAzJve60tHf2Hyjdi4eLEdVvVPnn2c5VJupjfi5q8dhnUTYugK6YTMKUl/4UA==
   dependencies:
     moleculer "^0.14.0"
+
+"moleculer-knex-filters@github:DadPatch/moleculer-knex-filters":
+  version "1.0.0"
+  resolved "https://codeload.github.com/DadPatch/moleculer-knex-filters/tar.gz/01fdd3c70a6ae055b234022062149244687452bc"
+  dependencies:
+    fastest-validator "^1.12.0"
+    lodash "^4.17.21"
 
 "moleculer-minio@github:zeckon/moleculer-minio":
   version "2.0.0"

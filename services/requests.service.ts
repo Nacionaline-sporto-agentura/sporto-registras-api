@@ -34,6 +34,15 @@ export enum RequestStatus {
   RETURNED = 'RETURNED', // grazinta taisyti
 }
 
+export const StatusReadable = {
+  [RequestStatus.DRAFT]: 'Juodraštis',
+  [RequestStatus.CREATED]: 'Pateiktas',
+  [RequestStatus.SUBMITTED]: 'Pakartotinai pateiktas',
+  [RequestStatus.APPROVED]: 'Patvirtintas',
+  [RequestStatus.REJECTED]: 'Atmestas',
+  [RequestStatus.RETURNED]: 'Grąžintas taisyti',
+};
+
 const userEditStatuses = [RequestStatus.DRAFT, RequestStatus.RETURNED];
 const adminEditStatuses = [RequestStatus.CREATED, RequestStatus.SUBMITTED];
 
@@ -125,7 +134,8 @@ const populatePermissions = (field: string) => {
           return Promise.all(
             entities.map(async (request) => {
               if (!request.entityId) return {};
-              return ctx.call('sportsBases.base', {
+
+              return ctx.call(`${SERVICE_BY_REQUEST_TYPE[request.entityType]}.base`, {
                 id: request.entityId,
               });
             }),

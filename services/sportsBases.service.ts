@@ -4,7 +4,7 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
 import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
 
-import RequestMixin from '../mixins/request.mixin';
+import RequestMixin, { REQUEST_FIELDS } from '../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -20,8 +20,7 @@ import {
 
 import filtersMixin from 'moleculer-knex-filters';
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
-import { UserAuthMeta } from './api.service';
-import { RequestEntityTypes, RequestStatus } from './requests.service';
+import { RequestEntityTypes } from './requests.service';
 import { SportBaseInvestment } from './sportsBases.investments.service';
 import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
 import { SportsBasesLevel } from './sportsBases.levels.service';
@@ -295,60 +294,7 @@ export type SportsBase<
         },
       },
 
-      lastRequest: {
-        virtual: true,
-        type: 'object',
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn('requests.populateByProp'),
-          params: {
-            queryKey: 'entity',
-            query: {
-              entityType: RequestEntityTypes.SPORTS_BASES,
-            },
-            mappingMulti: false,
-            sort: '-createdAt',
-          },
-        },
-      },
-
-      canCreateRequest: {
-        virtual: true,
-        type: 'boolean',
-        populate: {
-          keyField: 'id',
-          async handler(
-            ctx: Context<{ populate: string | string[] }, UserAuthMeta>,
-            values: any[],
-            docs: any[],
-          ) {
-            const params = {
-              id: values,
-              sort: '-createdAt',
-              queryKey: 'entity',
-              mapping: true,
-              mappingMulti: false,
-            };
-            const byKey: any = await ctx.call('requests.populateByProp', params);
-            const { user, profile } = ctx?.meta;
-
-            return docs?.map((d) => {
-              const fieldValue = d.id;
-              if (!fieldValue) return false;
-              const request = byKey[fieldValue];
-
-              const { tenant } = request;
-              const isCreatedByUser = !tenant && user?.id === request.createdBy;
-              const isCreatedByTenant = profile?.id === tenant;
-
-              if (!isCreatedByTenant && !isCreatedByUser) return false;
-
-              return [RequestStatus.APPROVED, RequestStatus.REJECTED].includes(request.status);
-            });
-          },
-        },
-      },
+      ...REQUEST_FIELDS(RequestEntityTypes.SPORTS_BASES),
       ...TENANT_FIELD,
       ...COMMON_FIELDS,
     },
@@ -372,14 +318,13 @@ export default class SportsBasesService extends moleculer.Service {
       id: ctx.params.id,
       populate: [
         'lastRequest',
+        'canCreateRequest',
         'type',
         'level',
         'technicalCondition',
         'spaces',
         'investments',
         'owners',
-        'canEdit',
-        'canCreateRequest',
         'canValidate',
         'tenants',
       ],

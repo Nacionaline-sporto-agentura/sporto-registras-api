@@ -1,6 +1,9 @@
 'use strict';
 
 import { Context, Validator } from 'moleculer';
+import { UserAuthMeta } from '../services/api.service';
+import { RequestEntityTypes, RequestStatus } from '../services/requests.service';
+import { PopulateHandlerFn } from './database.mixin';
 
 const {
   validator: { parseShortHand },
@@ -15,6 +18,63 @@ type Field = {
     ignoreField?: boolean;
   };
 };
+
+export const REQUEST_FIELDS = (entityType: RequestEntityTypes) => ({
+  lastRequest: {
+    virtual: true,
+    type: 'object',
+    readonly: true,
+    populate: {
+      keyField: 'id',
+      handler: PopulateHandlerFn('requests.populateByProp'),
+      params: {
+        queryKey: 'entity',
+        query: {
+          entityType,
+        },
+        mappingMulti: false,
+        sort: '-createdAt',
+      },
+    },
+  },
+
+  canCreateRequest: {
+    virtual: true,
+    type: 'boolean',
+    populate: {
+      keyField: 'id',
+      async handler(
+        ctx: Context<{ populate: string | string[] }, UserAuthMeta>,
+        values: any[],
+        docs: any[],
+      ) {
+        const params = {
+          id: values,
+          sort: '-createdAt',
+          queryKey: 'entity',
+          mapping: true,
+          mappingMulti: false,
+        };
+        const byKey: any = await ctx.call('requests.populateByProp', params);
+        const { user, profile } = ctx?.meta;
+
+        return docs?.map((d) => {
+          const fieldValue = d.id;
+          if (!fieldValue) return false;
+          const request = byKey[fieldValue];
+
+          const { tenant } = request;
+          const isCreatedByUser = !tenant && user?.id === request.createdBy;
+          const isCreatedByTenant = profile?.id === tenant;
+
+          if (!isCreatedByTenant && !isCreatedByUser) return false;
+
+          return [RequestStatus.APPROVED, RequestStatus.REJECTED].includes(request.status);
+        });
+      },
+    },
+  },
+});
 
 const getFieldSettings = (fieldSettings: any) => {
   const settings =

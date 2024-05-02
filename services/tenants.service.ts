@@ -6,7 +6,7 @@ import { Action, Service } from 'moleculer-decorators';
 import _ from 'lodash';
 import filtersMixin from 'moleculer-knex-filters';
 import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
-import RequestMixin from '../mixins/request.mixin';
+import RequestMixin, { REQUEST_FIELDS } from '../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -153,24 +153,6 @@ export enum TenantTenantType {
         },
       },
 
-      lastRequest: {
-        virtual: true,
-        type: 'object',
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn('requests.populateByProp'),
-          params: {
-            queryKey: 'entity',
-            query: {
-              entityType: RequestEntityTypes.TENANTS,
-            },
-            mappingMulti: false,
-            sort: '-createdAt',
-          },
-        },
-      },
-
       fundingSources: {
         type: 'array',
         items: { type: 'object' },
@@ -232,6 +214,7 @@ export enum TenantTenantType {
         },
       },
 
+      ...REQUEST_FIELDS(RequestEntityTypes.TENANTS),
       ...COMMON_FIELDS,
     },
 
@@ -300,7 +283,13 @@ export default class TenantsService extends moleculer.Service {
   base(ctx: Context<{ id: Tenant['id'] }>) {
     return this.resolveEntities(ctx, {
       id: ctx.params.id,
-      populate: ['lastRequest', 'fundingSources', 'governingBodies', 'memberships'],
+      populate: [
+        'lastRequest',
+        'canCreateRequest',
+        'fundingSources',
+        'governingBodies',
+        'memberships',
+      ],
     });
   }
 

@@ -309,6 +309,8 @@ export default class TenantsService extends moleculer.Service {
         'fundingSources',
         'governingBodies',
         'memberships',
+        'legalForm',
+        'type',
       ],
     });
   }

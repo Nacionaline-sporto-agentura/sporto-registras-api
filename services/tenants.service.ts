@@ -15,6 +15,7 @@ import {
   CommonPopulates,
   FieldHookCallback,
   RestrictionType,
+  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
   throwUnauthorizedError,
 } from '../types';
@@ -80,8 +81,6 @@ export enum TenantTenantType {
       email: 'string',
       phone: 'string',
       code: 'string',
-      type: 'string',
-      legalForm: 'string',
       address: 'string',
 
       authGroup: {
@@ -98,6 +97,27 @@ export enum TenantTenantType {
         type: 'string',
         enum: Object.values(TenantTenantType),
         default: TenantTenantType.ORGANIZATION,
+      },
+
+      legalForm: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
+        columnName: 'legalFormId',
+        populate: {
+          action: 'tenants.legalForms.resolve',
+          params: {
+            fields: 'id,name',
+          },
+        },
+      },
+      type: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
+        columnName: 'sportOrganizationTypeId',
+        populate: {
+          action: 'tenants.sportOrganizationTypes.resolve',
+          params: {
+            fields: 'id,name',
+          },
+        },
       },
 
       data: {

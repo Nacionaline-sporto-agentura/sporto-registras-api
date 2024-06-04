@@ -1,9 +1,9 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection from '../../../mixins/database.mixin';
 
-import RequestMixin from '../mixins/request.mixin';
+import RequestMixin from '../../../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -14,9 +14,9 @@ import {
   ONLY_GET_REST_ENABLED,
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
-} from '../types';
-import { SportBaseInvestment } from './sportsBases.investments.service';
-import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
+} from '../../../types';
+import { SportBaseInvestmentSource } from '../../types/sportsBases/investments/sources.service';
+import { SportBaseInvestment } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -80,4 +80,4 @@ export type SportBaseInvestmentItem<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class SportsBasesInvestmentsItemsService extends moleculer.Service {}
+export default class extends moleculer.Service {}

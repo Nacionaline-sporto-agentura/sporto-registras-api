@@ -9,7 +9,7 @@ import {
   RestrictionType,
   throwUnauthorizedError,
 } from '../types';
-import { Tenant } from './tenants.service';
+import { Tenant } from './tenants/index.service';
 import { User } from './users.service';
 
 export interface UserAuthMeta {

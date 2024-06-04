@@ -1,12 +1,12 @@
 'use strict';
 
-import moleculer, { Context } from 'moleculer';
+import moleculer, { Context, RestSchema } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 
-import _ from 'lodash';
+import _, { merge } from 'lodash';
 import filtersMixin from 'moleculer-knex-filters';
-import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
-import RequestMixin, { REQUEST_FIELDS } from '../mixins/request.mixin';
+import DbConnection, { PopulateHandlerFn } from '../../mixins/database.mixin';
+import RequestMixin, { REQUEST_FIELDS } from '../../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -17,15 +17,16 @@ import {
   RestrictionType,
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
+  throwNotFoundError,
   throwUnauthorizedError,
-} from '../types';
-import { UserAuthMeta } from './api.service';
-import { RequestEntityTypes } from './requests.service';
-import { TenantUser, TenantUserRole } from './tenantUsers.service';
-import { TenantFundingSource } from './tenants.fundingSources.service';
-import { TenantGoverningBody } from './tenants.governingBodies.service';
-import { TenantMembership } from './tenants.memberships.service';
-import { User, UserType } from './users.service';
+} from '../../types';
+import { UserAuthMeta } from '../api.service';
+import { RequestEntityTypes } from '../requests/index.service';
+import { TenantUser, TenantUserRole } from '../tenantUsers.service';
+import { User, UserType } from '../users.service';
+import { TenantFundingSource } from './fundingSources.service';
+import { TenantGoverningBody } from './governingBodies.service';
+import { TenantMembership } from './memberships.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -56,6 +57,20 @@ export enum TenantTenantType {
   MUNICIPALITY = 'MUNICIPALITY',
   ORGANIZATION = 'ORGANIZATION',
 }
+
+const publicFields = [
+  'id',
+  'name',
+  'code',
+  'phone',
+  'email',
+  'legalForm',
+  'type',
+  'data',
+  'sportsBases',
+];
+
+const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
 
 @Service({
   name: 'tenants',
@@ -231,6 +246,24 @@ export enum TenantTenantType {
         requestHandler: {
           service: 'tenants.memberships',
           relationField: 'tenant',
+        },
+      },
+
+      publicSportsBases: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('sportsBases.populateByProp'),
+          params: {
+            queryKey: 'tenant',
+            mappingMulti: true,
+            sort: 'name',
+            populate: ['publicSpaces'],
+            fields: ['id', 'name', 'address', 'publicSpaces', 'tenant', 'type'],
+          },
         },
       },
 
@@ -498,6 +531,60 @@ export default class TenantsService extends moleculer.Service {
     });
 
     return ctx.call('tenants.list', params);
+  }
+
+  @Action({
+    rest: <RestSchema>{
+      method: 'GET',
+      basePath: '/public/organizations',
+      path: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+  })
+  async publicOrganizations(ctx: Context) {
+    const params = merge({}, ctx.params || {}, {
+      query: { tenantType: TenantTenantType.ORGANIZATION },
+    });
+
+    const organizations = await ctx.call('tenants.list', {
+      ...params,
+      fields: publicFields,
+      populate: publicPopulates,
+    });
+
+    return organizations;
+  }
+
+  @Action({
+    rest: <RestSchema>{
+      method: 'GET',
+      basePath: '/public/organizations/:id',
+      path: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+    params: {
+      id: {
+        type: 'number',
+        convert: true,
+      },
+    },
+  })
+  async publicOrganization(ctx: Context<{ id: string }>) {
+    const organization: Tenant = await this.findEntity(ctx, {
+      ...ctx.params,
+      fields: publicFields,
+      populate: publicPopulates,
+      query: {
+        id: ctx.params.id,
+        tenantType: TenantTenantType.ORGANIZATION,
+      },
+    });
+
+    if (!organization) {
+      throwNotFoundError('Organization not found');
+    }
+
+    return organization;
   }
 
   @Action({

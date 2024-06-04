@@ -3,7 +3,7 @@ import * as jsonpatch from 'fast-json-patch';
 import { Operation } from 'fast-json-patch';
 import moleculer, { Context } from 'moleculer';
 import { Action, Event, Method, Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection from '../../mixins/database.mixin';
 
 import _ from 'lodash';
 import {
@@ -17,13 +17,13 @@ import {
   RestrictionType,
   TENANT_FIELD,
   Table,
-} from '../types';
-import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
-import { UserAuthMeta } from './api.service';
-import { RequestHistoryTypes } from './requests.histories.service';
-import { SportsBase } from './sportsBases.service';
-import { Tenant } from './tenants.service';
-import { User, UserType } from './users.service';
+} from '../../types';
+import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
+import { UserAuthMeta } from '../api.service';
+import { SportsBase } from '../sportsBases/index.service';
+import { Tenant } from '../tenants/index.service';
+import { User, UserType } from '../users.service';
+import { RequestHistoryTypes } from './histories.service';
 
 export enum RequestStatus {
   DRAFT = 'DRAFT', // juodrastis

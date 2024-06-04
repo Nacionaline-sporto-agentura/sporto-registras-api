@@ -1,7 +1,7 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection from '../../../../mixins/database.mixin';
 
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
@@ -9,18 +9,18 @@ import {
   COMMON_FIELDS,
   COMMON_SCOPES,
   CommonFields,
-} from '../types';
+} from '../../../../types';
 
-export interface SportsBasesSpacesBuildingType extends CommonFields {
+export interface SportBaseSpaceEnergyClass extends CommonFields {
   id: number;
   name: string;
 }
 
 @Service({
-  name: 'sportsBases.spaces.buildingTypes',
+  name: 'sportsBases.spaces.energyClasses',
   mixins: [
     DbConnection({
-      collection: 'sportsBasesSpacesBuildingTypes',
+      collection: 'sportBaseSpaceEnergyClasses',
     }),
   ],
   settings: {
@@ -39,14 +39,20 @@ export interface SportsBasesSpacesBuildingType extends CommonFields {
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsBasesSpacesBuildingTypesService extends moleculer.Service {
+export default class SportsBasesSpacesEnergyClassesService extends moleculer.Service {
   @Method
   async seedDB() {
     const data = [
-      { name: 'Viešieji pastatai' },
-      { name: 'Inžineriniai statiniai' },
-      { name: 'Laikinoji statyba' },
-      { name: 'Sporto objektai' },
+      { name: 'Nenurodyta / Nėra' },
+      { name: 'A++' },
+      { name: 'A+' },
+      { name: 'A' },
+      { name: 'B' },
+      { name: 'C' },
+      { name: 'D' },
+      { name: 'E' },
+      { name: 'F' },
+      { name: 'G' },
     ];
     await this.createEntities(null, data);
   }

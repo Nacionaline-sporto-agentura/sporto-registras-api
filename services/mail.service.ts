@@ -3,7 +3,12 @@ import { Context, default as Moleculer } from 'moleculer';
 import { Event, Service } from 'moleculer-decorators';
 import { ServerClient } from 'postmark';
 import { EntityChangedParams } from '../types';
-import { Request, RequestEntityTypes, RequestStatus, StatusReadable } from './requests.service';
+import {
+  Request,
+  RequestEntityTypes,
+  RequestStatus,
+  StatusReadable,
+} from './requests/index.service';
 import { User } from './users.service';
 
 @Service({

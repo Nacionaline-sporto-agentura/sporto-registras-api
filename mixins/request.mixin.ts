@@ -2,7 +2,7 @@
 
 import { Context, Validator } from 'moleculer';
 import { UserAuthMeta } from '../services/api.service';
-import { RequestEntityTypes, RequestStatus } from '../services/requests.service';
+import { RequestEntityTypes, RequestStatus } from '../services/requests/index.service';
 import { PopulateHandlerFn } from './database.mixin';
 
 const {

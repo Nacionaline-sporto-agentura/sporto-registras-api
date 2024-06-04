@@ -1,10 +1,10 @@
 'use strict';
 import { faker } from '@faker-js/faker';
-import moleculer, { Context } from 'moleculer';
+import moleculer, { Context, RestSchema } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
-import DbConnection, { PopulateHandlerFn } from '../mixins/database.mixin';
+import DbConnection, { PopulateHandlerFn } from '../../mixins/database.mixin';
 
-import RequestMixin, { REQUEST_FIELDS } from '../mixins/request.mixin';
+import RequestMixin, { REQUEST_FIELDS } from '../../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -13,28 +13,30 @@ import {
   CommonPopulates,
   FieldHookCallback,
   ONLY_GET_REST_ENABLED,
+  RestrictionType,
   TENANT_FIELD,
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
-} from '../types';
+} from '../../types';
 
 import filtersMixin from 'moleculer-knex-filters';
-import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../utils';
-import { RequestEntityTypes } from './requests.service';
-import { SportBaseInvestment } from './sportsBases.investments.service';
-import { SportBaseInvestmentSource } from './sportsBases.investments.sources.service';
-import { SportsBasesLevel } from './sportsBases.levels.service';
-import { SportsBaseOwner } from './sportsBases.owners.service';
-import { SportsBasesSpacesBuildingType } from './sportsBases.spaces.buildingTypes.service';
-import { SportBaseSpace } from './sportsBases.spaces.service';
-import { SportBaseSpaceSportType } from './sportsBases.spaces.sportTypes.service';
-import { SportBaseSpaceType } from './sportsBases.spaces.types.service';
+import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
+import { RequestEntityTypes } from '../requests/index.service';
+import { Tenant, TenantTenantType } from '../tenants/index.service';
+import { SportBaseInvestmentSource } from '../types/sportsBases/investments/sources.service';
+import { SportsBasesLevel } from '../types/sportsBases/levels.service';
+import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
+import { SportBaseSpaceEnergyClass } from '../types/sportsBases/spaces/energyClasses.service';
+import { SportBaseSpaceSportType } from '../types/sportsBases/spaces/sportTypes.service';
+import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
 import SportsBasesTechnicalConditionsService, {
   SportsBasesTechicalCondition,
-} from './sportsBases.technicalConditions.service';
-import { SportsBaseTenant } from './sportsBases.tenants.service';
-import { SportsBasesType } from './sportsBases.types.service';
-import { Tenant } from './tenants.service';
+} from '../types/sportsBases/technicalConditions.service';
+import { SportsBasesType } from '../types/sportsBases/types.service';
+import { SportBaseInvestment } from './investments/index.service';
+import { SportsBaseOwner } from './owners.service';
+import { SportBaseSpace } from './spaces.service';
+import { SportsBaseTenant } from './tenants.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -88,7 +90,7 @@ interface Fields extends CommonFields {
 }
 
 interface Populates extends CommonPopulates {
-  spaces: SportBaseSpace<'technicalCondition' | 'type' | 'sportTypes' | 'buildingType'>[];
+  spaces: SportBaseSpace<'technicalCondition' | 'type' | 'sportTypes', 'buildingPurpose'>[];
   lastRequest: Request;
   investments: SportBaseInvestment<'items'>[];
   owners: SportsBaseOwner<'user' | 'tenant'>[];
@@ -100,6 +102,31 @@ export type SportsBase<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
+
+const publicFields = [
+  'id',
+  'name',
+  'address',
+  'type',
+  'technicalCondition',
+  'level',
+  'webPage',
+  'photos',
+  'sportsBases',
+  'parkingPlaces',
+  'dressingRooms',
+  'methodicalClasses',
+  'saunas',
+  'diningPlaces',
+  'accommodationPlaces',
+  'publicWifi',
+  'publicSpaces',
+  'publicTenants',
+  'blindAccessible',
+  'disabledAccessible',
+];
+
+const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 'publicTenants'];
 
 @Service({
   name: 'sportsBases',
@@ -294,6 +321,54 @@ export type SportsBase<
         },
       },
 
+      publicSpaces: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('sportsBases.spaces.populateByProp'),
+          params: {
+            queryKey: 'sportBase',
+            mappingMulti: true,
+            fields: [
+              'id',
+              'type',
+              'name',
+              'sportBase',
+              'sportTypes',
+              'technicalCondition',
+              'constructionDate',
+              'latestRenovationDate',
+              'energyClass',
+              'photos',
+              'additionalValues',
+            ],
+            populate: ['technicalCondition', 'type', 'sportTypes'],
+            sort: 'name',
+          },
+        },
+      },
+
+      publicTenants: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn('sportsBases.tenants.populateByProp'),
+          params: {
+            queryKey: 'sportBase',
+            mappingMulti: true,
+            fields: ['id', 'sportBase', 'name', 'companyName', 'companyCode', 'basis'],
+            populate: ['basis'],
+            sort: '-createdAt',
+          },
+        },
+      },
+
       ...REQUEST_FIELDS(RequestEntityTypes.SPORTS_BASES),
       ...TENANT_FIELD,
       ...COMMON_FIELDS,
@@ -331,6 +406,69 @@ export default class SportsBasesService extends moleculer.Service {
     });
   }
 
+  @Action({
+    rest: <RestSchema>{
+      method: 'GET',
+      basePath: '/public/sportsRegister/count',
+      path: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+  })
+  async publicSportsRegisterCount(ctx: Context) {
+    const sportBases = await ctx.call('sportsBases.count');
+    const organizations = await ctx.call('tenants.count', {
+      query: { tenantType: TenantTenantType.ORGANIZATION },
+    });
+
+    return { sportBases, organizations };
+  }
+
+  @Action({
+    rest: <RestSchema>{
+      method: 'GET',
+      basePath: '/public/sportsBases',
+      path: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+  })
+  async publicSportBases(ctx: Context) {
+    const params: any = ctx?.params || {};
+
+    const sportsBases = await ctx.call('sportsBases.list', {
+      ...params,
+      fields: publicFields,
+      populate: publicPopulates,
+    });
+
+    return sportsBases;
+  }
+
+  @Action({
+    rest: <RestSchema>{
+      method: 'GET',
+      basePath: '/public/sportsBases/:id',
+      path: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+    params: {
+      id: {
+        type: 'number',
+        convert: true,
+      },
+    },
+  })
+  async publicSportBase(ctx: Context<{ id: string }>) {
+    const sportsBase: SportsBase = await ctx.call('sportsBases.resolve', {
+      ...ctx.params,
+      fields: publicFields,
+      populate: publicPopulates,
+      id: ctx.params.id,
+      throwIfNotExist: true,
+    });
+
+    return sportsBase;
+  }
+
   @Method
   async validatePhotos({ value, operation }: FieldHookCallback) {
     if (operation === 'create' || operation === 'update') {
@@ -360,8 +498,12 @@ export default class SportsBasesService extends moleculer.Service {
       'sportsBases.spaces.sportTypes.find',
     );
 
-    const sportsBasesBuildingTypes: SportsBasesSpacesBuildingType[] = await ctx.call(
-      'sportsBases.spaces.buildingTypes.find',
+    const sportsBasesSpacesBuildingPurposes: SportBaseSpaceBuildingPurpose[] = await ctx.call(
+      'sportsBases.spaces.buildingPurposes.find',
+    );
+
+    const sportsBasesSpacesEnergyClasses: SportBaseSpaceEnergyClass[] = await ctx.call(
+      'sportsBases.spaces.energyClasses.find',
     );
 
     const sportsBasesInvestmentsSources: SportBaseInvestmentSource[] = await ctx.call(
@@ -416,10 +558,10 @@ export default class SportsBasesService extends moleculer.Service {
         name: faker.lorem.words({ min: 1, max: 3 }),
         technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions),
         type: faker.helpers.arrayElement(sportsBasesSpacesTypes),
-        buildingType: faker.helpers.arrayElement(sportsBasesBuildingTypes),
+        buildingPurpose: faker.helpers.arrayElement(sportsBasesSpacesBuildingPurposes),
+        energyClass: faker.helpers.arrayElement(sportsBasesSpacesEnergyClasses),
         sportTypes: faker.helpers.arrayElements(sportsBasesSpacesSportTypes),
         buildingNumber: faker.number.int(10000),
-        buildingPurpose: faker.lorem.sentence(),
         buildingArea: faker.number.int(1000),
         photos: getPhotos(),
         energyClassCertificate: {
@@ -447,7 +589,8 @@ export default class SportsBasesService extends moleculer.Service {
       'sportsBases.technicalConditions',
       'sportsBases.spaces.types',
       'sportsBases.spaces.sportTypes',
-      'sportsBases.spaces.buildingTypes',
+      'sportsBases.spaces.buildingPurposes',
+      'sportsBases.spaces.energyClasses',
       'sportsBases.investments.sources',
     ]);
 

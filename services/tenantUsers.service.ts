@@ -15,7 +15,7 @@ import {
   throwUnauthorizedError,
 } from '../types';
 import { UserAuthMeta } from './api.service';
-import { Tenant } from './tenants.service';
+import { Tenant } from './tenants/index.service';
 import { User, UserType } from './users.service';
 
 export enum TenantUserRole {

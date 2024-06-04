@@ -1,9 +1,9 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection from '../../mixins/database.mixin';
 
-import RequestMixin from '../mixins/request.mixin';
+import RequestMixin from '../../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -13,39 +13,47 @@ import {
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   Table,
-} from '../types';
-import { Tenant } from './tenants.service';
-
-export enum MembershipTypes {
-  LITHUANIAN = 'LITHUANIAN',
-  INTERNATIONAL = 'INTERNATIONAL',
-}
+} from '../../types';
+import { Tenant } from '../tenants/index.service';
+import { User } from '../users.service';
+import { SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
   tenant: Tenant['id'];
-  improvements: string;
-  type: MembershipTypes;
-  name: string;
+  user: User['id'];
+  sportBase: SportsBase['id'];
+}
+
+interface ViispUser {
+  sportBase: SportsBaseOwner['sportBase'];
+  personalCode: string;
+  firstName: string;
+  lastName: string;
+}
+
+interface ViispCompany {
+  sportBase: SportsBaseOwner['sportBase'];
   companyCode: string;
-  startAt: Date;
-  endAt: Date;
+  name: string;
 }
 
 interface Populates extends CommonPopulates {
+  user: User;
   tenant: Tenant;
+  sportBase: SportsBase;
 }
 
-export type TenantMembership<
+export type SportsBaseOwner<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
 @Service({
-  name: 'tenants.memberships',
+  name: 'sportsBases.owners',
   mixins: [
     DbConnection({
-      collection: 'tenantMemberships',
+      collection: 'sportsBasesOwners',
     }),
     RequestMixin,
   ],
@@ -57,34 +65,23 @@ export type TenantMembership<
         primaryKey: true,
         secure: true,
       },
-      type: {
-        type: 'string',
-        enum: Object.values(MembershipTypes),
-      },
-      tenant: {
-        type: 'number',
-        columnName: 'tenantId',
-        populate: 'tenants.resolve',
-        required: true,
-      },
+
       name: 'string|required',
-      companyCode: 'string',
-      startAt: {
-        type: 'date',
-        columnType: 'datetime',
-        required: true,
-      },
-      endAt: {
-        type: 'date',
-        columnType: 'datetime',
-        required: true,
+      website: 'string|required',
+      companyCode: 'string|required',
+
+      sportBase: {
+        type: 'number',
+        columnName: 'sportBaseId',
+        immutable: true,
+        optional: true,
+        populate: 'sportsBases.resolve',
       },
       ...COMMON_FIELDS,
     },
-
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
     scopes: { ...COMMON_SCOPES },
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class TenantsMembershipsService extends moleculer.Service {}
+export default class SportsBasesOwnerService extends moleculer.Service {}

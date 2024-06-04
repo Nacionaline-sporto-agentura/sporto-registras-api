@@ -1,9 +1,9 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection from '../../mixins/database.mixin';
 
-import RequestMixin from '../mixins/request.mixin';
+import RequestMixin from '../../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -17,13 +17,13 @@ import {
   TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
   throwValidationError,
-} from '../types';
-import { SportsBase } from './sportsBases.service';
-import { SportsBasesSpacesBuildingType } from './sportsBases.spaces.buildingTypes.service';
-import { FieldTypes } from './sportsBases.spaces.fields.service';
-import { SportBaseSpaceSportType } from './sportsBases.spaces.sportTypes.service';
-import { SportBaseSpaceTypeAndField } from './sportsBases.spaces.typesAndFields.service';
-import { SportsBasesType } from './sportsBases.types.service';
+} from '../../types';
+import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
+import { FieldTypes } from '../types/sportsBases/spaces/fields.service';
+import { SportBaseSpaceSportType } from '../types/sportsBases/spaces/sportTypes.service';
+import { SportBaseSpaceTypeAndField } from '../types/sportsBases/spaces/typesAndFields.service';
+import { SportsBasesType } from '../types/sportsBases/types.service';
+import { SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -32,9 +32,8 @@ interface Fields extends CommonFields {
   type: SportsBasesType['id'];
   sportTypes: SportBaseSpaceSportType['id'][];
   sportBase: SportsBase;
-  buildingType: SportsBasesSpacesBuildingType['id'];
   buildingNumber: string;
-  buildingPurpose: string;
+  buildingPurpose: SportBaseSpaceBuildingPurpose['id'];
   buildingArea: number;
   energyClass: number;
   constructionDate: Date;
@@ -50,7 +49,7 @@ interface Populates extends CommonPopulates {
   technicalCondition: any;
   type: SportsBasesType;
   sportTypes: SportBaseSpaceSportType[];
-  buildingType: SportsBasesSpacesBuildingType;
+  buildingPurpose: SportBaseSpaceBuildingPurpose;
 }
 
 export type SportBaseSpace<
@@ -117,26 +116,37 @@ export type SportBaseSpace<
         optional: true,
         populate: 'sportsBases.resolve',
       },
-      buildingType: {
+      buildingPurpose: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportBaseSpaceBuildingTypeId',
+        columnName: 'sportBaseSpaceBuildingPurposeId',
         immutable: true,
         required: true,
         populate: {
-          action: 'sportsBases.spaces.buildingTypes.resolve',
+          action: 'sportsBases.spaces.buildingPurposes.resolve',
           params: {
             fields: 'id,name',
           },
         },
       },
+
       buildingNumber: {
         type: 'string',
         required: true,
         validate: 'validateBuildingNumber',
       },
-      buildingPurpose: 'string',
       buildingArea: 'number',
-      energyClass: 'string',
+      energyClass: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
+        columnName: 'sportBaseSpaceEnergyClassId',
+        immutable: true,
+        required: true,
+        populate: {
+          action: 'sportsBases.spaces.EnergyClasses.resolve',
+          params: {
+            fields: 'id,name',
+          },
+        },
+      },
       energyClassCertificate: {
         type: 'object',
         properties: {

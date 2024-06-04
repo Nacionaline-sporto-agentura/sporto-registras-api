@@ -13,7 +13,7 @@ import {
 
 import DbConnection from '../mixins/database.mixin';
 import { AuthUserRole, UserAuthMeta } from './api.service';
-import { Tenant } from './tenants.service';
+import { Tenant } from './tenants/index.service';
 import { TenantUserRole } from './tenantUsers.service';
 
 export enum UserType {

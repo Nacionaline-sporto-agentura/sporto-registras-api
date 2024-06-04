@@ -1,7 +1,7 @@
 'use strict';
-import moleculer from 'moleculer';
-import { Method, Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import moleculer, { Context, RestSchema } from 'moleculer';
+import { Action, Method, Service } from 'moleculer-decorators';
+import DbConnection from '../../../../mixins/database.mixin';
 
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
@@ -10,10 +10,11 @@ import {
   COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  RestrictionType,
   Table,
-} from '../types';
-import { SportBaseSpaceField } from './sportsBases.spaces.fields.service';
-import { SportBaseSpaceType } from './sportsBases.spaces.types.service';
+} from '../../../../types';
+import { SportBaseSpaceField } from './fields.service';
+import { SportBaseSpaceType } from './types.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -66,6 +67,26 @@ export type SportBaseSpaceTypeAndField<
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
 export default class SportsBasesSpacesTypesAndFieldsService extends moleculer.Service {
+  @Action({
+    rest: <RestSchema>{
+      method: 'GET',
+      basePath: '/public/typesAndFields',
+      path: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+  })
+  async publicTypesAndFields(ctx: Context) {
+    const params: any = ctx?.params || {};
+
+    const typesAndFields = await ctx.call('sportsBases.spaces.typesAndFields.find', {
+      ...params,
+      fields: ['id', 'type', 'field'],
+      populate: ['field'],
+    });
+
+    return typesAndFields;
+  }
+
   @Method
   async seedDB() {
     await this.broker.waitForServices(['sportsBases.spaces.types', 'sportsBases.spaces.fields']);

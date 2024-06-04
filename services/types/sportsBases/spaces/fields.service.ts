@@ -1,7 +1,7 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection from '../../../../mixins/database.mixin';
 
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
@@ -11,7 +11,7 @@ import {
   CommonFields,
   CommonPopulates,
   Table,
-} from '../types';
+} from '../../../../types';
 
 export const FieldTypes = {
   SELECT: 'SELECT',

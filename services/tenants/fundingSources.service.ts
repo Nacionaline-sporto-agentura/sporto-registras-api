@@ -1,9 +1,9 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection from '../../mixins/database.mixin';
 
-import RequestMixin from '../mixins/request.mixin';
+import RequestMixin from '../../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
@@ -14,9 +14,9 @@ import {
   ONLY_GET_REST_ENABLED,
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
-} from '../types';
-import { TenantFundingSourceType } from './tenants.fundingSources.types.service';
-import { Tenant } from './tenants.service';
+} from '../../types';
+import { TenantFundingSourceType } from '../types/tenants/fundingSources/types.service';
+import { Tenant } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;

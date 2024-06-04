@@ -3,8 +3,8 @@
 import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
 
-import DbConnection from '../mixins/database.mixin';
-import { COMMON_DEFAULT_SCOPES, COMMON_FIELDS, COMMON_SCOPES } from '../types';
+import DbConnection from '../../mixins/database.mixin';
+import { COMMON_DEFAULT_SCOPES, COMMON_FIELDS, COMMON_SCOPES } from '../../types';
 
 export const RequestHistoryTypes = {
   CREATED: 'CREATED',

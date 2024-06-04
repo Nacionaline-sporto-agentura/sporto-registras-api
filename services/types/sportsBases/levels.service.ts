@@ -1,14 +1,14 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
-import DbConnection from '../mixins/database.mixin';
+import DbConnection from '../../../mixins/database.mixin';
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
   COMMON_SCOPES,
   CommonFields,
-} from '../types';
+} from '../../../types';
 
 export interface SportsBasesLevel extends CommonFields {
   id: number;

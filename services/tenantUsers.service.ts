@@ -629,10 +629,7 @@ export default class TenantUsersService extends moleculer.Service {
     const { user } = ctx.meta;
     if (!user?.id || user?.type === UserType.ADMIN) return [];
 
-    const tenants: Tenant[] = await ctx.call('tenantUsers.findByUser', {
-      id: user.id,
-      fields: ['id', 'name', 'role'],
-    });
+    const tenants: Tenant[] = await ctx.call('tenantUsers.findByUser', { id: user.id });
 
     return tenants;
   }

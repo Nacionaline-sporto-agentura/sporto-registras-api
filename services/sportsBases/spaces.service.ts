@@ -141,7 +141,7 @@ export type SportBaseSpace<
         immutable: true,
         required: true,
         populate: {
-          action: 'sportsBases.spaces.EnergyClasses.resolve',
+          action: 'sportsBases.spaces.energyClasses.resolve',
           params: {
             fields: 'id,name',
           },

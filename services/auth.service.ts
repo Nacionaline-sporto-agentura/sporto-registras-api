@@ -250,6 +250,8 @@ export default class AuthService extends moleculer.Service {
         email: i.email,
         phone: i.phone,
         role: i.role,
+        tenantType: i.tenantType,
+        data: i.data || {},
       }));
     }
 

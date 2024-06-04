@@ -124,15 +124,7 @@ export const USERS_DEFAULT_SCOPES = [
         populate(_ctx: Context, _values: any, users: any[]) {
           return Promise.all(
             users.map(async (user: any) => {
-              return this.broker.call(
-                'tenantUsers.getProfiles',
-                {},
-                {
-                  meta: {
-                    user,
-                  },
-                },
-              );
+              return this.broker.call('tenantUsers.getProfiles', {}, { meta: { user } });
             }),
           );
         },
@@ -666,20 +658,19 @@ export default class UsersService extends moleculer.Service {
     });
   }
 
-  // @Method
-  // async seedDB() {
-  //   await this.broker.waitForServices(['auth', 'tenants', 'tenantUsers']);
-  //   const data: Array<any> = await this.broker.call('auth.getSeedData', {
-  //     timeout: 120 * 1000,
-  //   });
-  //
-  //   for (const authUser of data) {
-  //     await this.broker.call('auth.createUserWithTenantsIfNeeded', {
-  //       authUser,
-  //       authUserGroups: authUser?.groups,
-  //     });
-  //   }
-  // }
+  @Action()
+  async seedAuthData() {
+    const data: Array<any> = await this.broker.call('auth.getSeedData', {
+      timeout: 120 * 1000,
+    });
+
+    for (const authUser of data) {
+      await this.broker.call('auth.createUserWithTenantsIfNeeded', {
+        authUser,
+        authUserGroups: authUser?.groups,
+      });
+    }
+  }
 
   @Event()
   async 'users.**'() {

@@ -143,6 +143,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
           hasBeneficiaryStatus: 'boolean',
           nonGovernmentalOrganization: 'boolean',
           nonFormalEducation: 'boolean',
+          canHaveChildren: 'boolean',
         },
       },
 

@@ -45,8 +45,10 @@ export function getRandomFileName(length: number = 30) {
   return makeid(length);
 }
 
+export const SN_FILES = 'files';
+
 @Service({
-  name: 'files',
+  name: SN_FILES,
   mixins: [MinioMixin],
   settings: {
     endPoint: process.env.MINIO_ENDPOINT,
@@ -56,7 +58,7 @@ export function getRandomFileName(length: number = 30) {
     secretKey: process.env.MINIO_SECRETKEY,
   },
 })
-export default class FilesService extends Moleculer.Service {
+export default class extends Moleculer.Service {
   @Action({
     params: {
       bucketName: {
@@ -111,7 +113,7 @@ export default class FilesService extends Moleculer.Service {
     const bucketName = MINIO_BUCKET;
 
     try {
-      await ctx.call('files.putObject', ctx.params, {
+      await ctx.call(`${SN_FILES}.putObject`, ctx.params, {
         meta: {
           bucketName,
           objectName: objectFileName,
@@ -128,7 +130,7 @@ export default class FilesService extends Moleculer.Service {
       );
     }
 
-    const { size }: { size: number } = await ctx.call('files.statObject', {
+    const { size }: { size: number } = await ctx.call(`${SN_FILES}.statObject`, {
       objectName: objectFileName,
       bucketName,
     });
@@ -179,7 +181,7 @@ export default class FilesService extends Moleculer.Service {
     const objectName = `${tenant}/${user}/${name}`;
 
     try {
-      const reader: NodeJS.ReadableStream = await ctx.call('files.getObject', {
+      const reader: NodeJS.ReadableStream = await ctx.call(`${SN_FILES}.getObject`, {
         bucketName: bucket,
         objectName,
       });
@@ -232,7 +234,7 @@ export default class FilesService extends Moleculer.Service {
   ) {
     const isPrivate = ctx.meta.$multipart.private == 'true';
     if (!isPrivate) {
-      return await ctx.call('files.getUrl', {
+      return await ctx.call(`${SN_FILES}.getUrl`, {
         objectName,
         bucketName: MINIO_BUCKET,
       });

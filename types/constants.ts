@@ -1,5 +1,4 @@
 import Moleculer, { Errors } from 'moleculer';
-import { User } from '../services/users.service';
 import { FieldHookCallback } from './';
 
 export enum RestrictionType {
@@ -18,83 +17,6 @@ export type Table<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Pick<Omit<Fields, P> & Pick<Populates, P>, Extract<P | Exclude<keyof Fields, P>, F>>;
-
-export interface CommonFields {
-  createdBy: User['id'];
-  createdAt: Date;
-  updatedBy: User['id'];
-  updatedAt: Date;
-  deletedBy: User['id'];
-  detetedAt: Date;
-}
-
-export interface CommonPopulates {
-  createdBy: User;
-  updatedBy: User;
-  deletedBy: User;
-}
-
-export const COMMON_FIELDS = {
-  createdBy: {
-    type: 'number',
-    readonly: true,
-    onCreate: ({ ctx }: FieldHookCallback) => ctx?.meta?.user?.id,
-    populate: {
-      action: 'users.resolve',
-      params: {
-        scope: false,
-      },
-    },
-    requestHandler: false,
-  },
-  createdAt: {
-    type: 'date',
-    columnType: 'datetime',
-    readonly: true,
-    onCreate: () => new Date(),
-    requestHandler: false,
-  },
-  updatedBy: {
-    type: 'number',
-    readonly: true,
-    hidden: 'byDefault',
-    onUpdate: ({ ctx }: FieldHookCallback) => ctx?.meta?.user?.id,
-    populate: {
-      action: 'users.resolve',
-      params: {
-        scope: false,
-      },
-    },
-    requestHandler: false,
-  },
-  updatedAt: {
-    type: 'date',
-    columnType: 'datetime',
-    hidden: 'byDefault',
-    readonly: true,
-    onUpdate: () => new Date(),
-    requestHandler: false,
-  },
-  deletedBy: {
-    type: 'number',
-    readonly: true,
-    onRemove: ({ ctx }: FieldHookCallback) => ctx?.meta?.user?.id,
-    populate: {
-      action: 'users.resolve',
-      params: {
-        scope: false,
-      },
-    },
-    requestHandler: false,
-  },
-  deletedAt: {
-    type: 'date',
-    columnType: 'datetime',
-    readonly: true,
-    onRemove: () => new Date(),
-    requestHandler: false,
-  },
-};
 
 export const TENANT_FIELD = {
   tenant: {

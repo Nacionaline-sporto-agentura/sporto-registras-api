@@ -12,6 +12,7 @@ import {
   CommonPopulates,
   Table,
 } from '../../../../types';
+import { tableName, tmpRestFix } from '../../../../utils';
 
 interface Fields extends CommonFields {
   id: number;
@@ -25,14 +26,17 @@ export type SportBaseInvestmentSource<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_INVESTMENTS_SOURCES = 'types.sportsBases.investments.sources';
+
 @Service({
-  name: 'sportsBases.investments.sources',
+  name: SN_SPORTSBASES_INVESTMENTS_SOURCES,
   mixins: [
     DbConnection({
-      collection: 'sportsBasesInvestmentsSources',
+      collection: tableName(SN_SPORTSBASES_INVESTMENTS_SOURCES),
     }),
   ],
   settings: {
+    rest: tmpRestFix(SN_SPORTSBASES_INVESTMENTS_SOURCES),
     fields: {
       id: {
         type: 'string',
@@ -48,7 +52,7 @@ export type SportBaseInvestmentSource<
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsBasesInvestmentsSourcesService extends moleculer.Service {
+export default class extends moleculer.Service {
   async seedDB() {
     const data = [
       {

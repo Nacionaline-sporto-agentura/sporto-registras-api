@@ -10,20 +10,24 @@ import {
   COMMON_SCOPES,
   CommonFields,
 } from '../../../../types';
+import { tableName, tmpRestFix } from '../../../../utils';
 
 export interface SportBaseSpaceEnergyClass extends CommonFields {
   id: number;
   name: string;
 }
 
+export const SN_SPORTSBASES_SPACES_ENERGYCLASSES = 'types.sportsBases.spaces.energyClasses';
+
 @Service({
-  name: 'sportsBases.spaces.energyClasses',
+  name: SN_SPORTSBASES_SPACES_ENERGYCLASSES,
   mixins: [
     DbConnection({
-      collection: 'sportBaseSpaceEnergyClasses',
+      collection: tableName(SN_SPORTSBASES_SPACES_ENERGYCLASSES),
     }),
   ],
   settings: {
+    rest: tmpRestFix(SN_SPORTSBASES_SPACES_ENERGYCLASSES),
     fields: {
       id: {
         type: 'string',
@@ -39,7 +43,7 @@ export interface SportBaseSpaceEnergyClass extends CommonFields {
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsBasesSpacesEnergyClassesService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Method
   async seedDB() {
     const data = [

@@ -18,19 +18,28 @@ import {
   Table,
   throwValidationError,
 } from '../../types';
-import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
+import { SN_TYPES_SPORTTYPES, SportType } from '../types/sportTypes/index.service';
+import {
+  SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
+  SportBaseSpaceBuildingPurpose,
+} from '../types/sportsBases/spaces/buildingsPurposes.service';
+import { SN_SPORTSBASES_SPACES_ENERGYCLASSES } from '../types/sportsBases/spaces/energyClasses.service';
 import { FieldTypes } from '../types/sportsBases/spaces/fields.service';
-import { SportBaseSpaceSportType } from '../types/sportsBases/spaces/sportTypes.service';
-import { SportBaseSpaceTypeAndField } from '../types/sportsBases/spaces/typesAndFields.service';
+import { SN_SPORTSBASES_SPACES_TYPES } from '../types/sportsBases/spaces/types.service';
+import {
+  SN_SPORTSBASES_SPACES_TYPESANDFIELDS,
+  SportBaseSpaceTypeAndField,
+} from '../types/sportsBases/spaces/typesAndFields.service';
+import { SN_SPORTSBASES_TECHNICALCONDITIONS } from '../types/sportsBases/technicalConditions.service';
 import { SportsBasesType } from '../types/sportsBases/types.service';
-import { SportsBase } from './index.service';
+import { SN_SPORTSBASES, SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
   name: string;
   technicalCondition: any;
   type: SportsBasesType['id'];
-  sportTypes: SportBaseSpaceSportType['id'][];
+  sportTypes: SportType['id'][];
   sportBase: SportsBase;
   buildingNumber: string;
   buildingPurpose: SportBaseSpaceBuildingPurpose['id'];
@@ -48,7 +57,7 @@ interface Fields extends CommonFields {
 interface Populates extends CommonPopulates {
   technicalCondition: any;
   type: SportsBasesType;
-  sportTypes: SportBaseSpaceSportType[];
+  sportTypes: SportType[];
   buildingPurpose: SportBaseSpaceBuildingPurpose;
 }
 
@@ -57,8 +66,10 @@ export type SportBaseSpace<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_SPACES = 'sportsBases.spaces';
+
 @Service({
-  name: 'sportsBases.spaces',
+  name: SN_SPORTSBASES_SPACES,
   mixins: [
     DbConnection({
       collection: 'sportsBasesSpaces',
@@ -79,7 +90,7 @@ export type SportBaseSpace<
         immutable: true,
         required: true,
         populate: {
-          action: 'sportsBases.technicalConditions.resolve',
+          action: `${SN_SPORTSBASES_TECHNICALCONDITIONS}.resolve`,
           params: {
             fields: 'id,name',
           },
@@ -91,7 +102,7 @@ export type SportBaseSpace<
         immutable: true,
         optional: true,
         populate: {
-          action: 'sportsBases.spaces.types.resolve',
+          action: `${SN_SPORTSBASES_SPACES_TYPES}.resolve`,
           params: {
             fields: 'id,type,name',
           },
@@ -103,7 +114,7 @@ export type SportBaseSpace<
         columnName: 'sportBaseSpaceSportTypes',
         required: true,
         populate: {
-          action: 'sportsBases.spaces.sportTypes.resolve',
+          action: `${SN_TYPES_SPORTTYPES}.resolve`,
           params: {
             fields: 'id,name',
           },
@@ -114,7 +125,7 @@ export type SportBaseSpace<
         columnName: 'sportBaseId',
         immutable: true,
         optional: true,
-        populate: 'sportsBases.resolve',
+        populate: `${SN_SPORTSBASES}.resolve`,
       },
       buildingPurpose: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
@@ -122,7 +133,7 @@ export type SportBaseSpace<
         immutable: true,
         required: true,
         populate: {
-          action: 'sportsBases.spaces.buildingPurposes.resolve',
+          action: `${SN_SPORTSBASES_SPACES_BUILDINGPURPOSES}.resolve`,
           params: {
             fields: 'id,name',
           },
@@ -141,7 +152,7 @@ export type SportBaseSpace<
         immutable: true,
         required: true,
         populate: {
-          action: 'sportsBases.spaces.energyClasses.resolve',
+          action: `${SN_SPORTSBASES_SPACES_ENERGYCLASSES}.resolve`,
           params: {
             fields: 'id,name',
           },
@@ -193,7 +204,7 @@ export type SportBaseSpace<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class SportsBasesService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Method
   validatePhotos({ value }: FieldHookCallback) {
     return (
@@ -205,7 +216,7 @@ export default class SportsBasesService extends moleculer.Service {
   @Method
   async validateBuildingNumber({ value, entity }: FieldHookCallback) {
     if (entity?.buildingNumber !== value) {
-      const found: number = await this.broker.call('sportsBases.spaces.count', {
+      const found: number = await this.broker.call(`${SN_SPORTSBASES_SPACES}.count`, {
         query: { buildingNumber: value },
       });
       if (!!found) {
@@ -236,7 +247,7 @@ export default class SportsBasesService extends moleculer.Service {
     }
 
     const typesAndFields: SportBaseSpaceTypeAndField[] = await ctx.call(
-      'sportsBases.spaces.typesAndFields.find',
+      `${SN_SPORTSBASES_SPACES_TYPESANDFIELDS}.find`,
       {
         query: { type },
         populate: 'field',

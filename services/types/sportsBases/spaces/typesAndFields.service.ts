@@ -13,8 +13,9 @@ import {
   RestrictionType,
   Table,
 } from '../../../../types';
-import { SportBaseSpaceField } from './fields.service';
-import { SportBaseSpaceType } from './types.service';
+import { tableName, tmpRestFix } from '../../../../utils';
+import { SN_SPORTSBASES_SPACES_FIELDS, SportBaseSpaceField } from './fields.service';
+import { SN_SPORTSBASES_SPACES_TYPES, SportBaseSpaceType } from './types.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -29,14 +30,17 @@ export type SportBaseSpaceTypeAndField<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_SPACES_TYPESANDFIELDS = 'types.sportsBases.spaces.typesAndFields';
+
 @Service({
-  name: 'sportsBases.spaces.typesAndFields',
+  name: SN_SPORTSBASES_SPACES_TYPESANDFIELDS,
   mixins: [
     DbConnection({
-      collection: 'sportsBasesSpacesTypesAndFields',
+      collection: tableName(SN_SPORTSBASES_SPACES_TYPESANDFIELDS),
     }),
   ],
   settings: {
+    rest: tmpRestFix(SN_SPORTSBASES_SPACES_TYPESANDFIELDS),
     fields: {
       id: {
         type: 'string',
@@ -49,14 +53,14 @@ export type SportBaseSpaceTypeAndField<
         columnName: 'sportBaseSpaceTypeId',
         immutable: true,
         optional: true,
-        populate: 'sportsBases.spaces.types.resolve',
+        populate: `${SN_SPORTSBASES_SPACES_TYPES}.resolve`,
       },
       field: {
         type: 'number',
         columnName: 'sportBaseSpaceFieldId',
         immutable: true,
         optional: true,
-        populate: 'sportsBases.spaces.fields.resolve',
+        populate: `${SN_SPORTSBASES_SPACES_FIELDS}.resolve`,
       },
 
       ...COMMON_FIELDS,
@@ -66,7 +70,7 @@ export type SportBaseSpaceTypeAndField<
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsBasesSpacesTypesAndFieldsService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Action({
     rest: <RestSchema>{
       method: 'GET',
@@ -78,7 +82,7 @@ export default class SportsBasesSpacesTypesAndFieldsService extends moleculer.Se
   async publicTypesAndFields(ctx: Context) {
     const params: any = ctx?.params || {};
 
-    const typesAndFields = await ctx.call('sportsBases.spaces.typesAndFields.find', {
+    const typesAndFields = await ctx.call(`${SN_SPORTSBASES_SPACES_TYPESANDFIELDS}.find`, {
       ...params,
       fields: ['id', 'type', 'field'],
       populate: ['field'],
@@ -89,12 +93,12 @@ export default class SportsBasesSpacesTypesAndFieldsService extends moleculer.Se
 
   @Method
   async seedDB() {
-    await this.broker.waitForServices(['sportsBases.spaces.types', 'sportsBases.spaces.fields']);
+    await this.broker.waitForServices([SN_SPORTSBASES_SPACES_TYPES, SN_SPORTSBASES_SPACES_FIELDS]);
     const types: Array<SportBaseSpaceType> = await this.broker.call(
-      'sportsBases.spaces.types.find',
+      `${SN_SPORTSBASES_SPACES_TYPES}.find`,
     );
     const fields: Array<SportBaseSpaceField> = await this.broker.call(
-      'sportsBases.spaces.fields.find',
+      `${SN_SPORTSBASES_SPACES_FIELDS}.find`,
     );
 
     const typesIds = types.reduce(

@@ -9,8 +9,10 @@ import {
   RestrictionType,
   throwUnauthorizedError,
 } from '../types';
+import { SN_AUTH } from './auth.service';
+import { SN_TENANTUSERS } from './tenantUsers.service';
 import { Tenant } from './tenants/index.service';
-import { User } from './users.service';
+import { SN_USERS, User } from './users.service';
 
 export interface UserAuthMeta {
   user: User;
@@ -26,8 +28,10 @@ export enum AuthUserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
 }
 
+export const SN_API = 'api';
+
 @Service({
-  name: 'api',
+  name: SN_API,
   mixins: [ApiGateway],
   // More info about settings: https://moleculer.services/docs/0.14/moleculer-web.html
   // TODO: helmet
@@ -140,7 +144,7 @@ export enum AuthUserRole {
     },
   },
 })
-export default class ApiService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Action({
     auth: RestrictionType.PUBLIC,
     rest: {
@@ -193,13 +197,13 @@ export default class ApiService extends moleculer.Service {
     const token = auth.slice(7);
 
     // it will throw error if token not valid
-    const authUser: any = await ctx.call('auth.users.resolveToken', null, {
+    const authUser: any = await ctx.call(`${SN_AUTH}.users.resolveToken`, null, {
       meta: { authToken: token },
     });
 
-    const app: any = await ctx.call('auth.apps.resolveToken');
+    const app: any = await ctx.call(`${SN_AUTH}.apps.resolveToken`);
 
-    const user: User = await ctx.call('users.resolveByAuthUser', {
+    const user: User = await ctx.call(`${SN_USERS}.resolveByAuthUser`, {
       authUser,
     });
 
@@ -210,7 +214,7 @@ export default class ApiService extends moleculer.Service {
     const profile = req.headers['x-profile'];
 
     if (profile) {
-      const tenantWithRole: Tenant = await ctx.call('tenantUsers.getProfile', {
+      const tenantWithRole: Tenant = await ctx.call(`${SN_TENANTUSERS}.getProfile`, {
         id: user.id,
         profile,
       });
@@ -244,7 +248,7 @@ export default class ApiService extends moleculer.Service {
 
     const allAuth = [...aAuth, ...oAuth].filter(Boolean);
     const auth = [...new Set(allAuth)];
-    const valid = await ctx.call('auth.validateType', { auth });
+    const valid = await ctx.call(`${SN_AUTH}.validateType`, { auth });
 
     if (!valid) {
       return throwUnauthorizedError(ApiGateway.Errors.ERR_INVALID_TOKEN);

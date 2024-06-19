@@ -12,6 +12,7 @@ import {
   CommonPopulates,
   Table,
 } from '../../../../types';
+import { tableName, tmpRestFix } from '../../../../utils';
 
 interface Fields extends CommonFields {
   id: number;
@@ -34,14 +35,17 @@ export type SportBaseSpaceBuildingPurpose<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_SPACES_BUILDINGPURPOSES = 'types.sportsBases.spaces.buildingPurposes';
+
 @Service({
-  name: 'sportsBases.spaces.buildingPurposes',
+  name: SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
   mixins: [
     DbConnection({
-      collection: 'sportsBasesSpacesBuildingPurposes',
+      collection: tableName(SN_SPORTSBASES_SPACES_BUILDINGPURPOSES),
     }),
   ],
   settings: {
+    rest: tmpRestFix(SN_SPORTSBASES_SPACES_BUILDINGPURPOSES),
     fields: {
       id: {
         type: 'string',
@@ -61,7 +65,7 @@ export type SportBaseSpaceBuildingPurpose<
         type: 'array',
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.spaces.buildingPurposes.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES_SPACES_BUILDINGPURPOSES}.populateByProp`),
           inheritPopulate: true,
           params: {
             sort: 'name',
@@ -86,7 +90,7 @@ export type SportBaseSpaceBuildingPurpose<
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsBasesSpacesBuildingsPurposesService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Method
   async seedDB() {
     const data = [

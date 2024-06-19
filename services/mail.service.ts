@@ -9,15 +9,17 @@ import {
   RequestStatus,
   StatusReadable,
 } from './requests/index.service';
-import { User } from './users.service';
+import { SN_USERS, User } from './users.service';
+
+export const SN_MAIL = 'mail';
 
 @Service({
-  name: 'mail',
+  name: SN_MAIL,
   settings: {
     from: process.env.MAIL_FROM,
   },
 })
-export default class MailService extends Moleculer.Service {
+export default class extends Moleculer.Service {
   @Event()
   async 'requests.updated'(ctx: Context<EntityChangedParams<Request>>) {
     const { oldData, data } = ctx.params;
@@ -52,7 +54,7 @@ export default class MailService extends Moleculer.Service {
               return;
           }
 
-          const user: User = await ctx.call('users.resolve', { id: data.createdBy });
+          const user: User = await ctx.call(`${SN_USERS}.resolve`, { id: data.createdBy });
 
           if (!user.email) {
             return;

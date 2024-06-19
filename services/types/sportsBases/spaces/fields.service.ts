@@ -12,6 +12,7 @@ import {
   CommonPopulates,
   Table,
 } from '../../../../types';
+import { tableName, tmpRestFix } from '../../../../utils';
 
 export const FieldTypes = {
   SELECT: 'SELECT',
@@ -36,14 +37,17 @@ export type SportBaseSpaceField<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_SPACES_FIELDS = 'types.sportsBases.spaces.fields';
+
 @Service({
-  name: 'sportsBases.spaces.fields',
+  name: SN_SPORTSBASES_SPACES_FIELDS,
   mixins: [
     DbConnection({
-      collection: 'sportsBasesSpacesFields',
+      collection: tableName(SN_SPORTSBASES_SPACES_FIELDS),
     }),
   ],
   settings: {
+    rest: tmpRestFix(SN_SPORTSBASES_SPACES_FIELDS),
     fields: {
       id: {
         type: 'string',
@@ -73,7 +77,7 @@ export type SportBaseSpaceField<
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsBasesSpacesFieldsService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Method
   async seedDB() {
     const data: any = [

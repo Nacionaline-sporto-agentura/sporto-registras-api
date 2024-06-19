@@ -11,6 +11,7 @@ import {
   ONLY_GET_REST_ENABLED,
   Table,
 } from '../../../../types';
+import { tableName, tmpRestFix } from '../../../../utils';
 
 interface Fields extends CommonFields {
   id: number;
@@ -24,14 +25,17 @@ export type TenantFundingSourceType<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_TENANTS_FUNDINGSOURCES_TYPES = 'types.tenants.fundingSources.types';
+
 @Service({
-  name: 'tenants.fundingSources.types',
+  name: SN_TENANTS_FUNDINGSOURCES_TYPES,
   mixins: [
     DbConnection({
-      collection: 'tenantFundingSourcesTypes',
+      collection: tableName(SN_TENANTS_FUNDINGSOURCES_TYPES),
     }),
   ],
   settings: {
+    rest: tmpRestFix(SN_TENANTS_FUNDINGSOURCES_TYPES),
     fields: {
       id: {
         type: 'string',
@@ -46,7 +50,7 @@ export type TenantFundingSourceType<
   },
   actions: ONLY_GET_REST_ENABLED,
 })
-export default class TenantsFundingSourcesTypesService extends moleculer.Service {
+export default class extends moleculer.Service {
   async seedDB() {
     const data = [
       { name: 'Valstybės biudžetas' },

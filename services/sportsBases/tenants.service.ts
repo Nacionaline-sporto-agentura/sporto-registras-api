@@ -16,7 +16,8 @@ import {
   Table,
 } from '../../types';
 import { Tenant } from '../tenants/index.service';
-import { SportsBase } from './index.service';
+import { SN_SPORTSBASES_TENANTS_BASIS } from '../types/sportsBases/tenants/basis.service';
+import { SN_SPORTSBASES, SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -36,8 +37,10 @@ export type SportsBaseTenant<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_TENANTS = 'sportsBases.tenants';
+
 @Service({
-  name: 'sportsBases.tenants',
+  name: SN_SPORTSBASES_TENANTS,
   mixins: [
     DbConnection({
       collection: 'sportsBasesTenants',
@@ -56,7 +59,7 @@ export type SportsBaseTenant<
         type: 'number',
         columnName: 'sportBaseId',
         immutable: true,
-        populate: 'sportsBases.resolve',
+        populate: `${SN_SPORTSBASES}.resolve`,
       },
       companyName: 'string|required',
       companyCode: 'string|required',
@@ -64,7 +67,7 @@ export type SportsBaseTenant<
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportsBasesTenantsBasisId',
         immutable: true,
-        populate: 'sportsBases.tenants.basis.resolve',
+        populate: `${SN_SPORTSBASES_TENANTS_BASIS}.resolve`,
       },
       startAt: {
         type: 'date',
@@ -82,4 +85,4 @@ export type SportsBaseTenant<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class SportsBasesTenantsService extends moleculer.Service {}
+export default class extends moleculer.Service {}

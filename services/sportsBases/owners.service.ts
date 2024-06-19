@@ -16,7 +16,7 @@ import {
 } from '../../types';
 import { Tenant } from '../tenants/index.service';
 import { User } from '../users.service';
-import { SportsBase } from './index.service';
+import { SN_SPORTSBASES, SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -37,6 +37,10 @@ interface ViispCompany {
   companyCode: string;
   name: string;
 }
+enum LegalForms {
+  COMPANY = 'COMPANY',
+  PERSON = 'PERSON',
+}
 
 interface Populates extends CommonPopulates {
   user: User;
@@ -49,8 +53,10 @@ export type SportsBaseOwner<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_OWNERS = 'sportsBases.owners';
+
 @Service({
-  name: 'sportsBases.owners',
+  name: SN_SPORTSBASES_OWNERS,
   mixins: [
     DbConnection({
       collection: 'sportsBasesOwners',
@@ -65,17 +71,24 @@ export type SportsBaseOwner<
         primaryKey: true,
         secure: true,
       },
-
+      legalForm: {
+        type: 'enum',
+        values: Object.values(LegalForms),
+        default: LegalForms.COMPANY,
+        required: true,
+      },
       name: 'string|required',
       website: 'string|required',
-      companyCode: 'string|required',
-
+      code: {
+        type: 'string',
+        required: true,
+      },
       sportBase: {
         type: 'number',
         columnName: 'sportBaseId',
         immutable: true,
         optional: true,
-        populate: 'sportsBases.resolve',
+        populate: `${SN_SPORTSBASES}.resolve`,
       },
       ...COMMON_FIELDS,
     },
@@ -84,4 +97,4 @@ export type SportsBaseOwner<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class SportsBasesOwnerService extends moleculer.Service {}
+export default class extends moleculer.Service {}

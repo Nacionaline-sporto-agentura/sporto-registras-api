@@ -15,8 +15,11 @@ import {
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../../types';
-import { SportBaseInvestmentSource } from '../../types/sportsBases/investments/sources.service';
-import { SportBaseInvestment } from './index.service';
+import {
+  SN_SPORTSBASES_INVESTMENTS_SOURCES,
+  SportBaseInvestmentSource,
+} from '../../types/sportsBases/investments/sources.service';
+import { SN_SPORTSBASES_INVESTMENTS, SportBaseInvestment } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -35,8 +38,10 @@ export type SportBaseInvestmentItem<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_INVESTMENTS_ITEMS = 'sportsBases.investments.items';
+
 @Service({
-  name: 'sportsBases.investments.items',
+  name: SN_SPORTSBASES_INVESTMENTS_ITEMS,
   mixins: [
     DbConnection({
       collection: 'sportsBasesInvestmentsItems',
@@ -56,7 +61,7 @@ export type SportBaseInvestmentItem<
         type: 'number',
         columnName: 'sportBaseInvestmentId',
         required: true,
-        populate: 'sportsBases.investments.resolve',
+        populate: `${SN_SPORTSBASES_INVESTMENTS}.resolve`,
       },
 
       source: {
@@ -64,7 +69,7 @@ export type SportBaseInvestmentItem<
         columnName: 'sportBaseInvestmentSourceId',
         required: true,
         populate: {
-          action: 'sportsBases.investments.sources.resolve',
+          action: `${SN_SPORTSBASES_INVESTMENTS_SOURCES}.resolve`,
           params: {
             fields: 'id,name',
           },

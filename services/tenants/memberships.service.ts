@@ -41,8 +41,10 @@ export type TenantMembership<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_TENANTS_MEMBERSHIPS = 'tenants.memberships';
+
 @Service({
-  name: 'tenants.memberships',
+  name: SN_TENANTS_MEMBERSHIPS,
   mixins: [
     DbConnection({
       collection: 'tenantMemberships',
@@ -87,4 +89,4 @@ export type TenantMembership<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class TenantsMembershipsService extends moleculer.Service {}
+export default class extends moleculer.Service {}

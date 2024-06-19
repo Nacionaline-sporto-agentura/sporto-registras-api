@@ -15,8 +15,10 @@ export const RequestHistoryTypes = {
   DELETED: 'DELETED',
 };
 
+export const SN_REQUESTS_HISTORIES = 'requests.histories';
+
 @Service({
-  name: 'requests.histories',
+  name: SN_REQUESTS_HISTORIES,
 
   mixins: [
     DbConnection({
@@ -65,4 +67,4 @@ export const RequestHistoryTypes = {
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
   },
 })
-export default class RequestsHistoriesService extends moleculer.Service {}
+export default class extends moleculer.Service {}

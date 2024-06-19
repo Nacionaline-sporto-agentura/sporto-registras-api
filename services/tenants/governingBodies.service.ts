@@ -37,8 +37,10 @@ export type TenantGoverningBody<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_TENANTS_GOVERNINGBODIES = 'tenants.governingBodies';
+
 @Service({
-  name: 'tenants.governingBodies',
+  name: SN_TENANTS_GOVERNINGBODIES,
   mixins: [
     DbConnection({
       collection: 'tenantGoverningBodies',
@@ -89,4 +91,4 @@ export type TenantGoverningBody<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class TenantsGoverningBodiesService extends moleculer.Service {}
+export default class extends moleculer.Service {}

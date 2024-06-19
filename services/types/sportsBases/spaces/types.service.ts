@@ -12,7 +12,8 @@ import {
   CommonPopulates,
   Table,
 } from '../../../../types';
-import { SportsBasesType } from '../types.service';
+import { tableName, tmpRestFix } from '../../../../utils';
+import { SN_SPORTSBASES_TYPES, SportsBasesType } from '../types.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -25,14 +26,18 @@ export type SportBaseSpaceType<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
+
+export const SN_SPORTSBASES_SPACES_TYPES = 'types.sportsBases.spaces.types';
+
 @Service({
-  name: 'sportsBases.spaces.types',
+  name: SN_SPORTSBASES_SPACES_TYPES,
   mixins: [
     DbConnection({
-      collection: 'sportsBasesSpacesTypes',
+      collection: tableName(SN_SPORTSBASES_SPACES_TYPES),
     }),
   ],
   settings: {
+    rest: tmpRestFix(SN_SPORTSBASES_SPACES_TYPES),
     fields: {
       id: {
         type: 'string',
@@ -43,7 +48,7 @@ export type SportBaseSpaceType<
       type: {
         type: 'number',
         columnName: 'sportBaseTypeId',
-        populate: 'sportsBases.types.resolve',
+        populate: `${SN_SPORTSBASES_TYPES}.resolve`,
       },
       name: 'string',
       ...COMMON_FIELDS,
@@ -53,13 +58,13 @@ export type SportBaseSpaceType<
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsTypesService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Method
   async seedDB() {
-    await this.broker.waitForServices(['sportsBases.types']);
+    await this.broker.waitForServices([SN_SPORTSBASES_TYPES]);
 
     const sportsBasesSpacesTypes: Array<SportsBasesType> = await this.broker.call(
-      'sportsBases.types.find',
+      `${SN_SPORTSBASES_TYPES}.find`,
     );
 
     const sportsBasesSpacesTypesIds = sportsBasesSpacesTypes.reduce(

@@ -1,10 +1,87 @@
 import { IncomingMessage } from 'http';
 import moleculer, { ActionParamSchema, ActionSchema, Context } from 'moleculer';
 import { UserAuthMeta } from '../services/api.service';
-import { UserType } from '../services/users.service';
+import { SN_USERS, User, UserType } from '../services/users.service';
 
 import { DbAdapter, DbContextParameters, DbServiceSettings } from 'moleculer-db';
 import { RestrictionType } from './constants';
+
+export interface CommonFields {
+  createdBy: User['id'];
+  createdAt: Date;
+  updatedBy: User['id'];
+  updatedAt: Date;
+  deletedBy: User['id'];
+  detetedAt: Date;
+}
+
+export interface CommonPopulates {
+  createdBy: User;
+  updatedBy: User;
+  deletedBy: User;
+}
+
+export const COMMON_FIELDS = {
+  createdBy: {
+    type: 'number',
+    readonly: true,
+    onCreate: ({ ctx }: FieldHookCallback) => ctx?.meta?.user?.id,
+    populate: {
+      action: `users.resolve`,
+      params: {
+        scope: false,
+      },
+    },
+    requestHandler: false,
+  },
+  createdAt: {
+    type: 'date',
+    columnType: 'datetime',
+    readonly: true,
+    onCreate: () => new Date(),
+    requestHandler: false,
+  },
+  updatedBy: {
+    type: 'number',
+    readonly: true,
+    hidden: 'byDefault',
+    onUpdate: ({ ctx }: FieldHookCallback) => ctx?.meta?.user?.id,
+    populate: {
+      action: `${SN_USERS}.resolve`,
+      params: {
+        scope: false,
+      },
+    },
+    requestHandler: false,
+  },
+  updatedAt: {
+    type: 'date',
+    columnType: 'datetime',
+    hidden: 'byDefault',
+    readonly: true,
+    onUpdate: () => new Date(),
+    requestHandler: false,
+  },
+  deletedBy: {
+    type: 'number',
+    readonly: true,
+    onRemove: ({ ctx }: FieldHookCallback) => ctx?.meta?.user?.id,
+    populate: {
+      action: `${SN_USERS}.resolve`,
+      params: {
+        scope: false,
+      },
+    },
+    requestHandler: false,
+  },
+  deletedAt: {
+    type: 'date',
+    columnType: 'datetime',
+    readonly: true,
+    onRemove: () => new Date(),
+    requestHandler: false,
+  },
+};
 
 export type MultipartMeta = {
   $multipart: Record<string, string>;
@@ -315,3 +392,6 @@ export interface EntityChangedParams<T> {
   data: T | null;
   oldData?: T;
 }
+
+export type Override<T1, T2> = Omit<T1, keyof T2> & T2;
+export type OverrideArray<T1 extends unknown[], T2> = Array<Override<T1[number], T2>>;

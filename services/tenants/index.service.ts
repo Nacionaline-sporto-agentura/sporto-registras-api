@@ -21,12 +21,16 @@ import {
   throwUnauthorizedError,
 } from '../../types';
 import { UserAuthMeta } from '../api.service';
+import { SN_AUTH } from '../auth.service';
 import { RequestEntityTypes } from '../requests/index.service';
-import { TenantUser, TenantUserRole } from '../tenantUsers.service';
-import { User, UserType } from '../users.service';
-import { TenantFundingSource } from './fundingSources.service';
-import { TenantGoverningBody } from './governingBodies.service';
-import { TenantMembership } from './memberships.service';
+import { SN_SPORTSBASES } from '../sportsBases/index.service';
+import { SN_TENANTUSERS, TenantUser, TenantUserRole } from '../tenantUsers.service';
+import { SN_TENANTS_LEGALFORMS } from '../types/tenants/legalForms.service';
+import { SN_TENANTS_SPORTORGANIZATIONTYPES } from '../types/tenants/sportOrganizationTypes.service';
+import { SN_USERS, User, UserType } from '../users.service';
+import { SN_TENANTS_FUNDINGSOURCES, TenantFundingSource } from './fundingSources.service';
+import { SN_TENANTS_GOVERNINGBODIES, TenantGoverningBody } from './governingBodies.service';
+import { SN_TENANTS_MEMBERSHIPS, TenantMembership } from './memberships.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -72,8 +76,10 @@ const publicFields = [
 
 const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
 
+export const SN_TENANTS = 'tenants';
+
 @Service({
-  name: 'tenants',
+  name: SN_TENANTS,
 
   mixins: [
     DbConnection({
@@ -102,9 +108,13 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
         type: 'number',
         columnType: 'integer',
         columnName: 'authGroupId',
-        populate: 'auth.groups.get',
+        populate: `${SN_AUTH}.groups.get`,
         async onRemove({ ctx, entity }: FieldHookCallback) {
-          await ctx.call('auth.groups.remove', { id: entity.authGroupId }, { meta: ctx?.meta });
+          await ctx.call(
+            `${SN_AUTH}.groups.remove`,
+            { id: entity.authGroupId },
+            { meta: ctx?.meta },
+          );
         },
       },
 
@@ -118,7 +128,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'legalFormId',
         populate: {
-          action: 'tenants.legalForms.resolve',
+          action: `${SN_TENANTS_LEGALFORMS}.resolve`,
           params: {
             fields: 'id,name',
           },
@@ -128,7 +138,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportOrganizationTypeId',
         populate: {
-          action: 'tenants.sportOrganizationTypes.resolve',
+          action: `${SN_TENANTS_SPORTORGANIZATIONTYPES}.resolve`,
           params: {
             fields: 'id,name',
           },
@@ -154,7 +164,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
           return Promise.all(
             tenants.map(async (tenant: any) => {
               if (!ctx.meta.user?.id) return;
-              const tenantUser: TenantUser = await ctx.call('tenantUsers.findOne', {
+              const tenantUser: TenantUser = await ctx.call(`${SN_TENANTUSERS}.findOne`, {
                 query: {
                   tenant: tenant.id,
                   user: ctx.meta.user.id,
@@ -196,7 +206,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('tenants.fundingSources.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_TENANTS_FUNDINGSOURCES}.populateByProp`),
           params: {
             queryKey: 'tenant',
             mappingMulti: true,
@@ -205,7 +215,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
           },
         },
         requestHandler: {
-          service: 'tenants.fundingSources',
+          service: SN_TENANTS_FUNDINGSOURCES,
           relationField: 'tenant',
         },
       },
@@ -217,7 +227,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('tenants.governingBodies.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_TENANTS_GOVERNINGBODIES}.populateByProp`),
           params: {
             queryKey: 'tenant',
             mappingMulti: true,
@@ -225,7 +235,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
           },
         },
         requestHandler: {
-          service: 'tenants.governingBodies',
+          service: SN_TENANTS_GOVERNINGBODIES,
           relationField: 'tenant',
         },
       },
@@ -237,7 +247,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('tenants.memberships.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_TENANTS_MEMBERSHIPS}.populateByProp`),
           params: {
             queryKey: 'tenant',
             mappingMulti: true,
@@ -245,7 +255,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
           },
         },
         requestHandler: {
-          service: 'tenants.memberships',
+          service: SN_TENANTS_MEMBERSHIPS,
           relationField: 'tenant',
         },
       },
@@ -257,7 +267,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES}.populateByProp`),
           params: {
             queryKey: 'tenant',
             mappingMulti: true,
@@ -283,7 +293,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
       },
       async user(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
         if (ctx?.meta?.user?.type === UserType.USER) {
-          const tenantsIds: number[] = await ctx.call('tenantUsers.findIdsByUserRecursive', {
+          const tenantsIds: number[] = await ctx.call(`${SN_TENANTUSERS}.findIdsByUserRecursive`, {
             id: ctx.meta.user.id,
           });
 
@@ -327,7 +337,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
     },
   },
 })
-export default class TenantsService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Action({
     rest: 'GET /:id/base',
     params: {
@@ -470,14 +480,14 @@ export default class TenantsService extends moleculer.Service {
       companyInviteData.companyId = tenant.authGroup;
     }
 
-    const authGroup: any = await ctx.call('auth.users.invite', companyInviteData);
+    const authGroup: any = await ctx.call(`${SN_AUTH}.users.invite`, companyInviteData);
 
     const tenant: Tenant = await ctx.call('tenants.findOrCreate', { ...ctx.params, authGroup });
 
     let user: User & { url?: string };
 
     if (owner?.email) {
-      user = await ctx.call('users.invite', {
+      user = await ctx.call(`${SN_USERS}.invite`, {
         ...owner,
         role: TenantUserRole.ADMIN,
         tenantId: tenant.id,
@@ -511,7 +521,7 @@ export default class TenantsService extends moleculer.Service {
 
     const tenant: Tenant = await ctx.call('tenants.resolve', { id, throwIfNotExist: true });
 
-    await ctx.call('tenantUsers.removeUsers', {
+    await ctx.call(`${SN_TENANTUSERS}.removeUsers`, {
       tenantId: tenant.id,
     });
 

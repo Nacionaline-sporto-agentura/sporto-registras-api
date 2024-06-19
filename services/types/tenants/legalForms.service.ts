@@ -12,6 +12,7 @@ import {
   CommonPopulates,
   Table,
 } from '../../../types';
+import { tableName, tmpRestFix } from '../../../utils';
 
 interface Fields extends CommonFields {
   id: number;
@@ -25,14 +26,17 @@ export type TenantLegalForms<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_TENANTS_LEGALFORMS = 'types.tenants.legalForms';
+
 @Service({
-  name: 'tenants.legalForms',
+  name: SN_TENANTS_LEGALFORMS,
   mixins: [
     DbConnection({
-      collection: 'tenantLegalForms',
+      collection: tableName(SN_TENANTS_LEGALFORMS),
     }),
   ],
   settings: {
+    rest: tmpRestFix(SN_TENANTS_LEGALFORMS),
     fields: {
       id: {
         type: 'string',
@@ -48,7 +52,7 @@ export type TenantLegalForms<
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class TenantsLegalFormsService extends moleculer.Service {
+export default class extends moleculer.Service {
   async seedDB() {
     const data = [
       { name: 'Asociacija' },

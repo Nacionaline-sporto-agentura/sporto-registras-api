@@ -22,8 +22,8 @@ import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
 import { UserAuthMeta } from '../api.service';
 import { SportsBase } from '../sportsBases/index.service';
 import { Tenant } from '../tenants/index.service';
-import { User, UserType } from '../users.service';
-import { RequestHistoryTypes } from './histories.service';
+import { SN_USERS, User, UserType } from '../users.service';
+import { RequestHistoryTypes, SN_REQUESTS_HISTORIES } from './histories.service';
 
 export enum RequestStatus {
   DRAFT = 'DRAFT', // juodrastis
@@ -91,8 +91,10 @@ const populatePermissions = (field: string) => {
   };
 };
 
+export const SN_REQUESTS = 'requests';
+
 @Service({
-  name: 'requests',
+  name: SN_REQUESTS,
   mixins: [
     DbConnection({
       collection: 'requests',
@@ -200,7 +202,7 @@ const populatePermissions = (field: string) => {
     },
   },
 })
-export default class RequestsServices extends moleculer.Service {
+export default class extends moleculer.Service {
   @Action({
     rest: 'GET /:id/history',
     params: {
@@ -218,7 +220,7 @@ export default class RequestsServices extends moleculer.Service {
       pageSize?: number;
     }>,
   ) {
-    return ctx.call(`requests.histories.${ctx.params.type || 'list'}`, {
+    return ctx.call(`${SN_REQUESTS_HISTORIES}.${ctx.params.type || 'list'}`, {
       sort: '-createdAt',
       query: {
         request: ctx.params.id,
@@ -346,7 +348,7 @@ export default class RequestsServices extends moleculer.Service {
 
     const { comment } = (topCtx.params as any)?.req?.body || {};
 
-    return ctx.call('requests.histories.create', {
+    return ctx.call(`${SN_REQUESTS_HISTORIES}.create`, {
       request: request.id,
       changes: request.changes,
       comment,
@@ -420,7 +422,7 @@ export default class RequestsServices extends moleculer.Service {
         const meta: Partial<UserAuthMeta> = {};
 
         if (request.createdBy) {
-          meta.user = await ctx.call('users.resolve', { id: request.createdBy });
+          meta.user = await ctx.call(`${SN_USERS}.resolve`, { id: request.createdBy });
         }
         if (request.tenant) {
           meta.profile = await ctx.call('tenants.resolve', { id: request.tenant });

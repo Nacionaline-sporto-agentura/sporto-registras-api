@@ -14,8 +14,8 @@ import {
   ONLY_GET_REST_ENABLED,
   Table,
 } from '../../../types';
-import { SportsBase } from '../index.service';
-import { SportBaseInvestmentItem } from './items.service';
+import { SN_SPORTSBASES, SportsBase } from '../index.service';
+import { SN_SPORTSBASES_INVESTMENTS_ITEMS, SportBaseInvestmentItem } from './items.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -35,8 +35,10 @@ export type SportBaseInvestment<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_SPORTSBASES_INVESTMENTS = 'sportsBases.investments';
+
 @Service({
-  name: 'sportsBases.investments',
+  name: SN_SPORTSBASES_INVESTMENTS,
   mixins: [
     DbConnection({
       collection: 'sportsBasesInvestments',
@@ -56,7 +58,7 @@ export type SportBaseInvestment<
         type: 'number',
         columnName: 'sportBaseId',
         required: true,
-        populate: 'sportsBases.resolve',
+        populate: `${SN_SPORTSBASES}.resolve`,
       },
 
       improvements: 'string',
@@ -73,7 +75,7 @@ export type SportBaseInvestment<
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.investments.items.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES_INVESTMENTS_ITEMS}.populateByProp`),
           params: {
             queryKey: 'sportBaseInvestment',
             mappingMulti: true,
@@ -82,7 +84,7 @@ export type SportBaseInvestment<
           },
         },
         requestHandler: {
-          service: 'sportsBases.investments.items',
+          service: SN_SPORTSBASES_INVESTMENTS_ITEMS,
           relationField: 'sportBaseInvestment',
         },
       },
@@ -95,4 +97,4 @@ export type SportBaseInvestment<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class SportsBasesInvestmentsService extends moleculer.Service {}
+export default class extends moleculer.Service {}

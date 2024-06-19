@@ -23,24 +23,39 @@ import filtersMixin from 'moleculer-knex-filters';
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
 import { Tenant, TenantTenantType } from '../tenants/index.service';
-import { SportBaseInvestmentSource } from '../types/sportsBases/investments/sources.service';
-import { SportsBasesLevel } from '../types/sportsBases/levels.service';
-import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
-import { SportBaseSpaceEnergyClass } from '../types/sportsBases/spaces/energyClasses.service';
-import { SportBaseSpaceSportType } from '../types/sportsBases/spaces/sportTypes.service';
-import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
+import { SN_TYPES_SPORTTYPES, SportType } from '../types/sportTypes/index.service';
+import {
+  SN_SPORTSBASES_INVESTMENTS_SOURCES,
+  SportBaseInvestmentSource,
+} from '../types/sportsBases/investments/sources.service';
+import { SN_SPORTSBASES_LEVELS, SportsBasesLevel } from '../types/sportsBases/levels.service';
+import {
+  SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
+  SportBaseSpaceBuildingPurpose,
+} from '../types/sportsBases/spaces/buildingsPurposes.service';
+import {
+  SN_SPORTSBASES_SPACES_ENERGYCLASSES,
+  SportBaseSpaceEnergyClass,
+} from '../types/sportsBases/spaces/energyClasses.service';
+import {
+  SN_SPORTSBASES_SPACES_TYPES,
+  SportBaseSpaceType,
+} from '../types/sportsBases/spaces/types.service';
 import SportsBasesTechnicalConditionsService, {
+  SN_SPORTSBASES_TECHNICALCONDITIONS,
   SportsBasesTechicalCondition,
 } from '../types/sportsBases/technicalConditions.service';
-import { SportsBasesType } from '../types/sportsBases/types.service';
-import { SportBaseInvestment } from './investments/index.service';
-import { SportsBaseOwner } from './owners.service';
-import { SportBaseSpace } from './spaces.service';
-import { SportsBaseTenant } from './tenants.service';
+import { SN_SPORTSBASES_TYPES, SportsBasesType } from '../types/sportsBases/types.service';
+import { SN_SPORTSBASES_INVESTMENTS, SportBaseInvestment } from './investments/index.service';
+import { SN_SPORTSBASES_OWNERS, SportsBaseOwner } from './owners.service';
+import { SN_SPORTSBASES_SPACES, SportBaseSpace } from './spaces.service';
+import { SN_SPORTSBASES_TENANTS, SportsBaseTenant } from './tenants.service';
 
 interface Fields extends CommonFields {
   id: number;
   name: string;
+  email: string;
+  phone: string;
   type: SportsBasesType['id'];
   level: SportsBasesLevel['id'];
   technicalCondition: SportsBasesTechicalCondition['id'];
@@ -128,8 +143,10 @@ const publicFields = [
 
 const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 'publicTenants'];
 
+export const SN_SPORTSBASES = 'sportsBases';
+
 @Service({
-  name: 'sportsBases',
+  name: SN_SPORTSBASES,
   mixins: [
     DbConnection({
       collection: 'sportsBases',
@@ -146,26 +163,28 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
         secure: true,
       },
       name: 'string|required',
+      email: 'string',
+      phone: 'string',
       type: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportBaseTypeId',
         immutable: true,
         required: true,
-        populate: 'sportsBases.types.resolve',
+        populate: `${SN_SPORTSBASES_TYPES}.resolve`,
       },
       level: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportBaseLevelId',
         immutable: true,
         required: true,
-        populate: 'sportsBases.levels.resolve',
+        populate: `${SN_SPORTSBASES_LEVELS}.resolve`,
       },
       technicalCondition: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportBaseTechnicalConditionId',
         immutable: true,
         required: true,
-        populate: 'sportsBases.technicalConditions.resolve',
+        populate: `${SN_SPORTSBASES_TECHNICALCONDITIONS}.resolve`,
       },
 
       address: {
@@ -244,7 +263,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.spaces.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES_SPACES}.populateByProp`),
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
@@ -253,7 +272,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
           },
         },
         requestHandler: {
-          service: 'sportsBases.spaces',
+          service: SN_SPORTSBASES_SPACES,
           relationField: 'sportBase',
         },
       },
@@ -265,7 +284,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.investments.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES_INVESTMENTS}.populateByProp`),
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
@@ -274,7 +293,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
           },
         },
         requestHandler: {
-          service: 'sportsBases.investments',
+          service: SN_SPORTSBASES_INVESTMENTS,
           relationField: 'sportBase',
         },
       },
@@ -286,7 +305,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.owners.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES_OWNERS}.populateByProp`),
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
@@ -295,7 +314,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
           },
         },
         requestHandler: {
-          service: 'sportsBases.owners',
+          service: SN_SPORTSBASES_OWNERS,
           relationField: 'sportBase',
         },
       },
@@ -307,7 +326,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.tenants.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES_TENANTS}.populateByProp`),
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
@@ -316,7 +335,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
           },
         },
         requestHandler: {
-          service: 'sportsBases.tenants',
+          service: SN_SPORTSBASES_TENANTS,
           relationField: 'sportBase',
         },
       },
@@ -328,7 +347,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.spaces.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES_SPACES}.populateByProp`),
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
@@ -358,7 +377,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
         readonly: true,
         populate: {
           keyField: 'id',
-          handler: PopulateHandlerFn('sportsBases.tenants.populateByProp'),
+          handler: PopulateHandlerFn(`${SN_SPORTSBASES_TENANTS}.populateByProp`),
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
@@ -381,7 +400,7 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
   },
   actions: ONLY_GET_REST_ENABLED,
 })
-export default class SportsBasesService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Action({
     rest: 'GET /:id/base',
     params: {
@@ -415,7 +434,7 @@ export default class SportsBasesService extends moleculer.Service {
     auth: RestrictionType.PUBLIC,
   })
   async publicSportsRegisterCount(ctx: Context) {
-    const sportBases = await ctx.call('sportsBases.count');
+    const sportBases = await ctx.call(`${SN_SPORTSBASES}.count`);
     const organizations = await ctx.call('tenants.count', {
       query: { tenantType: TenantTenantType.ORGANIZATION },
     });
@@ -434,7 +453,7 @@ export default class SportsBasesService extends moleculer.Service {
   async publicSportBases(ctx: Context) {
     const params: any = ctx?.params || {};
 
-    const sportsBases = await ctx.call('sportsBases.list', {
+    const sportsBases = await ctx.call(`${SN_SPORTSBASES}.list`, {
       ...params,
       fields: publicFields,
       populate: publicPopulates,
@@ -458,7 +477,7 @@ export default class SportsBasesService extends moleculer.Service {
     },
   })
   async publicSportBase(ctx: Context<{ id: string }>) {
-    const sportsBase: SportsBase = await ctx.call('sportsBases.resolve', {
+    const sportsBase: SportsBase = await ctx.call(`${SN_SPORTSBASES}.resolve`, {
       ...ctx.params,
       fields: publicFields,
       populate: publicPopulates,
@@ -486,28 +505,26 @@ export default class SportsBasesService extends moleculer.Service {
 
   @Action()
   async fakeData(ctx: Context) {
-    const sportsBasesTypes: SportsBasesType[] = await ctx.call('sportsBases.types.find');
-    const sportsBasesLevels: SportsBasesLevel[] = await ctx.call('sportsBases.levels.find');
+    const sportsBasesTypes: SportsBasesType[] = await ctx.call(`${SN_SPORTSBASES_TYPES}.find`);
+    const sportsBasesLevels: SportsBasesLevel[] = await ctx.call(`${SN_SPORTSBASES_LEVELS}.find`);
     const sportsBasesTechnicalConditions: SportsBasesTechnicalConditionsService[] = await ctx.call(
-      'sportsBases.technicalConditions.find',
+      `${SN_SPORTSBASES_TECHNICALCONDITIONS}.find`,
     );
     const sportsBasesSpacesTypes: SportBaseSpaceType[] = await ctx.call(
-      'sportsBases.spaces.types.find',
+      `${SN_SPORTSBASES_SPACES_TYPES}.find`,
     );
-    const sportsBasesSpacesSportTypes: SportBaseSpaceSportType[] = await ctx.call(
-      'sportsBases.spaces.sportTypes.find',
-    );
+    const sportsBasesSpacesSportTypes: SportType[] = await ctx.call(`${SN_TYPES_SPORTTYPES}.find`);
 
     const sportsBasesSpacesBuildingPurposes: SportBaseSpaceBuildingPurpose[] = await ctx.call(
-      'sportsBases.spaces.buildingPurposes.find',
+      `${SN_SPORTSBASES_SPACES_BUILDINGPURPOSES}.find`,
     );
 
     const sportsBasesSpacesEnergyClasses: SportBaseSpaceEnergyClass[] = await ctx.call(
-      'sportsBases.spaces.energyClasses.find',
+      `${SN_SPORTSBASES_SPACES_ENERGYCLASSES}.find`,
     );
 
     const sportsBasesInvestmentsSources: SportBaseInvestmentSource[] = await ctx.call(
-      'sportsBases.investments.sources.find',
+      `${SN_SPORTSBASES_INVESTMENTS_SOURCES}.find`,
     );
 
     function randomArray(length: number, cb: Function) {
@@ -582,16 +599,16 @@ export default class SportsBasesService extends moleculer.Service {
     if (process.env.NODE_ENV !== 'local') return;
 
     await this.broker.waitForServices([
-      'sportsBases.spaces',
-      'sportsBases.investments',
-      'sportsBases.types',
-      'sportsBases.levels',
-      'sportsBases.technicalConditions',
-      'sportsBases.spaces.types',
-      'sportsBases.spaces.sportTypes',
-      'sportsBases.spaces.buildingPurposes',
-      'sportsBases.spaces.energyClasses',
-      'sportsBases.investments.sources',
+      SN_SPORTSBASES_SPACES,
+      SN_SPORTSBASES_INVESTMENTS,
+      SN_SPORTSBASES_TYPES,
+      SN_SPORTSBASES_LEVELS,
+      SN_SPORTSBASES_TECHNICALCONDITIONS,
+      SN_SPORTSBASES_SPACES_TYPES,
+      SN_TYPES_SPORTTYPES,
+      SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
+      SN_SPORTSBASES_SPACES_ENERGYCLASSES,
+      SN_SPORTSBASES_INVESTMENTS_SOURCES,
     ]);
 
     const sportsBasesData = await this.actions.fakeData();

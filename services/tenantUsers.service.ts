@@ -15,8 +15,9 @@ import {
   throwUnauthorizedError,
 } from '../types';
 import { UserAuthMeta } from './api.service';
+import { SN_AUTH } from './auth.service';
 import { Tenant } from './tenants/index.service';
-import { User, UserType } from './users.service';
+import { SN_USERS, User, UserType } from './users.service';
 
 export enum TenantUserRole {
   ADMIN = 'ADMIN',
@@ -29,8 +30,11 @@ export interface TenantUser extends CommonFields {
   user: number | User;
   role: TenantUserRole;
 }
+
+export const SN_TENANTUSERS = 'tenantUsers';
+
 @Service({
-  name: 'tenantUsers',
+  name: SN_TENANTUSERS,
 
   mixins: [
     DbConnection({
@@ -60,7 +64,7 @@ export interface TenantUser extends CommonFields {
         columnName: 'userId',
         immutable: true,
         required: true,
-        populate: 'users.resolve',
+        populate: `${SN_USERS}.resolve`,
       },
 
       role: {
@@ -79,7 +83,7 @@ export interface TenantUser extends CommonFields {
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
   },
 })
-export default class TenantUsersService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Action({
     params: {
       tenant: 'number|convert',
@@ -87,7 +91,7 @@ export default class TenantUsersService extends moleculer.Service {
     },
   })
   async getRole(ctx: Context<{ tenant: number; user: number }>) {
-    const tenantUser: TenantUser = await ctx.call('tenantUsers.findOne', {
+    const tenantUser: TenantUser = await ctx.call(`${SN_TENANTUSERS}.findOne`, {
       query: {
         tenant: ctx.params.tenant,
         user: ctx.params.user,
@@ -122,7 +126,7 @@ export default class TenantUsersService extends moleculer.Service {
       populate: 'role',
     });
 
-    return ctx.call('users.list', params, {
+    return ctx.call(`${SN_USERS}.list`, params, {
       meta: {
         profile: tenant,
       },
@@ -155,7 +159,7 @@ export default class TenantUsersService extends moleculer.Service {
       populate: 'role',
     });
 
-    return ctx.call('users.get', params, {
+    return ctx.call(`${SN_USERS}.get`, params, {
       meta: {
         profile: tenant,
       },
@@ -168,7 +172,7 @@ export default class TenantUsersService extends moleculer.Service {
     },
   })
   async findByUser(ctx: Context<{ id: number }>) {
-    const tenantUsers: TenantUser[] = await ctx.call('tenantUsers.find', {
+    const tenantUsers: TenantUser[] = await ctx.call(`${SN_TENANTUSERS}.find`, {
       query: {
         user: ctx.params.id,
       },
@@ -187,7 +191,7 @@ export default class TenantUsersService extends moleculer.Service {
     },
   })
   async findIdsByUser(ctx: Context<{ id: number }>) {
-    const tenantUsers: TenantUser[] = await ctx.call('tenantUsers.find', {
+    const tenantUsers: TenantUser[] = await ctx.call(`${SN_TENANTUSERS}.find`, {
       query: {
         user: ctx.params.id,
       },
@@ -241,7 +245,7 @@ export default class TenantUsersService extends moleculer.Service {
       query.role = role;
     }
 
-    const tenantUsers: TenantUser[] = await ctx.call('tenantUsers.find', {
+    const tenantUsers: TenantUser[] = await ctx.call(`${SN_TENANTUSERS}.find`, {
       query,
     });
 
@@ -255,7 +259,7 @@ export default class TenantUsersService extends moleculer.Service {
     },
   })
   async userExistsInTenant(ctx: Context<{ userId: number; tenantId: number }>) {
-    const tenantUser: TenantUser = await ctx.call('tenantUsers.findOne', {
+    const tenantUser: TenantUser = await ctx.call(`${SN_TENANTUSERS}.findOne`, {
       query: {
         tenant: ctx.params.tenantId,
         user: ctx.params.userId,
@@ -307,20 +311,20 @@ export default class TenantUsersService extends moleculer.Service {
       user: userId,
     };
 
-    const tenantUser: TenantUser = await ctx.call('tenantUsers.findOne', {
+    const tenantUser: TenantUser = await ctx.call(`${SN_TENANTUSERS}.findOne`, {
       query,
     });
 
     if (tenantUser && !!authGroup?.role && authGroup.role === tenantUser.role) return tenantUser;
 
     if (tenantUser?.id) {
-      return ctx.call('tenantUsers.update', {
+      return ctx.call(`${SN_TENANTUSERS}.update`, {
         id: tenantUser.id,
         role: authGroup.role || TenantUserRole.USER,
       });
     }
 
-    return ctx.call('tenantUsers.create', {
+    return ctx.call(`${SN_TENANTUSERS}.create`, {
       ...query,
       role: authGroup.role || TenantUserRole.USER,
     });
@@ -349,7 +353,7 @@ export default class TenantUsersService extends moleculer.Service {
       );
     }
 
-    const user: User = await ctx.call('users.resolve', { id: userId, throwIfNotExist: true });
+    const user: User = await ctx.call(`${SN_USERS}.resolve`, { id: userId, throwIfNotExist: true });
     const tenant: Tenant = await ctx.call('tenants.resolve', {
       id: tenantId,
       throwIfNotExist: true,
@@ -366,7 +370,7 @@ export default class TenantUsersService extends moleculer.Service {
       { meta: ctx.meta },
     );
 
-    await ctx.call('auth.users.unassignFromGroup', {
+    await ctx.call(`${SN_AUTH}.users.unassignFromGroup`, {
       id: user.authUser,
       groupId: tenant.authGroup,
     });
@@ -395,7 +399,7 @@ export default class TenantUsersService extends moleculer.Service {
       throwIfNotExist: true,
     });
 
-    const tenantUsers: TenantUser[] = await ctx.call('tenantUsers.find', {
+    const tenantUsers: TenantUser[] = await ctx.call(`${SN_TENANTUSERS}.find`, {
       query: {
         tenant: tenant.id,
       },
@@ -404,7 +408,7 @@ export default class TenantUsersService extends moleculer.Service {
 
     await Promise.all(
       tenantUsers.map((tu) =>
-        ctx.call('auth.users.unassignFromGroup', {
+        ctx.call(`${SN_AUTH}.users.unassignFromGroup`, {
           id: (tu.user as User).authUser,
           groupId: tenant.authGroup,
         }),
@@ -432,9 +436,9 @@ export default class TenantUsersService extends moleculer.Service {
   async removeTenants(ctx: Context<{ userId: number }, UserAuthMeta>) {
     const { userId } = ctx.params;
 
-    const user: User = await ctx.call('users.resolve', { id: userId, throwIfNotExist: true });
+    const user: User = await ctx.call(`${SN_USERS}.resolve`, { id: userId, throwIfNotExist: true });
 
-    const tenantUsers: TenantUser[] = await ctx.call('tenantUsers.find', {
+    const tenantUsers: TenantUser[] = await ctx.call(`${SN_TENANTUSERS}.find`, {
       query: {
         user: user.id,
       },
@@ -443,7 +447,7 @@ export default class TenantUsersService extends moleculer.Service {
 
     await Promise.all(
       tenantUsers.map((tu) =>
-        ctx.call('auth.users.unassignFromGroup', {
+        ctx.call(`${SN_AUTH}.users.unassignFromGroup`, {
           id: user.authUser,
           groupId: (tu.tenant as Tenant).authGroup,
         }),
@@ -490,13 +494,13 @@ export default class TenantUsersService extends moleculer.Service {
       );
     }
 
-    const user: User = await ctx.call('users.resolve', { id: userId, throwIfNotExist: true });
+    const user: User = await ctx.call(`${SN_USERS}.resolve`, { id: userId, throwIfNotExist: true });
     const tenant: Tenant = await ctx.call('tenants.resolve', {
       id: tenantId,
       throwIfNotExist: true,
     });
 
-    const tenantUser: TenantUser = await ctx.call('tenantUsers.findOne', {
+    const tenantUser: TenantUser = await ctx.call(`${SN_TENANTUSERS}.findOne`, {
       query: {
         tenant: tenant.id,
         user: user.id,
@@ -507,13 +511,13 @@ export default class TenantUsersService extends moleculer.Service {
       return throwNotFoundError('Tenant user not found.');
     }
 
-    await ctx.call('auth.users.assignToGroup', {
+    await ctx.call(`${SN_AUTH}.users.assignToGroup`, {
       id: user.authUser,
       groupId: tenant.authGroup,
       role,
     });
 
-    await ctx.call('tenantUsers.update', {
+    await ctx.call(`${SN_TENANTUSERS}.update`, {
       id: tenantUser.id,
       role,
     });
@@ -549,13 +553,13 @@ export default class TenantUsersService extends moleculer.Service {
       return throwUnauthorizedError('Tenant is not accessable.');
     }
 
-    const user: User = await ctx.call('users.resolve', { id: userId });
+    const user: User = await ctx.call(`${SN_USERS}.resolve`, { id: userId });
     const tenant: Tenant = await ctx.call('tenants.resolve', { id: tenantId });
     if (!user || !tenant) {
       return throwNotFoundError('User/Tenant not found.');
     }
 
-    const tenantUser: TenantUser = await ctx.call('tenantUsers.findOne', {
+    const tenantUser: TenantUser = await ctx.call(`${SN_TENANTUSERS}.findOne`, {
       query: {
         tenant: tenant.id,
         user: user.id,
@@ -570,13 +574,13 @@ export default class TenantUsersService extends moleculer.Service {
       );
     }
 
-    await ctx.call('auth.users.assignToGroup', {
+    await ctx.call(`${SN_AUTH}.users.assignToGroup`, {
       id: user.authUser,
       groupId: tenant.authGroup,
       role,
     });
 
-    await ctx.call('tenantUsers.create', {
+    await ctx.call(`${SN_TENANTUSERS}.create`, {
       tenant: tenant.id,
       user: user.id,
       role,
@@ -595,7 +599,7 @@ export default class TenantUsersService extends moleculer.Service {
     },
   })
   async getProfile(ctx: Context<{ id: number; profile: number }>) {
-    const tenantUser: TenantUser = await ctx.call('tenantUsers.findOne', {
+    const tenantUser: TenantUser = await ctx.call(`${SN_TENANTUSERS}.findOne`, {
       query: {
         tenant: ctx.params.profile,
         user: ctx.params.id,
@@ -629,13 +633,13 @@ export default class TenantUsersService extends moleculer.Service {
     const { user } = ctx.meta;
     if (!user?.id || user?.type === UserType.ADMIN) return [];
 
-    const tenants: Tenant[] = await ctx.call('tenantUsers.findByUser', { id: user.id });
+    const tenants: Tenant[] = await ctx.call(`${SN_TENANTUSERS}.findByUser`, { id: user.id });
 
     return tenants;
   }
 
   @Event()
-  async 'tenantUsers.**'() {
+  async [`${SN_TENANTUSERS}.**`]() {
     await this.broker.cacher?.clean(`${this.fullName}.**`);
     this.broker.emit('clean.cache.auth');
   }

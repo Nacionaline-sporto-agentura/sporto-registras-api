@@ -1,7 +1,7 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
-import DbConnection from '../../../../mixins/database.mixin';
+import DbConnection from '../../../mixins/database.mixin';
 
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
@@ -11,28 +11,37 @@ import {
   CommonFields,
   CommonPopulates,
   Table,
-} from '../../../../types';
-import { SportsBasesType } from '../types.service';
+} from '../../../types';
+import { tableName } from '../../../utils';
 
 interface Fields extends CommonFields {
   id: number;
   name: string;
-  type: SportsBasesType['id'];
+  olympic: boolean;
+  paralympic: boolean;
+  strategic: boolean;
+  technical: boolean;
+  deaf: boolean;
+  specialOlympics: boolean;
 }
 
 interface Populates extends CommonPopulates {}
-export type SportBaseSpaceSportType<
+export type SportType<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
+
+export const SN_TYPES_SPORTTYPES = 'types.sportTypes';
+
 @Service({
-  name: 'sportsBases.spaces.sportTypes',
+  name: SN_TYPES_SPORTTYPES,
   mixins: [
     DbConnection({
-      collection: 'sportsBasesSpacesSportTypes',
+      collection: tableName(SN_TYPES_SPORTTYPES),
     }),
   ],
   settings: {
+    rest: ['types/sportTypes', 'sportsBases/spaces/sportTypes'],
     fields: {
       id: {
         type: 'string',
@@ -42,6 +51,13 @@ export type SportBaseSpaceSportType<
       },
 
       name: 'string',
+      olympic: { type: 'boolean', default: false },
+      paralympic: { type: 'boolean', default: false },
+      strategic: { type: 'boolean', default: false },
+      technical: { type: 'boolean', default: false },
+      deaf: { type: 'boolean', default: false },
+      specialOlympics: { type: 'boolean', default: false },
+
       ...COMMON_FIELDS,
     },
     scopes: { ...COMMON_SCOPES },
@@ -49,7 +65,7 @@ export type SportBaseSpaceSportType<
   },
   actions: ACTIONS_MUTATE_ADMIN_ONLY,
 })
-export default class SportsTypesService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Method
   async seedDB() {
     const data = [
@@ -71,9 +87,7 @@ export default class SportsTypesService extends moleculer.Service {
       { name: 'Dziudo' },
       { name: 'Fechtavimasis' },
       { name: 'Futbolas' },
-      { name: 'Gimnastika (sportinė)' },
-      { name: 'Gimnastika (meninė)' },
-      { name: 'Gimnastika (akr. šuoliai ant batuto)' },
+      { name: 'Gimnastika' },
       { name: 'Golfas' },
       { name: 'Imtynės (graikų ir romėnų)' },
       { name: 'Imtynės (laisvosios)' },

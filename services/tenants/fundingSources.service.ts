@@ -15,7 +15,10 @@ import {
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../types';
-import { TenantFundingSourceType } from '../types/tenants/fundingSources/types.service';
+import {
+  SN_TENANTS_FUNDINGSOURCES_TYPES,
+  TenantFundingSourceType,
+} from '../types/tenants/fundingSources/types.service';
 import { Tenant } from './index.service';
 
 interface Fields extends CommonFields {
@@ -37,8 +40,10 @@ export type TenantFundingSource<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
+export const SN_TENANTS_FUNDINGSOURCES = 'tenants.fundingSources';
+
 @Service({
-  name: 'tenants.fundingSources',
+  name: SN_TENANTS_FUNDINGSOURCES,
   mixins: [
     DbConnection({
       collection: 'tenantFundingSources',
@@ -58,7 +63,7 @@ export type TenantFundingSource<
         columnName: 'tenantFundingSourceTypeId',
         required: true,
         populate: {
-          action: 'tenants.fundingSources.types.resolve',
+          action: `${SN_TENANTS_FUNDINGSOURCES_TYPES}.resolve`,
           params: {
             fields: 'id,name',
           },
@@ -84,4 +89,4 @@ export type TenantFundingSource<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class TenantsFundingSourceService extends moleculer.Service {}
+export default class extends moleculer.Service {}

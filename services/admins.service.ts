@@ -4,7 +4,8 @@ import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 import { RestrictionType } from '../types';
 import { AuthUserRole } from './api.service';
-import { USERS_ADMINS_SCOPE, User } from './users.service';
+import { SN_AUTH } from './auth.service';
+import { SN_USERS, USERS_ADMINS_SCOPE, User } from './users.service';
 
 const scope = USERS_ADMINS_SCOPE;
 
@@ -13,13 +14,15 @@ const GroupRole = {
   USER: 'USER',
 };
 
+export const SN_ADMINS = 'admins';
+
 @Service({
-  name: 'admins',
+  name: SN_ADMINS,
 })
-export default class AdminService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Action()
   find(ctx: Context<{}>) {
-    return ctx.call('users.find', {
+    return ctx.call(`${SN_USERS}.find`, {
       ...(ctx.params || {}),
       scope,
     });
@@ -30,7 +33,7 @@ export default class AdminService extends moleculer.Service {
     auth: RestrictionType.ADMIN,
   })
   list(ctx: Context<{}>) {
-    return ctx.call('users.list', {
+    return ctx.call(`${SN_USERS}.list`, {
       ...(ctx.params || {}),
       scope,
     });
@@ -44,7 +47,7 @@ export default class AdminService extends moleculer.Service {
     auth: RestrictionType.ADMIN,
   })
   get(ctx: Context<{}>) {
-    return ctx.call('users.get', {
+    return ctx.call(`${SN_USERS}.get`, {
       ...(ctx.params || {}),
       scope,
     });
@@ -90,7 +93,7 @@ export default class AdminService extends moleculer.Service {
     }>,
   ) {
     const { email, phone, firstName, lastName, groups, duties } = ctx.params;
-    const authUser: any = await ctx.call('auth.users.create', {
+    const authUser: any = await ctx.call(`${SN_AUTH}.users.create`, {
       email,
       firstName,
       lastName,
@@ -99,7 +102,7 @@ export default class AdminService extends moleculer.Service {
       type: AuthUserRole.ADMIN,
     });
 
-    const user: User = await ctx.call('users.findOrCreate', {
+    const user: User = await ctx.call(`${SN_USERS}.findOrCreate`, {
       authUser,
       firstName,
       lastName,
@@ -142,9 +145,9 @@ export default class AdminService extends moleculer.Service {
     const { id, email, password, oldPassword, firstName, lastName, phone, groups, duties } =
       ctx.params;
 
-    const user: User = await ctx.call('users.resolve', { id, throwIfNotExist: true, scope });
+    const user: User = await ctx.call(`${SN_USERS}.resolve`, { id, throwIfNotExist: true, scope });
 
-    const authUser = await ctx.call('auth.users.update', {
+    const authUser = await ctx.call(`${SN_AUTH}.users.update`, {
       id: user.authUser,
       email,
       firstName,
@@ -155,7 +158,7 @@ export default class AdminService extends moleculer.Service {
       groups,
     });
 
-    return ctx.call('users.findOrCreate', {
+    return ctx.call(`${SN_USERS}.findOrCreate`, {
       authUser,
       firstName,
       lastName,
@@ -180,7 +183,7 @@ export default class AdminService extends moleculer.Service {
   ) {
     const { id } = ctx.params;
 
-    return ctx.call('users.removeUser', {
+    return ctx.call(`${SN_USERS}.removeUser`, {
       id,
       scope,
     });

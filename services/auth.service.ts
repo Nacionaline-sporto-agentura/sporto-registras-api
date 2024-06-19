@@ -6,9 +6,10 @@ import { Action, Event, Method, Service } from 'moleculer-decorators';
 import authMixin from 'biip-auth-nodejs/mixin';
 import _ from 'lodash';
 import { NSA_GROUP_ID, RestrictionType } from '../types';
+import { SN_ADMINS } from './admins.service';
 import { UserAuthMeta } from './api.service';
-import { TenantUserRole } from './tenantUsers.service';
-import { User, UserType } from './users.service';
+import { SN_TENANTUSERS, TenantUserRole } from './tenantUsers.service';
+import { SN_USERS, User, UserType } from './users.service';
 
 function getAuthRest(
   path: string,
@@ -28,8 +29,10 @@ function getApiRest(
     fullPath: `/api${path}`,
   };
 }
+export const SN_AUTH = 'auth';
+
 @Service({
-  name: 'auth',
+  name: SN_AUTH,
   mixins: [
     authMixin(process.env.AUTH_API_KEY, {
       host: process.env.AUTH_HOST,
@@ -103,7 +106,7 @@ function getApiRest(
     },
   },
 })
-export default class AuthService extends moleculer.Service {
+export default class extends moleculer.Service {
   @Action({
     cache: {
       keys: ['#user.id'],
@@ -128,7 +131,7 @@ export default class AuthService extends moleculer.Service {
   })
   async groupUsers(ctx: Context<{ id: number }, UserAuthMeta>) {
     return ctx.call(
-      'admins.list',
+      `${SN_ADMINS}.list`,
       _.merge({}, ctx.params, {
         query: {
           group: ctx.params.id,
@@ -184,7 +187,7 @@ export default class AuthService extends moleculer.Service {
   })
   async createUserWithTenantsIfNeeded(ctx: Context<{ authUser: any; authUserGroups: any[] }>) {
     const { authUser, authUserGroups } = ctx.params;
-    const user: User = await ctx.call('users.findOrCreate', {
+    const user: User = await ctx.call(`${SN_USERS}.findOrCreate`, {
       authUser: authUser,
       update: true,
     });
@@ -193,7 +196,7 @@ export default class AuthService extends moleculer.Service {
       const authGroups = authUserGroups.filter((g) => g.id != NSA_GROUP_ID && !!g.companyCode);
 
       for (const group of authGroups) {
-        await ctx.call('tenantUsers.createRelationshipsIfNeeded', {
+        await ctx.call(`${SN_TENANTUSERS}.createRelationshipsIfNeeded`, {
           authGroup: group,
           userId: user.id,
         });
@@ -217,9 +220,9 @@ export default class AuthService extends moleculer.Service {
 
     const meta = { authToken: data.token };
 
-    const authUser: any = await this.broker.call('auth.users.resolveToken', null, { meta });
+    const authUser: any = await this.broker.call(`${SN_AUTH}.users.resolveToken`, null, { meta });
     const authUserGroups: any = await this.broker.call(
-      'auth.users.get',
+      `${SN_AUTH}.users.get`,
       {
         id: authUser?.id,
         populate: 'groups',
@@ -229,7 +232,7 @@ export default class AuthService extends moleculer.Service {
     const authGroups: any[] = authUserGroups?.groups || [];
 
     await this.broker.call(
-      'auth.createUserWithTenantsIfNeeded',
+      `${SN_AUTH}.createUserWithTenantsIfNeeded`,
       {
         authUser: authUser,
         authUserGroups: authGroups,
@@ -243,13 +246,15 @@ export default class AuthService extends moleculer.Service {
   @Method
   async addProfiles(ctx: any, data: any) {
     if (data?.id && data?.type === UserType.USER) {
-      data.profiles = await ctx.call('tenantUsers.getProfiles');
+      data.profiles = await ctx.call(`${SN_TENANTUSERS}.getProfiles`);
       data.profiles = data.profiles.map((i: any) => ({
         id: i.id,
         name: i.name,
         email: i.email,
         phone: i.phone,
         role: i.role,
+        tenantType: i.tenantType,
+        data: i.data || {},
       }));
     }
 

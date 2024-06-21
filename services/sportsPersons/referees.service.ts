@@ -13,15 +13,20 @@ import {
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   OverrideArray,
+  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../types';
 import {
+  SN_SPORTSPERSONS,
+  SN_SPORTSPERSONS_REFEREES,
   SN_TYPES_CATEGORIES_COMPANIES,
-  TypeCategoryCompany,
-} from '../types/categories/companies.service';
-import { SN_TYPES_STUDIES_COMPANIES, TypeStudiesCompany } from '../types/studies/companies.service';
-import { SN_TYPES_STUDIES_PROGRAMS, TypeStudiesProgram } from '../types/studies/programs.service';
-import { SN_SPORTSPERSONS, SportsPerson } from './index.service';
+  SN_TYPES_STUDIES_COMPANIES,
+  SN_TYPES_STUDIES_PROGRAMS,
+} from '../../types/serviceNames';
+import { TypeCategoryCompany } from '../types/categories/companies.service';
+import { TypeStudiesCompany } from '../types/studies/companies.service';
+import { TypeStudiesProgram } from '../types/studies/programs.service';
+import { SportsPerson } from './index.service';
 
 enum StudiesType {
   LEARNING = 'LEARNING',
@@ -61,8 +66,6 @@ export type SportsPersonsReferees<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
-export const SN_SPORTSPERSONS_REFEREES = 'sportsPersons.referees';
-
 @Service({
   name: SN_SPORTSPERSONS_REFEREES,
   mixins: [
@@ -80,6 +83,7 @@ export const SN_SPORTSPERSONS_REFEREES = 'sportsPersons.referees';
         secure: true,
       },
       sportsPerson: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportsPersonId',
         immutable: true,
         optional: true,
@@ -90,7 +94,7 @@ export const SN_SPORTSPERSONS_REFEREES = 'sportsPersons.referees';
         items: {
           type: 'object',
           properties: {
-            company: 'number|convert',
+            company: TYPE_ID_OR_OBJECT_WITH_ID,
             documentNumber: 'string',
             formCode: 'string',
             series: 'string',
@@ -110,8 +114,8 @@ export const SN_SPORTSPERSONS_REFEREES = 'sportsPersons.referees';
               type: 'string',
               enum: Object.values(StudiesType),
             },
-            company: 'number',
-            program: 'number',
+            company: TYPE_ID_OR_OBJECT_WITH_ID,
+            program: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },

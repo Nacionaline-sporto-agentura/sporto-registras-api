@@ -12,9 +12,9 @@ import {
 } from '../types';
 
 import DbConnection from '../mixins/database.mixin';
+import { SN_AUTH, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
 import { AuthUserRole, UserAuthMeta } from './api.service';
-import { SN_AUTH } from './auth.service';
-import { SN_TENANTUSERS, TenantUserRole } from './tenantUsers.service';
+import { TenantUserRole } from './tenantUsers.service';
 import { Tenant } from './tenants/index.service';
 
 export enum UserType {
@@ -52,8 +52,6 @@ export const USERS_DEFAULT_SCOPES = [
   ...USERS_WITHOUT_AUTH_SCOPES,
   ...USERS_WITHOUT_NOT_ADMINS_SCOPE,
 ];
-
-export const SN_USERS = 'users';
 
 @Service({
   name: SN_USERS,
@@ -177,7 +175,7 @@ export const SN_USERS = 'users';
     },
     scopes: {
       ...COMMON_SCOPES,
-      async admins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+      async admins(query: any, ctx: Context<null, UserAuthMeta>, _params: any) {
         query.type = UserType.ADMIN;
 
         const authUserIds = query?.authUser ? [query.authUser] : [];
@@ -208,7 +206,7 @@ export const SN_USERS = 'users';
 
         return query;
       },
-      notAdmins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+      notAdmins(query: any, _ctx: Context<null, UserAuthMeta>, _params: any) {
         query.type = UserType.USER;
 
         return query;

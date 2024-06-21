@@ -20,17 +20,25 @@ import {
   throwNotFoundError,
   throwUnauthorizedError,
 } from '../../types';
+import {
+  SN_AUTH,
+  SN_SPORTSBASES,
+  SN_TENANTS,
+  SN_TENANTS_FUNDINGSOURCES,
+  SN_TENANTS_GOVERNINGBODIES,
+  SN_TENANTS_LEGALFORMS,
+  SN_TENANTS_MEMBERSHIPS,
+  SN_TENANTS_SPORTORGANIZATIONTYPES,
+  SN_TENANTUSERS,
+  SN_USERS,
+} from '../../types/serviceNames';
 import { UserAuthMeta } from '../api.service';
-import { SN_AUTH } from '../auth.service';
 import { RequestEntityTypes } from '../requests/index.service';
-import { SN_SPORTSBASES } from '../sportsBases/index.service';
-import { SN_TENANTUSERS, TenantUser, TenantUserRole } from '../tenantUsers.service';
-import { SN_TENANTS_LEGALFORMS } from '../types/tenants/legalForms.service';
-import { SN_TENANTS_SPORTORGANIZATIONTYPES } from '../types/tenants/sportOrganizationTypes.service';
-import { SN_USERS, User, UserType } from '../users.service';
-import { SN_TENANTS_FUNDINGSOURCES, TenantFundingSource } from './fundingSources.service';
-import { SN_TENANTS_GOVERNINGBODIES, TenantGoverningBody } from './governingBodies.service';
-import { SN_TENANTS_MEMBERSHIPS, TenantMembership } from './memberships.service';
+import { TenantUser, TenantUserRole } from '../tenantUsers.service';
+import { User, UserType } from '../users.service';
+import { TenantFundingSource } from './fundingSources.service';
+import { TenantGoverningBody } from './governingBodies.service';
+import { TenantMembership } from './memberships.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -75,8 +83,6 @@ const publicFields = [
 ];
 
 const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
-
-export const SN_TENANTS = 'tenants';
 
 @Service({
   name: SN_TENANTS,
@@ -284,7 +290,7 @@ export const SN_TENANTS = 'tenants';
 
     scopes: {
       ...COMMON_SCOPES,
-      noParent(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+      noParent(query: any, _ctx: Context<null, UserAuthMeta>, params: any) {
         // TODO: apply for visible subtenants for users
         if (!params?.id && !query?.parent) {
           query.parent = { $exists: false };

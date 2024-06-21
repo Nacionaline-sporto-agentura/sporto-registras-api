@@ -6,10 +6,10 @@ import { Action, Event, Method, Service } from 'moleculer-decorators';
 import authMixin from 'biip-auth-nodejs/mixin';
 import _ from 'lodash';
 import { NSA_GROUP_ID, RestrictionType } from '../types';
-import { SN_ADMINS } from './admins.service';
+import { SN_ADMINS, SN_AUTH, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
 import { UserAuthMeta } from './api.service';
-import { SN_TENANTUSERS, TenantUserRole } from './tenantUsers.service';
-import { SN_USERS, User, UserType } from './users.service';
+import { TenantUserRole } from './tenantUsers.service';
+import { User, UserType } from './users.service';
 
 function getAuthRest(
   path: string,
@@ -29,7 +29,6 @@ function getApiRest(
     fullPath: `/api${path}`,
   };
 }
-export const SN_AUTH = 'auth';
 
 @Service({
   name: SN_AUTH,
@@ -215,7 +214,7 @@ export default class extends moleculer.Service {
   }
 
   @Method
-  async afterUserLoggedIn(ctx: any, data: any) {
+  async afterUserLoggedIn(_ctx: any, data: any) {
     if (!data || !data.token) return data;
 
     const meta = { authToken: data.token };

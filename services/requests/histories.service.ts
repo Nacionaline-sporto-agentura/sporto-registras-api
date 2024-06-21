@@ -5,6 +5,7 @@ import { Service } from 'moleculer-decorators';
 
 import DbConnection from '../../mixins/database.mixin';
 import { COMMON_DEFAULT_SCOPES, COMMON_FIELDS, COMMON_SCOPES } from '../../types';
+import { SN_REQUESTS_HISTORIES } from '../../types/serviceNames';
 
 export const RequestHistoryTypes = {
   CREATED: 'CREATED',
@@ -14,8 +15,6 @@ export const RequestHistoryTypes = {
   APPROVED: 'APPROVED',
   DELETED: 'DELETED',
 };
-
-export const SN_REQUESTS_HISTORIES = 'requests.histories';
 
 @Service({
   name: SN_REQUESTS_HISTORIES,

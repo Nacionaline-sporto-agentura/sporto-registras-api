@@ -3,9 +3,9 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 import { RestrictionType } from '../types';
+import { SN_ADMINS, SN_AUTH, SN_USERS } from '../types/serviceNames';
 import { AuthUserRole } from './api.service';
-import { SN_AUTH } from './auth.service';
-import { SN_USERS, USERS_ADMINS_SCOPE, User } from './users.service';
+import { USERS_ADMINS_SCOPE, User } from './users.service';
 
 const scope = USERS_ADMINS_SCOPE;
 
@@ -13,8 +13,6 @@ const GroupRole = {
   ADMIN: 'ADMIN',
   USER: 'USER',
 };
-
-export const SN_ADMINS = 'admins';
 
 @Service({
   name: SN_ADMINS,

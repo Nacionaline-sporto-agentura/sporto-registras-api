@@ -14,10 +14,10 @@ import {
   throwNotFoundError,
   throwUnauthorizedError,
 } from '../types';
+import { SN_AUTH, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
 import { UserAuthMeta } from './api.service';
-import { SN_AUTH } from './auth.service';
 import { Tenant } from './tenants/index.service';
-import { SN_USERS, User, UserType } from './users.service';
+import { User, UserType } from './users.service';
 
 export enum TenantUserRole {
   ADMIN = 'ADMIN',
@@ -30,8 +30,6 @@ export interface TenantUser extends CommonFields {
   user: number | User;
   role: TenantUserRole;
 }
-
-export const SN_TENANTUSERS = 'tenantUsers';
 
 @Service({
   name: SN_TENANTUSERS,

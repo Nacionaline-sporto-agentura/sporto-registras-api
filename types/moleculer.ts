@@ -1,10 +1,11 @@
 import { IncomingMessage } from 'http';
 import moleculer, { ActionParamSchema, ActionSchema, Context } from 'moleculer';
 import { UserAuthMeta } from '../services/api.service';
-import { SN_USERS, User, UserType } from '../services/users.service';
+import { User, UserType } from '../services/users.service';
 
 import { DbAdapter, DbContextParameters, DbServiceSettings } from 'moleculer-db';
 import { RestrictionType } from './constants';
+import { SN_USERS } from './serviceNames';
 
 export interface CommonFields {
   createdBy: User['id'];

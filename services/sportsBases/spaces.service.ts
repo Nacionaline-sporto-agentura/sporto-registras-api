@@ -18,21 +18,22 @@ import {
   Table,
   throwValidationError,
 } from '../../types';
-import { SN_TYPES_SPORTTYPES, SportType } from '../types/sportTypes/index.service';
 import {
+  SN_SPORTSBASES,
+  SN_SPORTSBASES_SPACES,
   SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
-  SportBaseSpaceBuildingPurpose,
-} from '../types/sportsBases/spaces/buildingsPurposes.service';
-import { SN_SPORTSBASES_SPACES_ENERGYCLASSES } from '../types/sportsBases/spaces/energyClasses.service';
-import { FieldTypes } from '../types/sportsBases/spaces/fields.service';
-import { SN_SPORTSBASES_SPACES_TYPES } from '../types/sportsBases/spaces/types.service';
-import {
+  SN_SPORTSBASES_SPACES_ENERGYCLASSES,
+  SN_SPORTSBASES_SPACES_TYPES,
   SN_SPORTSBASES_SPACES_TYPESANDFIELDS,
-  SportBaseSpaceTypeAndField,
-} from '../types/sportsBases/spaces/typesAndFields.service';
-import { SN_SPORTSBASES_TECHNICALCONDITIONS } from '../types/sportsBases/technicalConditions.service';
+  SN_SPORTSBASES_TECHNICALCONDITIONS,
+  SN_TYPES_SPORTTYPES,
+} from '../../types/serviceNames';
+import { SportType } from '../types/sportTypes/index.service';
+import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
+import { FieldTypes } from '../types/sportsBases/spaces/fields.service';
+import { SportBaseSpaceTypeAndField } from '../types/sportsBases/spaces/typesAndFields.service';
 import { SportsBasesType } from '../types/sportsBases/types.service';
-import { SN_SPORTSBASES, SportsBase } from './index.service';
+import { SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -65,8 +66,6 @@ export type SportBaseSpace<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_SPORTSBASES_SPACES = 'sportsBases.spaces';
 
 @Service({
   name: SN_SPORTSBASES_SPACES,

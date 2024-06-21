@@ -3,15 +3,14 @@ import { Context, default as Moleculer } from 'moleculer';
 import { Event, Service } from 'moleculer-decorators';
 import { ServerClient } from 'postmark';
 import { EntityChangedParams } from '../types';
+import { SN_MAIL, SN_USERS } from '../types/serviceNames';
 import {
   Request,
   RequestEntityTypes,
   RequestStatus,
   StatusReadable,
 } from './requests/index.service';
-import { SN_USERS, User } from './users.service';
-
-export const SN_MAIL = 'mail';
+import { User } from './users.service';
 
 @Service({
   name: SN_MAIL,

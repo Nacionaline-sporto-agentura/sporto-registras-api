@@ -9,14 +9,13 @@ import {
   COMMON_SCOPES,
   CommonFields,
 } from '../../../types';
+import { SN_TYPES_CATEGORIES_COMPANIES } from '../../../types/serviceNames';
 import { TEMP_FAKE_TYPE_NAMES } from '../../../utils';
 
 export interface TypeCategoryCompany extends CommonFields {
   id: number;
   name: string;
 }
-
-export const SN_TYPES_CATEGORIES_COMPANIES = 'types.categories.companies';
 
 @Service({
   name: SN_TYPES_CATEGORIES_COMPANIES,

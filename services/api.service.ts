@@ -9,10 +9,9 @@ import {
   RestrictionType,
   throwUnauthorizedError,
 } from '../types';
-import { SN_AUTH } from './auth.service';
-import { SN_TENANTUSERS } from './tenantUsers.service';
+import { SN_API, SN_AUTH, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
 import { Tenant } from './tenants/index.service';
-import { SN_USERS, User } from './users.service';
+import { User } from './users.service';
 
 export interface UserAuthMeta {
   user: User;
@@ -27,8 +26,6 @@ export enum AuthUserRole {
   ADMIN = 'ADMIN',
   SUPER_ADMIN = 'SUPER_ADMIN',
 }
-
-export const SN_API = 'api';
 
 @Service({
   name: SN_API,
@@ -51,7 +48,7 @@ export const SN_API = 'api';
     },
 
     use: [
-      function (req: any, res: any, next: any) {
+      function (req: any, _res: any, next: any) {
         const removeScopes = (query: any) => {
           if (!query) return query;
 

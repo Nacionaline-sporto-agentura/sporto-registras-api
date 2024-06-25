@@ -9,14 +9,13 @@ import {
   COMMON_SCOPES,
   CommonFields,
 } from '../../../types';
+import { SN_SPORTSBASES_LEVELS } from '../../../types/serviceNames';
 import { tableName, tmpRestFix } from '../../../utils';
 
 export interface SportsBasesLevel extends CommonFields {
   id: number;
   name: string;
 }
-
-export const SN_SPORTSBASES_LEVELS = 'types.sportsBases.levels';
 
 @Service({
   name: SN_SPORTSBASES_LEVELS,

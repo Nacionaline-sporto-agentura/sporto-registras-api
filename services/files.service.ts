@@ -10,6 +10,7 @@ import {
   throwNotFoundError,
   throwValidationError,
 } from '../types';
+import { SN_FILES } from '../types/serviceNames';
 import { AuthUserRole, UserAuthMeta } from './api.service';
 
 export const MINIO_BUCKET = process.env.MINIO_BUCKET || 'sporto-registras';
@@ -44,8 +45,6 @@ export function getRandomFileName(length: number = 30) {
 
   return makeid(length);
 }
-
-export const SN_FILES = 'files';
 
 @Service({
   name: SN_FILES,
@@ -170,7 +169,7 @@ export default class extends Moleculer.Service {
     const { bucket, tenant, user, name } = ctx.params;
 
     const isAdmin = [AuthUserRole.ADMIN, AuthUserRole.SUPER_ADMIN].some(
-      (role) => ctx.meta.authUser.type,
+      (_role) => ctx.meta.authUser.type,
     );
     if (!isAdmin) {
       if (tenant !== 'private' && (!!ctx.meta.profile || Number(tenant) !== ctx.meta.profile))

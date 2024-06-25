@@ -1,31 +1,47 @@
 'use strict';
-import moleculer from 'moleculer';
-import { Service } from 'moleculer-decorators';
+import moleculer, { Context } from 'moleculer';
+import { Action, Service } from 'moleculer-decorators';
 import DbConnection, { PopulateHandlerFn } from '../../mixins/database.mixin';
 
-import RequestMixin from '../../mixins/request.mixin';
+import filtersMixin from 'moleculer-knex-filters';
+import RequestMixin, { REQUEST_FIELDS } from '../../mixins/request.mixin';
 import {
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
   COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  FieldHookCallback,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   OverrideArray,
+  TENANT_FIELD,
+  TYPE_ID_OR_OBJECT_WITH_ID,
   TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../types';
-import { tableName } from '../../utils';
-import { SN_SPORTSBASES, SportsBase } from '../sportsBases/index.service';
-import { SN_TENANTS, Tenant } from '../tenants/index.service';
-import { SN_TYPES_SPORTTYPES, SportType } from '../types/sportTypes/index.service';
-import { SN_TYPES_STUDIES_COMPANIES, TypeStudiesCompany } from '../types/studies/companies.service';
-import { SN_TYPES_STUDIES_PROGRAMS, TypeStudiesProgram } from '../types/studies/programs.service';
 import {
+  SN_COMPETITIONS_RESULTS,
+  SN_SPORTSBASES,
+  SN_SPORTSPERSONS,
+  SN_SPORTSPERSONS_ATHLETES,
+  SN_SPORTSPERSONS_COACHES,
+  SN_SPORTSPERSONS_FAINSTRUCTORS,
+  SN_SPORTSPERSONS_REFEREES,
+  SN_TENANTS,
   SN_TENANTS_WORKRELATIONS,
-  TenantWorkRelations,
-} from '../types/tenants/workRelations.service';
+  SN_TYPES_SPORTTYPES,
+  SN_TYPES_STUDIES_COMPANIES,
+  SN_TYPES_STUDIES_PROGRAMS,
+} from '../../types/serviceNames';
+import { tableName } from '../../utils';
+import { RequestEntityTypes } from '../requests/index.service';
+import { SportsBase } from '../sportsBases/index.service';
+import { Tenant } from '../tenants/index.service';
+import { SportType } from '../types/sportTypes/index.service';
+import { TypeStudiesCompany } from '../types/studies/companies.service';
+import { TypeStudiesProgram } from '../types/studies/programs.service';
+import { TenantWorkRelations } from '../types/tenants/workRelations.service';
 
 export enum StudiesType {
   LEARNING = 'LEARNING',
@@ -60,6 +76,7 @@ interface Fields extends CommonFields {
     endAt: Date;
   }>;
   sportsBases: Array<SportsBase['id']>;
+  competitionsCount: number;
 }
 
 interface Populates extends CommonPopulates {
@@ -84,8 +101,6 @@ export type SportsPerson<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
-export const SN_SPORTSPERSONS = 'sportsPersons';
-
 @Service({
   name: SN_SPORTSPERSONS,
   mixins: [
@@ -93,6 +108,7 @@ export const SN_SPORTSPERSONS = 'sportsPersons';
       collection: tableName(SN_SPORTSPERSONS),
     }),
     RequestMixin,
+    filtersMixin(),
   ],
   settings: {
     fields: {
@@ -126,8 +142,8 @@ export const SN_SPORTSPERSONS = 'sportsPersons';
               type: 'string',
               enum: Object.values(StudiesType),
             },
-            company: 'number',
-            program: 'number',
+            company: TYPE_ID_OR_OBJECT_WITH_ID,
+            program: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },
@@ -142,8 +158,8 @@ export const SN_SPORTSPERSONS = 'sportsPersons';
         items: {
           type: 'object',
           properties: {
-            organization: 'number',
-            basis: 'number',
+            organization: TYPE_ID_OR_OBJECT_WITH_ID,
+            basis: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },
@@ -162,8 +178,8 @@ export const SN_SPORTSPERSONS = 'sportsPersons';
               type: 'string',
               enum: Object.values(StudiesType),
             },
-            company: 'number',
-            program: 'number',
+            company: TYPE_ID_OR_OBJECT_WITH_ID,
+            program: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },
@@ -174,10 +190,98 @@ export const SN_SPORTSPERSONS = 'sportsPersons';
         }),
       },
       sportsBases: {
-        type: 'array',
-        items: 'number',
+        ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
         populate: `${SN_SPORTSBASES}.resolve`,
       },
+      athlete: {
+        type: 'object',
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_ATHLETES}.populateByProp`),
+          params: {
+            queryKey: 'sportsPerson',
+            populate: ['coaches'],
+            sort: 'id',
+          },
+        },
+        requestHandler: {
+          service: SN_SPORTSPERSONS_ATHLETES,
+          relationField: 'sportsPerson',
+        },
+      },
+      coach: {
+        type: 'object',
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_COACHES}.populateByProp`),
+          params: {
+            queryKey: 'sportsPerson',
+            populate: ['sportsBases', 'nationalTeams', 'workRelations', 'competences', 'studies'],
+            sort: 'id',
+          },
+        },
+        requestHandler: {
+          service: SN_SPORTSPERSONS_COACHES,
+          relationField: 'sportsPerson',
+        },
+      },
+      faInstructor: {
+        type: 'object',
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_FAINSTRUCTORS}.populateByProp`),
+          params: {
+            queryKey: 'sportsPerson',
+            populate: ['sportsBases', 'competences', 'workRelations', 'studies'],
+            sort: 'id',
+          },
+        },
+        requestHandler: {
+          service: SN_SPORTSPERSONS_FAINSTRUCTORS,
+          relationField: 'sportsPerson',
+        },
+      },
+      referee: {
+        type: 'object',
+        virtual: true,
+        readonly: true,
+        populate: {
+          keyField: 'id',
+          handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_REFEREES}.populateByProp`),
+          params: {
+            queryKey: 'sportsPerson',
+            populate: ['categories', 'studies'],
+            sort: 'id',
+          },
+        },
+        requestHandler: {
+          service: SN_SPORTSPERSONS_REFEREES,
+          relationField: 'sportsPerson',
+        },
+      },
+      competitionsCount: {
+        type: 'number',
+        virtual: true,
+        readonly: true,
+        async get({ ctx, entity }: FieldHookCallback) {
+          return ctx.call(`${SN_COMPETITIONS_RESULTS}.count`, {
+            query: {
+              $raw: {
+                condition: `sports_persons @> ?`,
+                bindings: [entity.id],
+              },
+            },
+          });
+        },
+      },
+      ...REQUEST_FIELDS(RequestEntityTypes.SPORTS_PERSONS),
+      ...TENANT_FIELD,
       ...COMMON_FIELDS,
     },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
@@ -185,4 +289,29 @@ export const SN_SPORTSPERSONS = 'sportsPersons';
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class extends moleculer.Service {}
+export default class extends moleculer.Service {
+  @Action({
+    rest: 'GET /:id/base',
+    params: {
+      id: 'number|convert',
+    },
+  })
+  base(ctx: Context<{ id: SportsPerson['id'] }>) {
+    return this.resolveEntities(ctx, {
+      id: ctx.params.id,
+      populate: [
+        'lastRequest',
+        'canCreateRequest',
+        'sportTypes',
+        'education',
+        'workRelations',
+        'studies',
+        'sportsBases',
+        'athlete',
+        'coach',
+        'faInstructor',
+        'referee',
+      ],
+    });
+  }
+}

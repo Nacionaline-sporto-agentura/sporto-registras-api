@@ -20,36 +20,38 @@ import {
 } from '../../types';
 
 import filtersMixin from 'moleculer-knex-filters';
+import {
+  SN_SPORTSBASES,
+  SN_SPORTSBASES_INVESTMENTS,
+  SN_SPORTSBASES_INVESTMENTS_SOURCES,
+  SN_SPORTSBASES_LEVELS,
+  SN_SPORTSBASES_OWNERS,
+  SN_SPORTSBASES_SPACES,
+  SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
+  SN_SPORTSBASES_SPACES_ENERGYCLASSES,
+  SN_SPORTSBASES_SPACES_TYPES,
+  SN_SPORTSBASES_TECHNICALCONDITIONS,
+  SN_SPORTSBASES_TENANTS,
+  SN_SPORTSBASES_TYPES,
+  SN_TYPES_SPORTTYPES,
+} from '../../types/serviceNames';
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
 import { Tenant, TenantTenantType } from '../tenants/index.service';
-import { SN_TYPES_SPORTTYPES, SportType } from '../types/sportTypes/index.service';
-import {
-  SN_SPORTSBASES_INVESTMENTS_SOURCES,
-  SportBaseInvestmentSource,
-} from '../types/sportsBases/investments/sources.service';
-import { SN_SPORTSBASES_LEVELS, SportsBasesLevel } from '../types/sportsBases/levels.service';
-import {
-  SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
-  SportBaseSpaceBuildingPurpose,
-} from '../types/sportsBases/spaces/buildingsPurposes.service';
-import {
-  SN_SPORTSBASES_SPACES_ENERGYCLASSES,
-  SportBaseSpaceEnergyClass,
-} from '../types/sportsBases/spaces/energyClasses.service';
-import {
-  SN_SPORTSBASES_SPACES_TYPES,
-  SportBaseSpaceType,
-} from '../types/sportsBases/spaces/types.service';
+import { SportType } from '../types/sportTypes/index.service';
+import { SportBaseInvestmentSource } from '../types/sportsBases/investments/sources.service';
+import { SportsBasesLevel } from '../types/sportsBases/levels.service';
+import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
+import { SportBaseSpaceEnergyClass } from '../types/sportsBases/spaces/energyClasses.service';
+import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
 import SportsBasesTechnicalConditionsService, {
-  SN_SPORTSBASES_TECHNICALCONDITIONS,
   SportsBasesTechicalCondition,
 } from '../types/sportsBases/technicalConditions.service';
-import { SN_SPORTSBASES_TYPES, SportsBasesType } from '../types/sportsBases/types.service';
-import { SN_SPORTSBASES_INVESTMENTS, SportBaseInvestment } from './investments/index.service';
-import { SN_SPORTSBASES_OWNERS, SportsBaseOwner } from './owners.service';
-import { SN_SPORTSBASES_SPACES, SportBaseSpace } from './spaces.service';
-import { SN_SPORTSBASES_TENANTS, SportsBaseTenant } from './tenants.service';
+import { SportsBasesType } from '../types/sportsBases/types.service';
+import { SportBaseInvestment } from './investments/index.service';
+import { SportsBaseOwner } from './owners.service';
+import { SportBaseSpace } from './spaces.service';
+import { SportsBaseTenant } from './tenants.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -142,8 +144,6 @@ const publicFields = [
 ];
 
 const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 'publicTenants'];
-
-export const SN_SPORTSBASES = 'sportsBases';
 
 @Service({
   name: SN_SPORTSBASES,
@@ -548,7 +548,8 @@ export default class extends moleculer.Service {
       address: {
         municipality: faker.location.county(),
         city: faker.location.city(),
-        street: faker.location.streetName(),
+
+        street: faker.location.street(),
         house: faker.location.buildingNumber(),
         apartment: faker.location.buildingNumber(),
       },

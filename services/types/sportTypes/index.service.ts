@@ -12,6 +12,7 @@ import {
   CommonPopulates,
   Table,
 } from '../../../types';
+import { SN_TYPES_SPORTTYPES } from '../../../types/serviceNames';
 import { tableName } from '../../../utils';
 
 interface Fields extends CommonFields {
@@ -30,8 +31,6 @@ export type SportType<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_TYPES_SPORTTYPES = 'types.sportTypes';
 
 @Service({
   name: SN_TYPES_SPORTTYPES,

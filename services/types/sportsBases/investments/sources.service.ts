@@ -12,6 +12,7 @@ import {
   CommonPopulates,
   Table,
 } from '../../../../types';
+import { SN_SPORTSBASES_INVESTMENTS_SOURCES } from '../../../../types/serviceNames';
 import { tableName, tmpRestFix } from '../../../../utils';
 
 interface Fields extends CommonFields {
@@ -25,8 +26,6 @@ export type SportBaseInvestmentSource<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_SPORTSBASES_INVESTMENTS_SOURCES = 'types.sportsBases.investments.sources';
 
 @Service({
   name: SN_SPORTSBASES_INVESTMENTS_SOURCES,

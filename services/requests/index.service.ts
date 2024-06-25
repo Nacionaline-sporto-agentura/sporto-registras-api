@@ -18,12 +18,13 @@ import {
   TENANT_FIELD,
   Table,
 } from '../../types';
+import { SN_REQUESTS, SN_REQUESTS_HISTORIES, SN_USERS } from '../../types/serviceNames';
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
 import { UserAuthMeta } from '../api.service';
 import { SportsBase } from '../sportsBases/index.service';
 import { Tenant } from '../tenants/index.service';
-import { SN_USERS, User, UserType } from '../users.service';
-import { RequestHistoryTypes, SN_REQUESTS_HISTORIES } from './histories.service';
+import { User, UserType } from '../users.service';
+import { RequestHistoryTypes } from './histories.service';
 
 export enum RequestStatus {
   DRAFT = 'DRAFT', // juodrastis
@@ -49,11 +50,15 @@ const adminEditStatuses = [RequestStatus.CREATED, RequestStatus.SUBMITTED];
 export enum RequestEntityTypes {
   SPORTS_BASES = 'SPORTS_BASES',
   TENANTS = 'TENANTS',
+  SPORTS_PERSONS = 'SPORTS_PERSONS',
+  COMPETITIONS = 'COMPETITIONS',
 }
 
 export const SERVICE_BY_REQUEST_TYPE = {
   [RequestEntityTypes.SPORTS_BASES]: 'sportsBases',
   [RequestEntityTypes.TENANTS]: 'tenants',
+  [RequestEntityTypes.SPORTS_PERSONS]: 'sportsPersons',
+  [RequestEntityTypes.COMPETITIONS]: 'competitions',
 };
 
 const nonEditableStatuses = [RequestStatus.APPROVED, RequestStatus.REJECTED];
@@ -90,8 +95,6 @@ const populatePermissions = (field: string) => {
     });
   };
 };
-
-export const SN_REQUESTS = 'requests';
 
 @Service({
   name: SN_REQUESTS,
@@ -180,7 +183,7 @@ export const SN_REQUESTS = 'requests';
     scopes: {
       ...COMMON_SCOPES,
       ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.scopes,
-      invisibleDraftsForAdmins(query: any, ctx: Context<null, UserAuthMeta>, params: any) {
+      invisibleDraftsForAdmins(query: any, ctx: Context<null, UserAuthMeta>, _params: any) {
         const { user } = ctx?.meta;
         if (user?.type !== UserType.ADMIN) return query;
 
@@ -327,7 +330,10 @@ export default class extends moleculer.Service {
 
     if (editingPermissions.edit) {
       // TODO: disable other statuses to be converted to drafts
-      return [RequestStatus.SUBMITTED, RequestStatus.DRAFT].includes(value) || error;
+      return (
+        [RequestStatus.SUBMITTED, RequestStatus.CREATED, RequestStatus.DRAFT].includes(value) ||
+        error
+      );
     } else if (editingPermissions.validate) {
       return (
         [RequestStatus.REJECTED, RequestStatus.RETURNED, RequestStatus.APPROVED].includes(value) ||

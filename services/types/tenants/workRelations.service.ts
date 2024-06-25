@@ -12,6 +12,7 @@ import {
   CommonPopulates,
   Table,
 } from '../../../types';
+import { SN_TENANTS_WORKRELATIONS } from '../../../types/serviceNames';
 import { TEMP_FAKE_TYPE_NAMES } from '../../../utils';
 
 interface Fields extends CommonFields {
@@ -25,8 +26,6 @@ export type TenantWorkRelations<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_TENANTS_WORKRELATIONS = 'tenants.workRelations';
 
 @Service({
   name: SN_TENANTS_WORKRELATIONS,

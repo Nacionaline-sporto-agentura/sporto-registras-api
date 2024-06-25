@@ -13,30 +13,35 @@ import {
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   OverrideArray,
+  TYPE_ID_OR_OBJECT_WITH_ID,
+  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../types';
-import { SN_SPORTSBASES, SportsBase } from '../sportsBases/index.service';
-import { SN_TENANTS, Tenant } from '../tenants/index.service';
 import {
-  SN_TYPES_NATIONAL_TEAM_AGE_GROUP,
-  TypeNationalTeamAgeGroup,
-} from '../types/nationalTeams/ageGroups.service';
-import {
-  SN_TYPES_NATIONAL_TEAM_GENDER,
-  TypeNationalTeamGender,
-} from '../types/nationalTeams/genders.service';
-import { SN_TYPES_SPORTTYPES, SportType } from '../types/sportTypes/index.service';
-import { SN_TYPES_STUDIES_COMPANIES, TypeStudiesCompany } from '../types/studies/companies.service';
-import { SN_TYPES_STUDIES_PROGRAMS, TypeStudiesProgram } from '../types/studies/programs.service';
-import {
+  SN_SPORTSBASES,
+  SN_SPORTSPERSONS,
+  SN_SPORTSPERSONS_COACHES,
+  SN_TENANTS,
   SN_TENANTS_WORKRELATIONS,
-  TenantWorkRelations,
-} from '../types/tenants/workRelations.service';
-import { SN_SPORTSPERSONS, SportsPerson } from './index.service';
+  SN_TYPES_NATIONAL_TEAM_AGE_GROUP,
+  SN_TYPES_NATIONAL_TEAM_GENDER,
+  SN_TYPES_SPORTTYPES,
+  SN_TYPES_STUDIES_COMPANIES,
+  SN_TYPES_STUDIES_PROGRAMS,
+} from '../../types/serviceNames';
+import { SportsBase } from '../sportsBases/index.service';
+import { Tenant } from '../tenants/index.service';
+import { TypeNationalTeamAgeGroup } from '../types/nationalTeams/ageGroups.service';
+import { TypeNationalTeamGender } from '../types/nationalTeams/genders.service';
+import { SportType } from '../types/sportTypes/index.service';
+import { TypeStudiesCompany } from '../types/studies/companies.service';
+import { TypeStudiesProgram } from '../types/studies/programs.service';
+import { TenantWorkRelations } from '../types/tenants/workRelations.service';
+import { SportsPerson } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
-  sportsPerson: number;
+  sportsPerson: SportsPerson['id'];
   sportsBases: number[];
   nationalTeams: {
     sportType: SportType['id'];
@@ -86,8 +91,6 @@ export type SportsPersonCoach<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
-export const SN_SPORTSPERSONS_COACHES = 'sportsPersons.coaches';
-
 @Service({
   name: SN_SPORTSPERSONS_COACHES,
   mixins: [
@@ -105,14 +108,14 @@ export const SN_SPORTSPERSONS_COACHES = 'sportsPersons.coaches';
         secure: true,
       },
       sportsPerson: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportsPersonId',
         immutable: true,
-        optional: true,
+        required: true,
         populate: `${SN_SPORTSPERSONS}.resolve`,
       },
       sportsBases: {
-        type: 'array',
-        items: 'number',
+        ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
         populate: `${SN_SPORTSBASES}.resolve`,
       },
       nationalTeams: {
@@ -120,9 +123,9 @@ export const SN_SPORTSPERSONS_COACHES = 'sportsPersons.coaches';
         items: {
           type: 'object',
           properties: {
-            sportType: 'number|convert',
-            ageGroup: 'number|convert',
-            gender: 'number|convert',
+            sportType: TYPE_ID_OR_OBJECT_WITH_ID,
+            ageGroup: TYPE_ID_OR_OBJECT_WITH_ID,
+            gender: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },
@@ -148,8 +151,8 @@ export const SN_SPORTSPERSONS_COACHES = 'sportsPersons.coaches';
         items: {
           type: 'object',
           properties: {
-            organization: 'number|convert',
-            basis: 'number|convert',
+            organization: TYPE_ID_OR_OBJECT_WITH_ID,
+            basis: TYPE_ID_OR_OBJECT_WITH_ID,
             position: 'string',
             startAt: 'date',
             endAt: 'date',
@@ -165,7 +168,7 @@ export const SN_SPORTSPERSONS_COACHES = 'sportsPersons.coaches';
         items: {
           type: 'object',
           properties: {
-            company: 'number|convert',
+            company: TYPE_ID_OR_OBJECT_WITH_ID,
             documentNumber: 'string',
             formCode: 'string',
             position: 'string',
@@ -183,8 +186,8 @@ export const SN_SPORTSPERSONS_COACHES = 'sportsPersons.coaches';
         items: {
           type: 'object',
           properties: {
-            company: 'number|convert',
-            program: 'number|convert',
+            company: TYPE_ID_OR_OBJECT_WITH_ID,
+            program: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },

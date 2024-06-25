@@ -13,9 +13,14 @@ import {
   RestrictionType,
   Table,
 } from '../../../../types';
+import {
+  SN_SPORTSBASES_SPACES_FIELDS,
+  SN_SPORTSBASES_SPACES_TYPES,
+  SN_SPORTSBASES_SPACES_TYPESANDFIELDS,
+} from '../../../../types/serviceNames';
 import { tableName, tmpRestFix } from '../../../../utils';
-import { SN_SPORTSBASES_SPACES_FIELDS, SportBaseSpaceField } from './fields.service';
-import { SN_SPORTSBASES_SPACES_TYPES, SportBaseSpaceType } from './types.service';
+import { SportBaseSpaceField } from './fields.service';
+import { SportBaseSpaceType } from './types.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -29,8 +34,6 @@ export type SportBaseSpaceTypeAndField<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_SPORTSBASES_SPACES_TYPESANDFIELDS = 'types.sportsBases.spaces.typesAndFields';
 
 @Service({
   name: SN_SPORTSBASES_SPACES_TYPESANDFIELDS,

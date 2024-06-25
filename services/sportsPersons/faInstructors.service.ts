@@ -13,18 +13,26 @@ import {
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   OverrideArray,
+  TYPE_ID_OR_OBJECT_WITH_ID,
+  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../types';
-import { SN_SPORTSBASES, SportsBase } from '../sportsBases/index.service';
-import { SN_TENANTS, Tenant } from '../tenants/index.service';
-import { SN_TYPES_STUDIES_COMPANIES, TypeStudiesCompany } from '../types/studies/companies.service';
-import { SN_TYPES_STUDIES_PROGRAMS, TypeStudiesProgram } from '../types/studies/programs.service';
 import {
+  SN_SPORTSBASES,
+  SN_SPORTSPERSONS,
+  SN_SPORTSPERSONS_FAINSTRUCTORS,
+  SN_TENANTS,
   SN_TENANTS_WORKRELATIONS,
-  TenantWorkRelations,
-} from '../types/tenants/workRelations.service';
-import { SN_USERS } from '../users.service';
-import { SN_SPORTSPERSONS, SportsPerson } from './index.service';
+  SN_TYPES_STUDIES_COMPANIES,
+  SN_TYPES_STUDIES_PROGRAMS,
+  SN_USERS,
+} from '../../types/serviceNames';
+import { SportsBase } from '../sportsBases/index.service';
+import { Tenant } from '../tenants/index.service';
+import { TypeStudiesCompany } from '../types/studies/companies.service';
+import { TypeStudiesProgram } from '../types/studies/programs.service';
+import { TenantWorkRelations } from '../types/tenants/workRelations.service';
+import { SportsPerson } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -57,7 +65,6 @@ interface Fields extends CommonFields {
 interface Populates extends CommonPopulates {
   sportsPerson: SportsPerson;
   sportsBases: SportsBase[];
-
   competences: OverrideArray<Fields['competences'], { company: Tenant }>;
   workRelations: OverrideArray<
     Fields['workRelations'],
@@ -74,8 +81,6 @@ export type SportsPersonFaInstructor<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
-export const SN_SPORTSPERSONS_FAINSTRUCTORS = 'sportsPersons.faInstructors';
-
 @Service({
   name: SN_SPORTSPERSONS_FAINSTRUCTORS,
   mixins: [
@@ -87,25 +92,24 @@ export const SN_SPORTSPERSONS_FAINSTRUCTORS = 'sportsPersons.faInstructors';
   settings: {
     fields: {
       id: {
-        type: 'string',
+        type: 'number',
         columnType: 'integer',
         primaryKey: true,
         secure: true,
       },
       sportsPerson: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportsPersonId',
         immutable: true,
         optional: true,
         populate: `${SN_SPORTSPERSONS}.resolve`,
       },
       sportsBases: {
-        type: 'array',
-        items: 'number',
+        ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
         populate: `${SN_SPORTSBASES}.resolve`,
       },
       faSpecialists: {
-        type: 'array',
-        items: 'number',
+        ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
         populate: `${SN_USERS}.resolve`,
       },
       competences: {
@@ -113,7 +117,7 @@ export const SN_SPORTSPERSONS_FAINSTRUCTORS = 'sportsPersons.faInstructors';
         items: {
           type: 'object',
           properties: {
-            company: 'number|convert',
+            company: TYPE_ID_OR_OBJECT_WITH_ID,
             documentNumber: 'string',
             formCode: 'string',
             position: 'string',
@@ -131,8 +135,8 @@ export const SN_SPORTSPERSONS_FAINSTRUCTORS = 'sportsPersons.faInstructors';
         items: {
           type: 'object',
           properties: {
-            organization: 'number|convert',
-            basis: 'number|convert',
+            organization: TYPE_ID_OR_OBJECT_WITH_ID,
+            basis: TYPE_ID_OR_OBJECT_WITH_ID,
             position: 'string',
             startAt: 'date',
             endAt: 'date',
@@ -148,8 +152,8 @@ export const SN_SPORTSPERSONS_FAINSTRUCTORS = 'sportsPersons.faInstructors';
         items: {
           type: 'object',
           properties: {
-            company: 'number|convert',
-            program: 'number|convert',
+            company: TYPE_ID_OR_OBJECT_WITH_ID,
+            program: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },

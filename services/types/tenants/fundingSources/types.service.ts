@@ -11,6 +11,7 @@ import {
   ONLY_GET_REST_ENABLED,
   Table,
 } from '../../../../types';
+import { SN_TENANTS_FUNDINGSOURCES_TYPES } from '../../../../types/serviceNames';
 import { tableName, tmpRestFix } from '../../../../utils';
 
 interface Fields extends CommonFields {
@@ -24,8 +25,6 @@ export type TenantFundingSourceType<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_TENANTS_FUNDINGSOURCES_TYPES = 'types.tenants.fundingSources.types';
 
 @Service({
   name: SN_TENANTS_FUNDINGSOURCES_TYPES,

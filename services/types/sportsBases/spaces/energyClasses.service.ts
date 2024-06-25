@@ -10,14 +10,13 @@ import {
   COMMON_SCOPES,
   CommonFields,
 } from '../../../../types';
+import { SN_SPORTSBASES_SPACES_ENERGYCLASSES } from '../../../../types/serviceNames';
 import { tableName, tmpRestFix } from '../../../../utils';
 
 export interface SportBaseSpaceEnergyClass extends CommonFields {
   id: number;
   name: string;
 }
-
-export const SN_SPORTSBASES_SPACES_ENERGYCLASSES = 'types.sportsBases.spaces.energyClasses';
 
 @Service({
   name: SN_SPORTSBASES_SPACES_ENERGYCLASSES,

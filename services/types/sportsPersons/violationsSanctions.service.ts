@@ -9,15 +9,13 @@ import {
   COMMON_SCOPES,
   CommonFields,
 } from '../../../types';
+import { SN_TYPES_SPORTSPERSONS_VIOLATIONS_SANCTIONS } from '../../../types/serviceNames';
 import { TEMP_FAKE_TYPE_NAMES, tableName } from '../../../utils';
 
 export interface ViolationSanctions extends CommonFields {
   id: number;
   name: string;
 }
-
-export const SN_TYPES_SPORTSPERSONS_VIOLATIONS_SANCTIONS =
-  'types.sportsPersons.violationsSanctions';
 
 @Service({
   name: SN_TYPES_SPORTSPERSONS_VIOLATIONS_SANCTIONS,

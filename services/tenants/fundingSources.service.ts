@@ -16,9 +16,10 @@ import {
   Table,
 } from '../../types';
 import {
+  SN_TENANTS_FUNDINGSOURCES,
   SN_TENANTS_FUNDINGSOURCES_TYPES,
-  TenantFundingSourceType,
-} from '../types/tenants/fundingSources/types.service';
+} from '../../types/serviceNames';
+import { TenantFundingSourceType } from '../types/tenants/fundingSources/types.service';
 import { Tenant } from './index.service';
 
 interface Fields extends CommonFields {
@@ -39,8 +40,6 @@ export type TenantFundingSource<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_TENANTS_FUNDINGSOURCES = 'tenants.fundingSources';
 
 @Service({
   name: SN_TENANTS_FUNDINGSOURCES,

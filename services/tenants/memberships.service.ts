@@ -14,6 +14,7 @@ import {
   ONLY_GET_REST_ENABLED,
   Table,
 } from '../../types';
+import { SN_TENANTS_MEMBERSHIPS } from '../../types/serviceNames';
 import { Tenant } from './index.service';
 
 export enum MembershipTypes {
@@ -40,8 +41,6 @@ export type TenantMembership<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_TENANTS_MEMBERSHIPS = 'tenants.memberships';
 
 @Service({
   name: SN_TENANTS_MEMBERSHIPS,

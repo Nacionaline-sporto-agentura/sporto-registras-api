@@ -10,25 +10,32 @@ import {
   COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  FieldHookCallback,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   OverrideArray,
+  TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../types';
+import {
+  SN_COMPETITIONS_RESULTS,
+  SN_SPORTSPERSONS,
+  SN_SPORTSPERSONS_ATHLETES,
+  SN_SPORTSPERSONS_COACHES,
+} from '../../types/serviceNames';
 import { tableName } from '../../utils';
-import { SN_SPORTSPERSONS_COACHES, SportsPersonCoach } from './coaches.service';
+import { SportsPersonCoach } from './coaches.service';
+import { SportsPerson } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
-
+  sportsPerson: SportsPerson['id'];
   memberships: Array<{
     documentNumber: number;
     series: string;
     date: Date;
   }>;
-
   careerEndedAt: 'date';
-
   coaches: Array<{
     coach: SportsPersonCoach['id'];
     startAt: Date;
@@ -36,6 +43,7 @@ interface Fields extends CommonFields {
   }>;
 }
 interface Populates extends CommonPopulates {
+  sportsPerson: SportsPerson;
   coaches: OverrideArray<Fields['coaches'], { coach: SportsPersonCoach }>;
 }
 
@@ -43,8 +51,6 @@ export type SportsPersonAthlete<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_SPORTSPERSONS_ATHLETES = 'sportsPersons.athletes';
 
 @Service({
   name: SN_SPORTSPERSONS_ATHLETES,
@@ -61,6 +67,32 @@ export const SN_SPORTSPERSONS_ATHLETES = 'sportsPersons.athletes';
         columnType: 'integer',
         primaryKey: true,
         secure: true,
+      },
+
+      sportsPerson: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
+        columnName: 'sportsPersonId',
+        immutable: true,
+        required: true,
+        populate: `${SN_SPORTSPERSONS}.resolve`,
+      },
+
+      competitionResults: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        async get({ ctx, entity }: FieldHookCallback) {
+          return ctx.call(`${SN_COMPETITIONS_RESULTS}.find`, {
+            populate: ['competition', 'sportType', 'match', 'sportsPersons', 'resultType'],
+            query: {
+              $raw: {
+                condition: `sports_persons @> ?`,
+                bindings: [entity.sportsPersonId],
+              },
+            },
+          });
+        },
       },
 
       memberships: {
@@ -82,7 +114,7 @@ export const SN_SPORTSPERSONS_ATHLETES = 'sportsPersons.athletes';
         items: {
           type: 'object',
           properties: {
-            coach: 'number',
+            coach: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },

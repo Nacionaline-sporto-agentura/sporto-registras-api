@@ -12,8 +12,9 @@ import {
   CommonPopulates,
   Table,
 } from '../../../types';
+import { SN_TYPES_SPORTTYPES, SN_TYPES_SPORTTYPES_MATCHES } from '../../../types/serviceNames';
 import { tableName } from '../../../utils';
-import { SN_TYPES_SPORTTYPES, SportType } from './index.service';
+import { SportType } from './index.service';
 
 export enum SportTypeMatchType {
   INDIVIDUAL = 'INDIVIDUAL',
@@ -39,8 +40,6 @@ export type SportTypeMatch<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_TYPES_SPORTTYPES_MATCHES = 'types.sportTypes.matches';
 
 @Service({
   name: SN_TYPES_SPORTTYPES_MATCHES,

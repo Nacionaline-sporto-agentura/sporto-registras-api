@@ -14,9 +14,10 @@ import {
   ONLY_GET_REST_ENABLED,
   Table,
 } from '../../types';
+import { SN_SPORTSBASES, SN_SPORTSBASES_OWNERS } from '../../types/serviceNames';
 import { Tenant } from '../tenants/index.service';
 import { User } from '../users.service';
-import { SN_SPORTSBASES, SportsBase } from './index.service';
+import { SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -25,18 +26,18 @@ interface Fields extends CommonFields {
   sportBase: SportsBase['id'];
 }
 
-interface ViispUser {
-  sportBase: SportsBaseOwner['sportBase'];
-  personalCode: string;
-  firstName: string;
-  lastName: string;
-}
-
-interface ViispCompany {
-  sportBase: SportsBaseOwner['sportBase'];
-  companyCode: string;
-  name: string;
-}
+//interface ViispUser {
+//  sportBase: SportsBaseOwner['sportBase'];
+//  personalCode: string;
+//  firstName: string;
+//  lastName: string;
+//}
+//
+//interface ViispCompany {
+//  sportBase: SportsBaseOwner['sportBase'];
+//  companyCode: string;
+//  name: string;
+//}
 enum LegalForms {
   COMPANY = 'COMPANY',
   PERSON = 'PERSON',
@@ -52,8 +53,6 @@ export type SportsBaseOwner<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_SPORTSBASES_OWNERS = 'sportsBases.owners';
 
 @Service({
   name: SN_SPORTSBASES_OWNERS,

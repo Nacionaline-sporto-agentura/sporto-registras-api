@@ -9,15 +9,13 @@ import {
   COMMON_SCOPES,
   CommonFields,
 } from '../../../types';
+import { SN_TYPES_STUDIES_COMPANIES, SN_TYPES_STUDIES_PROGRAMS } from '../../../types/serviceNames';
 import { TEMP_FAKE_TYPE_NAMES } from '../../../utils';
-import { SN_TYPES_STUDIES_COMPANIES } from './companies.service';
 
 export interface TypeStudiesProgram extends CommonFields {
   id: number;
   name: string;
 }
-
-export const SN_TYPES_STUDIES_PROGRAMS = 'types.studies.programs';
 
 @Service({
   name: SN_TYPES_STUDIES_PROGRAMS,

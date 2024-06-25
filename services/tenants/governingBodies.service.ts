@@ -14,6 +14,7 @@ import {
   ONLY_GET_REST_ENABLED,
   Table,
 } from '../../types';
+import { SN_TENANTS_GOVERNINGBODIES } from '../../types/serviceNames';
 import { Tenant } from './index.service';
 
 interface Fields extends CommonFields {
@@ -36,8 +37,6 @@ export type TenantGoverningBody<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_TENANTS_GOVERNINGBODIES = 'tenants.governingBodies';
 
 @Service({
   name: SN_TENANTS_GOVERNINGBODIES,

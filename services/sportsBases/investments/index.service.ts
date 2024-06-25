@@ -14,8 +14,13 @@ import {
   ONLY_GET_REST_ENABLED,
   Table,
 } from '../../../types';
-import { SN_SPORTSBASES, SportsBase } from '../index.service';
-import { SN_SPORTSBASES_INVESTMENTS_ITEMS, SportBaseInvestmentItem } from './items.service';
+import {
+  SN_SPORTSBASES,
+  SN_SPORTSBASES_INVESTMENTS,
+  SN_SPORTSBASES_INVESTMENTS_ITEMS,
+} from '../../../types/serviceNames';
+import { SportsBase } from '../index.service';
+import { SportBaseInvestmentItem } from './items.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -34,8 +39,6 @@ export type SportBaseInvestment<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-export const SN_SPORTSBASES_INVESTMENTS = 'sportsBases.investments';
 
 @Service({
   name: SN_SPORTSBASES_INVESTMENTS,

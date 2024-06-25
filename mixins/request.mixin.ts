@@ -112,6 +112,13 @@ const RequestMixin = {
 
       return value;
     },
+    forceArrayValue(value: any, settings: any) {
+      if (settings.type === 'array') {
+        return this.fixArrayValue(value, settings);
+      }
+
+      return value ? [value] : [];
+    },
   },
 
   actions: {
@@ -171,7 +178,7 @@ const RequestMixin = {
           updateData.id = oldEntity.id;
 
           if (validate) {
-            const res = this.$validators.update(updateData);
+            const res = await this.validateParams(ctx, updateData, { type: 'update' });
             if (Array.isArray(res)) {
               for (const er of res) {
                 invalidFields[er.field] = er.message;
@@ -182,14 +189,9 @@ const RequestMixin = {
           }
         } else {
           if (validate) {
-            // https://github.com/moleculerjs/database/blob/master/src/validation.js#L39
-            //            const check = compile(
-            //              generateValidatorSchemaFromFields(ctx.service.settings.fields, {
-            //                type: 'create',
-            //              }),
-            //            );
+            // TODO: jei noretusi de-hardcodinti 111 (zemiau esanti), galima naudot (pasalinus fielda): this_validateObject(ctx, fields, params, opts);
+            const res = await this.validateParams(ctx, updateData, { type: 'create' });
 
-            const res = this.$validators.create(updateData);
             if (Array.isArray(res)) {
               for (const er of res) {
                 invalidFields[er.field] = er.message;
@@ -211,52 +213,48 @@ const RequestMixin = {
           if (field.requestHandler?.service) {
             const handlerAction = `${field.requestHandler.service}.applyOrValidateRequestChanges`;
 
-            // TODO: simplify ifs
-            if (field.type === 'array') {
-              // Handle inserts and updates
-              const arrValues = this.fixArrayValue(entity[fieldName], field);
-              for (const childEntityKey in arrValues) {
-                const childEntity = arrValues[childEntityKey];
-                const oldChildEntity =
-                  childEntity.id &&
-                  oldEntity?.[fieldName]?.find((e: any) => childEntity.id === e.id);
+            const arrValues = this.forceArrayValue(entity[fieldName], field);
+            // Handle inserts and updates
+            for (const childEntityKey in arrValues) {
+              const childEntity = arrValues[childEntityKey];
+              const oldChildEntity =
+                childEntity.id && oldEntity?.[fieldName]?.find((e: any) => childEntity.id === e.id);
 
-                if (field.requestHandler.relationField) {
-                  if (validate) {
-                    // TODO: de-hardcode 111, better remove from validation fields
-                    childEntity[field.requestHandler.relationField] = 111;
-                  } else {
-                    childEntity[field.requestHandler.relationField] = entityWithId.id;
-                  }
-                }
-
-                // updates creates
-                const response: boolean | Record<string, any> = await ctx.call(handlerAction, {
-                  entity: childEntity,
-                  oldEntity: oldChildEntity,
-                  apply,
-                });
-
-                if (validate && response !== true) {
-                  invalidFields[fieldName] ||= {};
-                  invalidFields[fieldName][childEntityKey] = response;
+              if (field.requestHandler.relationField) {
+                if (validate) {
+                  // TODO: de-hardcode 111, better remove from validation fields
+                  childEntity[field.requestHandler.relationField] = 111;
+                } else {
+                  childEntity[field.requestHandler.relationField] = entityWithId.id;
                 }
               }
 
-              // Handle removes
-              if (Array.isArray(oldEntity?.[fieldName])) {
-                for (const oldChildEntity of oldEntity[fieldName]) {
-                  const childEntity =
-                    oldChildEntity.id &&
-                    entity?.[fieldName]?.find((e: any) => oldChildEntity.id === e.id);
+              // updates creates
+              const response: boolean | Record<string, any> = await ctx.call(handlerAction, {
+                entity: childEntity,
+                oldEntity: oldChildEntity,
+                apply,
+              });
 
-                  if (!childEntity) {
-                    //removes
-                    await ctx.call(handlerAction, {
-                      oldEntity: oldChildEntity,
-                      apply,
-                    });
-                  }
+              if (validate && response !== true) {
+                invalidFields[fieldName] ||= {};
+                invalidFields[fieldName][childEntityKey] = response;
+              }
+            }
+
+            // Handle removes
+            if (Array.isArray(oldEntity?.[fieldName])) {
+              for (const oldChildEntity of oldEntity[fieldName]) {
+                const childEntity =
+                  oldChildEntity.id &&
+                  entity?.[fieldName]?.find((e: any) => oldChildEntity.id === e.id);
+
+                if (!childEntity) {
+                  //removes
+                  await ctx.call(handlerAction, {
+                    oldEntity: oldChildEntity,
+                    apply,
+                  });
                 }
               }
             }

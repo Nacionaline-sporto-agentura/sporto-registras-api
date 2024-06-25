@@ -10,14 +10,13 @@ import {
   COMMON_SCOPES,
   CommonFields,
 } from '../../../../types';
+import { SN_SPORTSBASES_TENANTS_BASIS } from '../../../../types/serviceNames';
 import { tableName, tmpRestFix } from '../../../../utils';
 
 export interface SportsBasesTenantsBasis extends CommonFields {
   id: number;
   name: string;
 }
-
-export const SN_SPORTSBASES_TENANTS_BASIS = 'types.sportsBases.tenants.basis';
 
 @Service({
   name: SN_SPORTSBASES_TENANTS_BASIS,
@@ -46,12 +45,7 @@ export const SN_SPORTSBASES_TENANTS_BASIS = 'types.sportsBases.tenants.basis';
 export default class extends moleculer.Service {
   @Method
   async seedDB() {
-    const data = [
-      { name: 'TODO: Basis 1' },
-      { name: 'TODO: Basis 2' },
-      { name: 'TODO: Basis 3' },
-      { name: 'TODO: Basis 4' },
-    ];
+    const data = [{ name: 'Nuoma' }, { name: 'Panauda' }, { name: 'Koncesija' }, { name: 'Kita' }];
     await this.createEntities(null, data);
   }
 }

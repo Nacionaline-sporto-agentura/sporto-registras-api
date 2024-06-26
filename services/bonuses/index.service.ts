@@ -77,6 +77,9 @@ const BonusType = {
         columnName: 'resultId',
         immutable: true,
         required: true,
+        params: {
+          populate: ['resultType', 'competition'],
+        },
         populate: `${SN_COMPETITIONS_RESULTS}.resolve`,
       },
 

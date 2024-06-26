@@ -69,27 +69,30 @@ const ScholarshipType = {
 
       sportsPerson: {
         columnName: 'sportsPersonId',
-        immutable: true,
         required: true,
         populate: `${SN_SPORTSPERSONS}.resolve`,
       },
 
       result: {
         columnName: 'resultId',
-        immutable: true,
         required: true,
-        populate: `${SN_COMPETITIONS_RESULTS}.resolve`,
+        populate: {
+          action: `${SN_COMPETITIONS_RESULTS}.resolve`,
+          params: {
+            populate: ['competition', 'resultType'],
+          },
+        },
       },
 
-      documentNumber: 'string',
+      documentNumber: 'string|required',
 
-      date: 'date',
+      date: 'date|required',
 
-      amount: 'number',
+      amount: 'number|required',
 
-      dateFrom: 'date',
+      dateFrom: 'date|required',
 
-      dateTo: 'date',
+      dateTo: 'date|required',
 
       data: {
         type: 'object',

@@ -73,7 +73,6 @@ const RentStatus = {
 
       sportsPerson: {
         columnName: 'sportsPersonId',
-        immutable: true,
         required: true,
         populate: `${SN_SPORTSPERSONS}.resolve`,
       },
@@ -81,14 +80,19 @@ const RentStatus = {
       result: {
         columnName: 'resultId',
         required: true,
-        populate: `${SN_COMPETITIONS_RESULTS}.resolve`,
+        populate: {
+          action: `${SN_COMPETITIONS_RESULTS}.resolve`,
+          params: {
+            populate: ['competition', 'resultType'],
+          },
+        },
       },
 
-      documentNumber: 'string',
+      documentNumber: 'string|required',
 
-      date: 'date',
+      date: 'date|required',
 
-      amount: 'number',
+      amount: 'number|required',
 
       unit: {
         columnName: 'rentUnitId',
@@ -96,7 +100,7 @@ const RentStatus = {
         populate: `${SN_TYPES_RENTS_UNITS}.resolve`,
       },
 
-      dateFrom: 'date',
+      dateFrom: 'date|required',
 
       data: {
         type: 'object',

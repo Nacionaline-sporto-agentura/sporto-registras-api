@@ -56,7 +56,6 @@ const BonusType = {
 
       sportsPerson: {
         columnName: 'sportsPersonId',
-        immutable: true,
         required: true,
         populate: `${SN_SPORTSPERSONS}.resolve`,
       },
@@ -67,20 +66,21 @@ const BonusType = {
         default: BonusType.NATIONAL,
       },
 
-      documentNumber: 'string',
+      documentNumber: 'string|required',
 
-      date: 'date',
+      date: 'date|required',
 
-      amount: 'number',
+      amount: 'number|required',
 
       result: {
         columnName: 'resultId',
-        immutable: true,
         required: true,
-        params: {
-          populate: ['resultType', 'competition'],
+        populate: {
+          action: `${SN_COMPETITIONS_RESULTS}.resolve`,
+          params: {
+            populate: ['competition', 'resultType'],
+          },
         },
-        populate: `${SN_COMPETITIONS_RESULTS}.resolve`,
       },
 
       ...COMMON_FIELDS,

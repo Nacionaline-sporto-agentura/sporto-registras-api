@@ -53,3 +53,7 @@ export const SN_SPORTSBASES_INVESTMENTS = 'sportsBases.investments';
 export const SN_SPORTSBASES_INVESTMENTS_ITEMS = 'sportsBases.investments.items';
 export const SN_TYPES_NATIONAL_TEAM_AGE_GROUP = 'types.nationalTeam.ageGroups';
 export const SN_TYPES_NATIONAL_TEAM_GENDER = 'types.nationalTeam.genders';
+export const SN_SCHOLARSHIPS = 'scholarships';
+export const SN_RENTS = 'rents';
+export const SN_TYPES_RENTS_UNITS = 'types.rents.units';
+export const SN_BONUSES = 'bonuses';

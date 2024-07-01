@@ -24,7 +24,7 @@ interface Fields extends CommonFields {
   users: {
     firstName: string;
     lastName: string;
-    duties: string;
+    position: string;
     personalCode: string;
   }[];
 }
@@ -68,7 +68,7 @@ export type TenantGoverningBody<
           properties: {
             firstName: 'string|required',
             lastName: 'string|required',
-            duties: 'string|required',
+            position: 'string|required',
             personalCode: {
               type: 'string',
               required: true,

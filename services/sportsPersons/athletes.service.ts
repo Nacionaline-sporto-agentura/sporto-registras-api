@@ -21,7 +21,6 @@ import {
   SN_COMPETITIONS_RESULTS,
   SN_SPORTSPERSONS,
   SN_SPORTSPERSONS_ATHLETES,
-  SN_SPORTSPERSONS_COACHES,
 } from '../../types/serviceNames';
 import { tableName } from '../../utils';
 import { SportsPersonCoach } from './coaches.service';
@@ -114,13 +113,13 @@ export type SportsPersonAthlete<
         items: {
           type: 'object',
           properties: {
-            coach: TYPE_ID_OR_OBJECT_WITH_ID,
+            sportsPerson: TYPE_ID_OR_OBJECT_WITH_ID,
             startAt: 'date',
             endAt: 'date',
           },
         },
         populate: PopulateHandlerFn({
-          coach: `${SN_SPORTSPERSONS_COACHES}.resolve`,
+          sportsPerson: `${SN_SPORTSPERSONS}.resolve`,
         }),
       },
 

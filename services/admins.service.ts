@@ -57,7 +57,7 @@ export default class extends moleculer.Service {
     params: {
       firstName: 'string',
       lastName: 'string',
-      duties: 'string|optional',
+      position: 'string|optional',
       email: 'string',
       phone: 'string|optional',
       groups: {
@@ -81,7 +81,7 @@ export default class extends moleculer.Service {
     ctx: Context<{
       firstName: string;
       lastName: string;
-      duties: string;
+      position: string;
       phone: string;
       email: string;
       groups: Array<{
@@ -90,7 +90,7 @@ export default class extends moleculer.Service {
       }>;
     }>,
   ) {
-    const { email, phone, firstName, lastName, groups, duties } = ctx.params;
+    const { email, phone, firstName, lastName, groups, position } = ctx.params;
     const authUser: any = await ctx.call(`${SN_AUTH}.users.create`, {
       email,
       firstName,
@@ -106,7 +106,7 @@ export default class extends moleculer.Service {
       lastName,
       email,
       phone,
-      duties,
+      position,
       update: true,
     });
 
@@ -129,7 +129,7 @@ export default class extends moleculer.Service {
       id: number;
       email: string;
       password: string;
-      duties: string;
+      position: string;
       oldPassword: string;
       firstName: string;
       lastName: string;
@@ -140,7 +140,7 @@ export default class extends moleculer.Service {
       }>;
     }>,
   ) {
-    const { id, email, password, oldPassword, firstName, lastName, phone, groups, duties } =
+    const { id, email, password, oldPassword, firstName, lastName, phone, groups, position } =
       ctx.params;
 
     const user: User = await ctx.call(`${SN_USERS}.resolve`, { id, throwIfNotExist: true, scope });
@@ -160,7 +160,7 @@ export default class extends moleculer.Service {
       authUser,
       firstName,
       lastName,
-      duties,
+      position,
       email,
       phone,
       update: true,

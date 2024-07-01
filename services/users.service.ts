@@ -14,8 +14,8 @@ import {
 import DbConnection from '../mixins/database.mixin';
 import { SN_AUTH, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
 import { AuthUserRole, UserAuthMeta } from './api.service';
-import { TenantUserRole } from './tenantUsers.service';
 import { Tenant } from './tenants/index.service';
+import { TenantUserRole } from './tenantUsers.service';
 
 export enum UserType {
   ADMIN = 'ADMIN',
@@ -33,7 +33,7 @@ export interface User {
   fullName: string;
   email: string;
   phone: string;
-  duties?: string;
+  position?: string;
   type: UserType;
   authUser: number;
   authStrategy: string;
@@ -99,7 +99,7 @@ export const USERS_DEFAULT_SCOPES = [
       firstName: 'string',
       lastName: 'string',
       phone: 'string',
-      duties: 'string|optional',
+      position: 'string|optional',
       email: {
         type: 'email',
         set: ({ value }: FieldHookCallback) => value?.toLowerCase().trim(),
@@ -487,7 +487,7 @@ export default class extends moleculer.Service {
       },
       firstName: 'string|optional',
       lastName: 'string|optional',
-      duties: 'string|optional',
+      position: 'string|optional',
       email: 'string|optional',
       phone: 'string|optional',
       type: 'string|optional',
@@ -503,11 +503,11 @@ export default class extends moleculer.Service {
       phone?: string;
       type?: string;
       update?: boolean;
-      duties?: string;
+      position?: string;
       authStrategy?: string;
     }>,
   ) {
-    const { authUser, update, firstName, lastName, email, phone, type, authStrategy, duties } =
+    const { authUser, update, firstName, lastName, email, phone, type, authStrategy, position } =
       ctx.params;
     if (!authUser || !authUser.id) return;
 
@@ -534,7 +534,7 @@ export default class extends moleculer.Service {
       type: authUserIsAdmin ? UserType.ADMIN : UserType.USER,
       email: email || authUser.email,
       phone: phone || authUser.phone,
-      duties,
+      position,
       authStrategy: authStrategy || UserAuthStrategy.PASSWORD,
     };
 

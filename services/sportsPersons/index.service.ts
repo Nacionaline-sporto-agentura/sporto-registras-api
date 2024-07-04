@@ -223,10 +223,8 @@ export type SportsPerson<
         type: 'number',
         columnName: 'coachId',
         populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_COACHES}.populateByProp`),
+          action: `${SN_SPORTSPERSONS_COACHES}.resolve`,
           params: {
-            queryKey: 'sportsPerson',
             populate: ['sportsBases', 'nationalTeams', 'workRelations', 'competences', 'studies'],
             sort: 'id',
           },
@@ -239,10 +237,8 @@ export type SportsPerson<
         type: 'number',
         columnName: 'faInstructorId',
         populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_FAINSTRUCTORS}.populateByProp`),
+          action: `${SN_SPORTSPERSONS_FAINSTRUCTORS}.resolve`,
           params: {
-            queryKey: 'sportsPerson',
             populate: ['sportsBases', 'competences', 'workRelations', 'studies'],
             sort: 'id',
           },
@@ -255,10 +251,8 @@ export type SportsPerson<
         type: 'number',
         columnName: 'refereeId',
         populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_REFEREES}.populateByProp`),
+          action: `${SN_SPORTSPERSONS_REFEREES}.resolve`,
           params: {
-            queryKey: 'sportsPerson',
             populate: ['categories', 'studies'],
             sort: 'id',
           },

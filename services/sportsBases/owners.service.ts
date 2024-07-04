@@ -77,7 +77,7 @@ export type SportsBaseOwner<
         required: true,
       },
       name: 'string|required',
-      website: 'string|required',
+      website: 'string',
       code: {
         type: 'string',
         required: true,

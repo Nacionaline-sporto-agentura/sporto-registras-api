@@ -75,10 +75,6 @@ interface Fields extends CommonFields {
     house: string;
     apartment?: string;
   };
-  coordinates: {
-    x: number;
-    y: number;
-  };
   geom: any;
   webPage: string;
   photos: Array<{
@@ -215,16 +211,9 @@ export const SN_SPORTSBASES = 'sportsBases';
           apartment: 'string',
         },
       },
-      coordinates: {
-        type: 'object',
-        properties: {
-          x: 'number',
-          y: 'number',
-        },
-        required: true,
-      },
       geom: {
         type: 'any',
+        required: true,
         geom: true,
       },
       webPage: 'string|required',
@@ -447,6 +436,7 @@ export default class extends moleculer.Service {
         'owners',
         'canValidate',
         'tenants',
+        'geom',
       ],
     });
   }
@@ -606,17 +596,13 @@ export default class extends moleculer.Service {
         house: faker.location.buildingNumber(),
         apartment: faker.location.buildingNumber(),
       },
-      coordinates: {
-        x: faker.number.float({ min: 53, max: 55 }),
-        y: faker.number.float({ min: 24, max: 27 }),
-      },
       webPage: faker.internet.url(),
       photos: getPhotos(),
       plotNumber: `${faker.number.int(10000)}`,
       disabledAccessible: faker.datatype.boolean(),
       blindAccessible: faker.datatype.boolean(),
       plotArea: faker.number.int(1000),
-      areaUnits: faker.helpers.arrayElement(Object.values(AreaUnits)),
+      areaUnits: faker.helpers.enumValue(AreaUnits),
       builtPlotArea: faker.number.int(1000),
       audienceSeats: faker.number.int(1000),
       parkingPlaces: faker.number.int(1000),

@@ -366,7 +366,9 @@ export default class TilesEventsService extends moleculer.Service {
         layers.sportsBases = tileSportsBases;
       }
 
-      return Buffer.from(vtpbf.fromGeojsonVt(layers, { extent: superclusterOpts.extent }));
+      return Buffer.from(
+        vtpbf.fromGeojsonVt(layers, { extent: superclusterOpts.extent, version: 2 }),
+      );
     }
 
     // show real geometries

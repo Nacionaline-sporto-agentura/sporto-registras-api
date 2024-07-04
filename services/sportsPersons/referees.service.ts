@@ -17,7 +17,6 @@ import {
   Table,
 } from '../../types';
 import {
-  SN_SPORTSPERSONS,
   SN_SPORTSPERSONS_REFEREES,
   SN_TYPES_CATEGORIES_COMPANIES,
   SN_TYPES_STUDIES_COMPANIES,
@@ -26,7 +25,6 @@ import {
 import { TypeCategoryCompany } from '../types/categories/companies.service';
 import { TypeStudiesCompany } from '../types/studies/companies.service';
 import { TypeStudiesProgram } from '../types/studies/programs.service';
-import { SportsPerson } from './index.service';
 
 enum StudiesType {
   LEARNING = 'LEARNING',
@@ -35,7 +33,6 @@ enum StudiesType {
 
 interface Fields extends CommonFields {
   id: number;
-  sportsPerson: number;
   categories: {
     company: TypeCategoryCompany['id'];
     documentNumber: string;
@@ -53,7 +50,6 @@ interface Fields extends CommonFields {
   careerEndedAt: Date;
 }
 interface Populates extends CommonPopulates {
-  sportsPerson: SportsPerson;
   categories: OverrideArray<Fields['categories'], { company: TypeCategoryCompany }>;
   studies: OverrideArray<
     Fields['studies'],
@@ -81,13 +77,6 @@ export type SportsPersonsReferees<
         columnType: 'integer',
         primaryKey: true,
         secure: true,
-      },
-      sportsPerson: {
-        ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportsPersonId',
-        immutable: true,
-        optional: true,
-        populate: `${SN_SPORTSPERSONS}.resolve`,
       },
       categories: {
         type: 'array',

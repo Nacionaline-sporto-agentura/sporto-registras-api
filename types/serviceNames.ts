@@ -57,3 +57,5 @@ export const SN_SCHOLARSHIPS = 'scholarships';
 export const SN_RENTS = 'rents';
 export const SN_TYPES_RENTS_UNITS = 'types.rents.units';
 export const SN_BONUSES = 'bonuses';
+
+export const SN_TILES_SPORTSBASES = 'tiles.sportsBases';

@@ -28,7 +28,6 @@ import { SportsPerson } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
-  sportsPerson: SportsPerson['id'];
   memberships: Array<{
     documentNumber: number;
     series: string;
@@ -42,7 +41,6 @@ interface Fields extends CommonFields {
   }>;
 }
 interface Populates extends CommonPopulates {
-  sportsPerson: SportsPerson;
   coaches: OverrideArray<Fields['coaches'], { coach: SportsPersonCoach }>;
 }
 
@@ -68,26 +66,26 @@ export type SportsPersonAthlete<
         secure: true,
       },
 
-      sportsPerson: {
-        ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportsPersonId',
-        immutable: true,
-        required: true,
-        populate: `${SN_SPORTSPERSONS}.resolve`,
-      },
-
       competitionResults: {
         type: 'array',
         items: { type: 'object' },
         virtual: true,
         readonly: true,
         async get({ ctx, entity }: FieldHookCallback) {
+          if (!entity?.id) return 0;
+
+          const sportsPerson: SportsPerson = await ctx.call(`${SN_SPORTSPERSONS}.findOne`, {
+            query: { athlete: entity.id },
+          });
+
+          if (!sportsPerson?.id) return 0;
+
           return ctx.call(`${SN_COMPETITIONS_RESULTS}.find`, {
             populate: ['competition', 'sportType', 'match', 'sportsPersons', 'resultType'],
             query: {
               $raw: {
                 condition: `sports_persons @> ?`,
-                bindings: [entity.sportsPersonId],
+                bindings: [sportsPerson.id],
               },
             },
           });

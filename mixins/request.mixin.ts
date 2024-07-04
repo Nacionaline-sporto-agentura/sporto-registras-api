@@ -137,10 +137,6 @@ const RequestMixin = {
         const validate = !apply;
         const invalidFields: Record<string, any> = {};
 
-        // ==============================
-        // Handle current service changes
-        // ==============================
-
         let opertion: 'remove' | 'update' | 'create';
         if (!entity && oldEntity?.id) {
           opertion = 'remove';
@@ -149,6 +145,73 @@ const RequestMixin = {
         } else {
           opertion = 'create';
         }
+
+        // ==============================
+        // Handle remote fields where relation id needed on current service
+        // ==============================
+
+        for (const fieldName in serviceFields) {
+          // field settings object
+          const field: Field = getFieldSettings(serviceFields[fieldName]);
+
+          if (field.requestHandler?.service && !field.requestHandler?.relationField) {
+            const handlerAction = `${field.requestHandler.service}.applyOrValidateRequestChanges`;
+
+            const arrValues = this.forceArrayValue(entity[fieldName], field);
+            // Handle inserts and updates
+            for (const childEntityKey in arrValues) {
+              const childEntity = arrValues[childEntityKey];
+              const oldChildEntity =
+                childEntity.id && oldEntity?.[fieldName]?.find((e: any) => childEntity.id === e.id);
+
+              // updates creates
+              const response: boolean | Record<string, any> = await ctx.call(handlerAction, {
+                entity: childEntity,
+                oldEntity: oldChildEntity,
+                apply,
+              });
+
+              if (validate) {
+                if (response !== true) {
+                  invalidFields[fieldName] ||= {};
+                  invalidFields[fieldName][childEntityKey] = response;
+                } else {
+                  // TODO: de-hardcode 111, better remove from validation fields
+                  arrValues[childEntityKey] = 111;
+                }
+              } else {
+                arrValues[childEntityKey] = (response as any).id;
+              }
+            }
+
+            if (field.type === 'array') {
+              entity[fieldName] = arrValues;
+            } else {
+              entity[fieldName] = arrValues[0];
+            }
+
+            // Handle removes
+            if (Array.isArray(oldEntity?.[fieldName])) {
+              for (const oldChildEntity of oldEntity[fieldName]) {
+                const childEntity =
+                  oldChildEntity.id &&
+                  entity?.[fieldName]?.find((e: any) => oldChildEntity.id === e.id);
+
+                if (!childEntity) {
+                  //removes
+                  await ctx.call(handlerAction, {
+                    oldEntity: oldChildEntity,
+                    apply,
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        // ==============================
+        // Handle current service changes
+        // ==============================
 
         if (opertion === 'remove') {
           return validate
@@ -166,8 +229,7 @@ const RequestMixin = {
           const field: Field = getFieldSettings(serviceFields[fieldName]);
 
           // remote fields will be handled later (entity id might be needed)
-          if (field.virtual || field.requestHandler?.service || field.requestHandler?.ignoreField)
-            continue;
+          if (field.virtual || field.requestHandler?.ignoreField) continue;
 
           if (entity[fieldName] !== oldEntity?.[fieldName]) {
             updateData[fieldName] = this.fixArrayValue(entity[fieldName], field);
@@ -210,7 +272,7 @@ const RequestMixin = {
           // field settings object
           const field: Field = getFieldSettings(serviceFields[fieldName]);
 
-          if (field.requestHandler?.service) {
+          if (field.requestHandler?.service && field.requestHandler?.relationField) {
             const handlerAction = `${field.requestHandler.service}.applyOrValidateRequestChanges`;
 
             const arrValues = this.forceArrayValue(entity[fieldName], field);

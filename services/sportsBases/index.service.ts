@@ -20,8 +20,8 @@ import {
 } from '../../types';
 
 import filtersMixin from 'moleculer-knex-filters';
+import PostgisMixin from 'moleculer-postgis';
 import {
-  SN_SPORTSBASES,
   SN_SPORTSBASES_INVESTMENTS,
   SN_SPORTSBASES_INVESTMENTS_SOURCES,
   SN_SPORTSBASES_LEVELS,
@@ -38,6 +38,7 @@ import {
 import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
 import { Tenant, TenantTenantType } from '../tenants/index.service';
+import { LKS_SRID } from '../tiles/sportsBases.service';
 import { SportType } from '../types/sportTypes/index.service';
 import { SportBaseInvestmentSource } from '../types/sportsBases/investments/sources.service';
 import { SportsBasesLevel } from '../types/sportsBases/levels.service';
@@ -52,6 +53,12 @@ import { SportBaseInvestment } from './investments/index.service';
 import { SportsBaseOwner } from './owners.service';
 import { SportBaseSpace } from './spaces.service';
 import { SportsBaseTenant } from './tenants.service';
+
+export enum AreaUnits {
+  HA = 'HA',
+  A = 'A',
+  M2 = 'M2',
+}
 
 interface Fields extends CommonFields {
   id: number;
@@ -72,6 +79,7 @@ interface Fields extends CommonFields {
     x: number;
     y: number;
   };
+  geom: any;
   webPage: string;
   photos: Array<{
     url: string;
@@ -83,6 +91,7 @@ interface Fields extends CommonFields {
   disabledAccessible: boolean;
   blindAccessible: boolean;
   plotArea: number;
+  areaUnits: AreaUnits;
   builtPlotArea: number;
   audienceSeats: number;
   parkingPlaces: number;
@@ -145,11 +154,19 @@ const publicFields = [
 
 const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 'publicTenants'];
 
+export const SN_SPORTSBASES = 'sportsBases';
+
 @Service({
   name: SN_SPORTSBASES,
   mixins: [
     DbConnection({
       collection: 'sportsBases',
+    }),
+    PostgisMixin({
+      srid: LKS_SRID,
+      geojson: {
+        maxDecimalDigits: 0,
+      },
     }),
     RequestMixin,
     filtersMixin(),
@@ -206,6 +223,10 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
         },
         required: true,
       },
+      geom: {
+        type: 'any',
+        geom: true,
+      },
       webPage: 'string|required',
       photos: {
         type: 'array',
@@ -232,6 +253,11 @@ const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 
       disabledAccessible: 'boolean', // for people with physical disability
       blindAccessible: 'boolean', // for blind people
       plotArea: 'number|required',
+      areaUnits: {
+        type: 'enum',
+        required: true,
+        values: Object.values(AreaUnits),
+      },
       builtPlotArea: 'number|required',
 
       parkingPlaces: 'number|required',
@@ -540,6 +566,33 @@ export default class extends moleculer.Service {
       }));
     }
 
+    function getGeom() {
+      try {
+        const wgsCoordinates = faker.location.nearbyGPSCoordinate({
+          isMetric: true,
+          origin: [23.930085, 55.237194],
+          radius: 20,
+        });
+        const transformation = require('transform-coordinates');
+        const transform = transformation('EPSG:4326', '3346'); // WGS 84 to LKS
+        const lksCoordinates = transform.forward(wgsCoordinates);
+        return {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: lksCoordinates,
+              },
+            },
+          ],
+        };
+      } catch (e) {
+        console.log('Error while generating coordinates');
+      }
+    }
+
     return randomArray(3, () => ({
       name: faker.lorem.words({ min: 1, max: 3 }),
       type: faker.helpers.arrayElement(sportsBasesTypes),
@@ -563,6 +616,7 @@ export default class extends moleculer.Service {
       disabledAccessible: faker.datatype.boolean(),
       blindAccessible: faker.datatype.boolean(),
       plotArea: faker.number.int(1000),
+      areaUnits: faker.helpers.arrayElement(Object.values(AreaUnits)),
       builtPlotArea: faker.number.int(1000),
       audienceSeats: faker.number.int(1000),
       parkingPlaces: faker.number.int(1000),
@@ -592,6 +646,7 @@ export default class extends moleculer.Service {
         improvements: faker.lorem.sentence(),
         appointedAt: faker.date.anytime(),
       })),
+      geom: getGeom(),
     }));
   }
 
@@ -613,7 +668,6 @@ export default class extends moleculer.Service {
     ]);
 
     const sportsBasesData = await this.actions.fakeData();
-
     for (const sportBaseData of sportsBasesData) {
       await this.actions.applyOrValidateRequestChanges({
         entity: sportBaseData,

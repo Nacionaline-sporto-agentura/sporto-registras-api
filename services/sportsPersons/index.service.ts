@@ -42,6 +42,10 @@ import { SportType } from '../types/sportTypes/index.service';
 import { TypeStudiesCompany } from '../types/studies/companies.service';
 import { TypeStudiesProgram } from '../types/studies/programs.service';
 import { TenantWorkRelations } from '../types/tenants/workRelations.service';
+import { SportsPersonAthlete } from './athletes.service';
+import { SportsPersonCoach } from './coaches.service';
+import { SportsPersonFaInstructor } from './faInstructors.service';
+import { SportsPersonsReferees } from './referees.service';
 
 export enum StudiesType {
   LEARNING = 'LEARNING',
@@ -77,6 +81,10 @@ interface Fields extends CommonFields {
   }>;
   sportsBases: Array<SportsBase['id']>;
   competitionsCount: number;
+  athlete: SportsPersonAthlete['id'];
+  coach: SportsPersonCoach['id'];
+  faInstructor: SportsPersonFaInstructor['id'];
+  referee: SportsPersonsReferees['id'];
 }
 
 interface Populates extends CommonPopulates {
@@ -94,6 +102,10 @@ interface Populates extends CommonPopulates {
     { company: TypeStudiesCompany; program: TypeStudiesProgram }
   >;
   sportsBases: SportsBase[];
+  athlete: SportsPersonAthlete;
+  coach: SportsPersonCoach;
+  faInstructor: SportsPersonFaInstructor;
+  referee: SportsPersonsReferees;
 }
 
 export type SportsPerson<
@@ -194,27 +206,22 @@ export type SportsPerson<
         populate: `${SN_SPORTSBASES}.resolve`,
       },
       athlete: {
-        type: 'object',
-        virtual: true,
-        readonly: true,
+        type: 'number',
+        columnName: 'athleteId',
         populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_ATHLETES}.populateByProp`),
+          action: `${SN_SPORTSPERSONS_ATHLETES}.resolve`,
           params: {
-            queryKey: 'sportsPerson',
             populate: ['coaches'],
             sort: 'id',
           },
         },
         requestHandler: {
           service: SN_SPORTSPERSONS_ATHLETES,
-          relationField: 'sportsPerson',
         },
       },
       coach: {
-        type: 'object',
-        virtual: true,
-        readonly: true,
+        type: 'number',
+        columnName: 'coachId',
         populate: {
           keyField: 'id',
           handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_COACHES}.populateByProp`),
@@ -226,13 +233,11 @@ export type SportsPerson<
         },
         requestHandler: {
           service: SN_SPORTSPERSONS_COACHES,
-          relationField: 'sportsPerson',
         },
       },
       faInstructor: {
-        type: 'object',
-        virtual: true,
-        readonly: true,
+        type: 'number',
+        columnName: 'faInstructorId',
         populate: {
           keyField: 'id',
           handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_FAINSTRUCTORS}.populateByProp`),
@@ -244,13 +249,11 @@ export type SportsPerson<
         },
         requestHandler: {
           service: SN_SPORTSPERSONS_FAINSTRUCTORS,
-          relationField: 'sportsPerson',
         },
       },
       referee: {
-        type: 'object',
-        virtual: true,
-        readonly: true,
+        type: 'number',
+        columnName: 'refereeId',
         populate: {
           keyField: 'id',
           handler: PopulateHandlerFn(`${SN_SPORTSPERSONS_REFEREES}.populateByProp`),
@@ -262,7 +265,6 @@ export type SportsPerson<
         },
         requestHandler: {
           service: SN_SPORTSPERSONS_REFEREES,
-          relationField: 'sportsPerson',
         },
       },
       competitionsCount: {

@@ -24,9 +24,11 @@ import {
   SN_COMPETITIONS_RESULTS,
   SN_SPORTSBASES,
   SN_SPORTSPERSONS,
+  SN_SPORTSPERSONS_AMS_INSTRUCTORS,
   SN_SPORTSPERSONS_ATHLETES,
   SN_SPORTSPERSONS_COACHES,
   SN_SPORTSPERSONS_FAINSTRUCTORS,
+  SN_SPORTSPERSONS_FASPECIALISTS,
   SN_SPORTSPERSONS_REFEREES,
   SN_TENANTS,
   SN_TENANTS_WORKRELATIONS,
@@ -42,9 +44,11 @@ import { SportType } from '../types/sportTypes/index.service';
 import { TypeStudiesCompany } from '../types/studies/companies.service';
 import { TypeStudiesProgram } from '../types/studies/programs.service';
 import { TenantWorkRelations } from '../types/tenants/workRelations.service';
+import { SportsPersonAmsInstructor } from './amsInstructors.service';
 import { SportsPersonAthlete } from './athletes.service';
 import { SportsPersonCoach } from './coaches.service';
 import { SportsPersonFaInstructor } from './faInstructors.service';
+import { SportsPersonFaSpecialist } from './faSpecialists.service';
 import { SportsPersonsReferees } from './referees.service';
 
 export enum StudiesType {
@@ -84,6 +88,8 @@ interface Fields extends CommonFields {
   athlete: SportsPersonAthlete['id'];
   coach: SportsPersonCoach['id'];
   faInstructor: SportsPersonFaInstructor['id'];
+  amsInstructor: SportsPersonAmsInstructor['id'];
+  faSpecialist: SportsPersonFaSpecialist['id'];
   referee: SportsPersonsReferees['id'];
 }
 
@@ -105,6 +111,8 @@ interface Populates extends CommonPopulates {
   athlete: SportsPersonAthlete;
   coach: SportsPersonCoach;
   faInstructor: SportsPersonFaInstructor;
+  faSpecialist: SportsPersonFaSpecialist;
+  amsInstructor: SportsPersonAmsInstructor;
   referee: SportsPersonsReferees;
 }
 
@@ -245,6 +253,34 @@ export type SportsPerson<
         },
         requestHandler: {
           service: SN_SPORTSPERSONS_FAINSTRUCTORS,
+        },
+      },
+      amsInstructor: {
+        type: 'number',
+        columnName: 'amsInstructorId',
+        populate: {
+          action: `${SN_SPORTSPERSONS_AMS_INSTRUCTORS}.resolve`,
+          params: {
+            populate: [],
+            sort: 'id',
+          },
+        },
+        requestHandler: {
+          service: SN_SPORTSPERSONS_AMS_INSTRUCTORS,
+        },
+      },
+      faSpecialist: {
+        type: 'number',
+        columnName: 'faSpecialistId',
+        populate: {
+          action: `${SN_SPORTSPERSONS_FASPECIALISTS}.resolve`,
+          params: {
+            populate: [],
+            sort: 'id',
+          },
+        },
+        requestHandler: {
+          service: SN_SPORTSPERSONS_FASPECIALISTS,
         },
       },
       referee: {

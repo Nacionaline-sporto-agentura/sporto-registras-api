@@ -282,7 +282,7 @@ export const SN_SPORTSBASES = 'sportsBases';
           params: {
             queryKey: 'sportBase',
             mappingMulti: true,
-            populate: ['technicalCondition', 'type', 'sportTypes', 'buildingType'],
+            populate: ['technicalCondition', 'type', 'group', 'sportTypes', 'buildingType'],
             sort: 'name',
           },
         },
@@ -622,9 +622,6 @@ export default class extends moleculer.Service {
         buildingNumber: faker.number.int(10000),
         buildingArea: faker.number.int(1000),
         photos: getPhotos(),
-        energyClassCertificate: {
-          url: faker.internet.url(),
-        },
       })),
       investments: randomArray(3, () => ({
         source: faker.helpers.arrayElement(sportsBasesInvestmentsSources),

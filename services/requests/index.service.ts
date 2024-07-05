@@ -52,6 +52,7 @@ export enum RequestEntityTypes {
   TENANTS = 'TENANTS',
   SPORTS_PERSONS = 'SPORTS_PERSONS',
   COMPETITIONS = 'COMPETITIONS',
+  NATIONAL_TEAMS = 'NATIONAL_TEAMS',
 }
 
 export const SERVICE_BY_REQUEST_TYPE = {
@@ -59,6 +60,7 @@ export const SERVICE_BY_REQUEST_TYPE = {
   [RequestEntityTypes.TENANTS]: 'tenants',
   [RequestEntityTypes.SPORTS_PERSONS]: 'sportsPersons',
   [RequestEntityTypes.COMPETITIONS]: 'competitions',
+  [RequestEntityTypes.NATIONAL_TEAMS]: 'nationalTeams',
 };
 
 const nonEditableStatuses = [RequestStatus.APPROVED, RequestStatus.REJECTED];

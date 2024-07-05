@@ -19,23 +19,24 @@ import {
 } from '../../types';
 import {
   SN_SPORTSBASES,
+  SN_SPORTSPERSONS,
   SN_SPORTSPERSONS_FAINSTRUCTORS,
   SN_TENANTS,
   SN_TENANTS_WORKRELATIONS,
   SN_TYPES_STUDIES_COMPANIES,
   SN_TYPES_STUDIES_PROGRAMS,
-  SN_USERS,
 } from '../../types/serviceNames';
 import { SportsBase } from '../sportsBases/index.service';
 import { Tenant } from '../tenants/index.service';
 import { TypeStudiesCompany } from '../types/studies/companies.service';
 import { TypeStudiesProgram } from '../types/studies/programs.service';
 import { TenantWorkRelations } from '../types/tenants/workRelations.service';
+import { SportsPerson } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
   sportsBases: number[];
-  faSpecialists: number[];
+  faSpecialists: Array<SportsPerson['id']>;
   competences: {
     company: Tenant['id'];
     documentNumber: string;
@@ -60,6 +61,7 @@ interface Fields extends CommonFields {
   }[];
 }
 interface Populates extends CommonPopulates {
+  faSpecialists: Array<SportsPerson<'faSpecialist'>>;
   sportsBases: SportsBase[];
   competences: OverrideArray<Fields['competences'], { company: Tenant }>;
   workRelations: OverrideArray<
@@ -99,7 +101,12 @@ export type SportsPersonFaInstructor<
       },
       faSpecialists: {
         ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
-        populate: `${SN_USERS}.resolve`,
+        populate: {
+          action: `${SN_SPORTSPERSONS}.resolve`,
+          params: {
+            populate: ['faSpecialist'],
+          },
+        },
       },
       competences: {
         type: 'array',

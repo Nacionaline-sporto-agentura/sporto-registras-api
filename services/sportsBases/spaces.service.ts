@@ -23,6 +23,7 @@ import {
   SN_SPORTSBASES_SPACES,
   SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
   SN_SPORTSBASES_SPACES_ENERGYCLASSES,
+  SN_SPORTSBASES_SPACES_GROUPS,
   SN_SPORTSBASES_SPACES_TYPES,
   SN_SPORTSBASES_SPACES_TYPESANDFIELDS,
   SN_SPORTSBASES_TECHNICALCONDITIONS,
@@ -48,11 +49,6 @@ interface Fields extends CommonFields {
   energyClass: number;
   constructionDate: Date;
   latestRenovationDate: Date;
-  energyClassCertificate: {
-    url: string;
-    name: string;
-    size: number;
-  };
 }
 
 interface Populates extends CommonPopulates {
@@ -86,7 +82,6 @@ export type SportBaseSpace<
       technicalCondition: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportBaseTechnicalConditionId',
-        immutable: true,
         required: true,
         populate: {
           action: `${SN_SPORTSBASES_TECHNICALCONDITIONS}.resolve`,
@@ -95,15 +90,25 @@ export type SportBaseSpace<
           },
         },
       },
+      group: {
+        ...TYPE_ID_OR_OBJECT_WITH_ID,
+        columnName: 'sportBaseSpaceGroupId',
+        optional: true,
+        populate: {
+          action: `${SN_SPORTSBASES_SPACES_GROUPS}.resolve`,
+          params: {
+            fields: 'id,name',
+          },
+        },
+      },
       type: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportBaseSpaceTypeId',
-        immutable: true,
         optional: true,
         populate: {
           action: `${SN_SPORTSBASES_SPACES_TYPES}.resolve`,
           params: {
-            fields: 'id,type,name',
+            fields: 'id,name',
           },
         },
       },
@@ -122,14 +127,12 @@ export type SportBaseSpace<
       sportBase: {
         type: 'number',
         columnName: 'sportBaseId',
-        immutable: true,
         optional: true,
         populate: `${SN_SPORTSBASES}.resolve`,
       },
       buildingPurpose: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportBaseSpaceBuildingPurposeId',
-        immutable: true,
         required: true,
         populate: {
           action: `${SN_SPORTSBASES_SPACES_BUILDINGPURPOSES}.resolve`,
@@ -148,21 +151,12 @@ export type SportBaseSpace<
       energyClass: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnName: 'sportBaseSpaceEnergyClassId',
-        immutable: true,
         required: true,
         populate: {
           action: `${SN_SPORTSBASES_SPACES_ENERGYCLASSES}.resolve`,
           params: {
             fields: 'id,name',
           },
-        },
-      },
-      energyClassCertificate: {
-        type: 'object',
-        properties: {
-          url: 'string|required',
-          name: 'string',
-          size: 'number',
         },
       },
       constructionDate: 'date',

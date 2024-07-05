@@ -12,9 +12,13 @@ import {
   CommonPopulates,
   Table,
 } from '../../../../types';
-import { SN_SPORTSBASES_SPACES_TYPES, SN_SPORTSBASES_TYPES } from '../../../../types/serviceNames';
+import {
+  SN_SPORTSBASES_SPACES_GROUPS,
+  SN_SPORTSBASES_SPACES_TYPES,
+} from '../../../../types/serviceNames';
 import { tableName, tmpRestFix } from '../../../../utils';
 import { SportsBasesType } from '../types.service';
+import { SportBaseSpaceGroup } from './groups.service';
 
 interface Fields extends CommonFields {
   id: number;
@@ -44,10 +48,10 @@ export type SportBaseSpaceType<
         primaryKey: true,
         secure: true,
       },
-      type: {
+      group: {
         type: 'number',
-        columnName: 'sportBaseTypeId',
-        populate: `${SN_SPORTSBASES_TYPES}.resolve`,
+        columnName: 'sportBaseSpaceGroupId',
+        populate: `${SN_SPORTSBASES_SPACES_GROUPS}.resolve`,
       },
       name: 'string',
       ...COMMON_FIELDS,
@@ -60,13 +64,13 @@ export type SportBaseSpaceType<
 export default class extends moleculer.Service {
   @Method
   async seedDB() {
-    await this.broker.waitForServices([SN_SPORTSBASES_TYPES]);
+    await this.broker.waitForServices([SN_SPORTSBASES_SPACES_GROUPS]);
 
-    const sportsBasesSpacesTypes: Array<SportsBasesType> = await this.broker.call(
-      `${SN_SPORTSBASES_TYPES}.find`,
+    const sportsBasesSpacesGroups: SportBaseSpaceGroup[] = await this.broker.call(
+      `${SN_SPORTSBASES_SPACES_GROUPS}.find`,
     );
 
-    const sportsBasesSpacesTypesIds = sportsBasesSpacesTypes.reduce(
+    const sportsBasesSpacesGroupsIds = sportsBasesSpacesGroups.reduce(
       (acc, item) => ({ ...acc, [item.name]: item.id }),
       {} as { [key: string]: number },
     );
@@ -75,105 +79,114 @@ export default class extends moleculer.Service {
       {
         name: 'Uždarų patalpų erdvės',
         children: [
-          { name: 'Sporto salė' },
-          { name: 'Skvošo aikštelė' },
-          { name: 'Aerobikos salė' },
-          { name: 'Treniruoklių salė' },
+          { name: 'Gimnastikos salė' },
+          { name: 'Boulingo takai' },
+          { name: 'Laipiojimo sporto erdvė' },
           { name: 'Lengvosios atletikos maniežas' },
-          { name: 'Teniso kortai' },
-          { name: 'Futbolo maniežas' },
+          { name: 'Padelio aikštelė' },
+          { name: 'Badmintono aikštelė' },
           { name: 'Riedučių ir dviračių rampos' },
-          { name: 'Kitos sporto salės' },
-          { name: 'Pripučiamos konstrukcijos statinys' },
+          { name: 'Skvošo aikštelė' },
+          { name: 'Sporto salė' },
+          { name: 'Bokso salė su ringu' },
+          { name: 'Sunkiosios atletikos salė' },
+          { name: 'Teniso kortai' },
+          { name: 'Treniruoklių salė' },
+          { name: 'Vidaus Dviračių trekai' },
+          { name: 'Kitos vidaus sporto erdvės' },
+        ],
+      },
+      {
+        name: 'Lauko aikštynai',
+        children: [
+          { name: 'Futbolo aikštelė' },
+          { name: 'Beisbolo aikštė' },
+          { name: 'Padelio aikštelė' },
+          { name: 'Krepšinio aikštelė' },
+          { name: 'Petankės aikštelė' },
+          { name: 'Piklbolo aištelė' },
+          { name: 'Žolės riedulio aikštelė' },
+          { name: 'Badmintono aikštelė' },
+          { name: 'Teniso kortai' },
+          { name: 'Paplūdinio tinklinio aikštelė' },
+          { name: 'Stadionas (Ne mažesnis nei 100 m x 64 m žaidimo aikštelės dydis)' },
+          { name: 'Tinklinio aikštelė' },
+          { name: 'Kita lauko aikštelė' },
+          { name: 'Paplūdimio futbolo aikštelė' },
+        ],
+      },
+      {
+        name: 'Kitos lauko erdvės',
+        children: [
+          { name: 'Diskgolfo parkas' },
+          { name: 'Golfo aikštynas' },
+          { name: 'Irklavimo bazė' },
+          { name: 'BMX lenktynių trasa' },
+          { name: 'Dviračių trasa' },
+          { name: 'Ekstremalaus sporto aikštelė ("Pump track")' },
+          { name: 'Laipiojimo sporto erdvė' },
+          { name: '„Wake“ parkas' },
+          { name: 'Treniruokliai' },
+          { name: 'Kita lauko erdvė' },
         ],
       },
       { name: 'Baseinai', children: [{ name: 'Vidaus baseinai' }] },
       {
         name: 'Šaudyklos',
         children: [
-          { name: 'Vidaus šaudykla' },
-          { name: 'Stendinio šaudymo šaudykla' },
           { name: 'Biatlono šaudykla' },
+          { name: 'Lauko šaudykla' },
+          { name: 'Stendinio šaudymo šaudykla' },
           { name: 'Šaudymo iš lanko šaudykla' },
+          { name: 'Vidaus šaudykla' },
+          { name: 'Kita šaudykla' },
         ],
       },
       {
-        name: 'Auto / Moto sporto trasos',
+        name: 'Žiemos sporto erdvės',
         children: [
-          { name: 'Automobilių ar motociklų žiedai' },
-          { name: 'Kartingų trasos' },
-          { name: 'Automobilių ar motociklų trasos' },
+          { name: 'Vidaus čiuožykla' },
+          { name: 'Lauko čiuožykla' },
+          { name: 'Slidinėjimo trasa' },
+          { name: 'Lauko kalnų slidinėjimo trasa' },
+          { name: 'Uždarų patalpų kalnų slidinėjimo trasa' },
+          { name: 'Kita žiemos sporto erdvė' },
         ],
       },
       {
-        name: 'Slidinėjimo trasos',
-        children: [{ name: 'Slidinėjimo trasos' }],
-      },
-      {
-        name: 'Kitos sporto šakų erdvės',
-        children: [{ name: 'Aerodromas' }, { name: 'Marina' }],
-      },
-      {
-        name: 'Kitos lauko sporto erdvės',
+        name: 'Techninio sporto erdvės',
         children: [
-          { name: 'Lauko žaidimų aikštė' },
-          { name: 'Disk golfo kortai' },
-          { name: 'Wake parkas' },
-          { name: 'Petankės aikštelė' },
-          { name: 'Laipiojimas uolomis' },
-          { name: 'Kitos erdvės' },
-        ],
-      },
-      { name: 'Ledo arenos', children: [{ name: 'Čiuožykla' }] },
-      {
-        name: 'Žirginis sportas',
-        children: [
-          { name: 'Jojimo maniežas' },
-          { name: 'Hipodromas' },
-          { name: 'Lauko jojimo bazė' },
-          { name: 'Žirginio sporto trasa' },
+          { name: 'Aerodromas' },
+          { name: 'Automobilių, motociklų, motorinių transporto priemonių trasa' },
+          { name: 'Kartingų trasa' },
+          { name: 'Prieplauka' },
         ],
       },
       {
-        name: 'Kitos vidaus sporto erdvės',
-        children: [
-          { name: 'Atletikos salė' },
-          { name: 'Boulingo takai' },
-          { name: 'Kitos vidaus sporto erdvės' },
-          { name: 'Vidaus laipiojimo uolomis ' },
-        ],
+        name: 'Žirgų sporto erdvės',
+        children: [{ name: 'Hipodromas' }, { name: 'Jojimo maniežas' }],
       },
       {
         name: 'Pagalbinės patalpos',
-        children: [{ name: 'Pagalbinės patalpos' }],
+        children: [{ name: 'Persirengimo patalpos' }, { name: 'Pagalbinės patalpos' }],
       },
-      { name: 'Stadionas ', children: [{ name: 'Stadionas ' }] },
       {
-        name: 'Lauko aikštynai',
+        name: 'Apgyvendinimo, maitinimo, konferencinės erdvės',
         children: [
-          { name: 'Futbolo aikštė' },
-          { name: 'Krepšinio aikštelė' },
-          { name: 'Tinklinio aikštelė' },
-          { name: 'Paplūdimio tinklinio aikštelė' },
-          { name: 'Multifunkcinė aikštelė' },
-          { name: 'Kita lauko aikštelė' },
-          { name: 'Lauko teniso kortai' },
-          { name: 'Lauko golfo kortai' },
-          { name: 'Lauko čiuožykla' },
-          { name: 'Lauko BMX lenktynių trasa' },
-          { name: 'Lauko ekstremalaus sporto aikštelė (Pump track)' },
-          { name: 'Kita lauko sporto aikštelė' },
+          { name: 'Apgyvendinimo erdvė' },
+          { name: 'Konferencinė erdvė' },
+          { name: 'Maitinimo erdvė' },
+          { name: 'Reabilitacijos erdvė' },
         ],
       },
-      { name: 'Dviračių trekas', children: [{ name: 'Dviračių trekas' }] },
     ];
 
     for (const item of data) {
-      const typeId = sportsBasesSpacesTypesIds[item.name];
+      const group = sportsBasesSpacesGroupsIds[item.name];
       for (const child of item.children) {
         await this.createEntity(null, {
           name: child.name,
-          type: typeId,
+          group,
         });
       }
     }

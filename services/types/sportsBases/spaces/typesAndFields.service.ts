@@ -97,6 +97,7 @@ export default class extends moleculer.Service {
   @Method
   async seedDB() {
     await this.broker.waitForServices([SN_SPORTSBASES_SPACES_TYPES, SN_SPORTSBASES_SPACES_FIELDS]);
+
     const types: Array<SportBaseSpaceType> = await this.broker.call(
       `${SN_SPORTSBASES_SPACES_TYPES}.find`,
     );
@@ -114,1691 +115,297 @@ export default class extends moleculer.Service {
       {} as { [key: string]: number },
     );
 
-    const data = [
-      { type: 'Sporto salė', field: 'Plotas (m2)' },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Riedučių ir dviračių rampos',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Plotas (m2)',
-      },
-      { type: 'Čiuožykla', field: 'Plotas (m2)' },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Plotas (m2)',
-      },
-      { type: 'Stadionas ', field: 'Plotas (m2)' },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Krepšinio aikštelė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Tinklinio aikštelė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Paplūdimio tinklinio aikštelė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Multifunkcinė aikštelė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Kita lauko aikštelė',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Lauko čiuožykla',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Lauko BMX lenktynių trasa',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Lauko ekstremalaus sporto aikštelė (Pump track)',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Kita lauko sporto aikštelė',
-        field: 'Plotas (m2)',
-      },
-      { type: 'Sporto salė', field: 'Ilgis (m)' },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Ilgis (m)',
-      },
-      { type: 'Teniso kortai', field: 'Ilgis (m)' },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Riedučių ir dviračių rampos',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Ilgis (m)',
-      },
-      { type: 'Čiuožykla', field: 'Ilgis (m)' },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Ilgis (m)',
-      },
-      { type: 'Stadionas ', field: 'Ilgis (m)' },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Krepšinio aikštelė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Tinklinio aikštelė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Paplūdimio tinklinio aikštelė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Multifunkcinė aikštelė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Kita lauko aikštelė',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Lauko čiuožykla',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Lauko BMX lenktynių trasa',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Lauko ekstremalaus sporto aikštelė (Pump track)',
-        field: 'Ilgis (m)',
-      },
-      {
-        type: 'Kita lauko sporto aikštelė',
-        field: 'Ilgis (m)',
-      },
-      { type: 'Sporto salė', field: 'Plotis (m)' },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Riedučių ir dviračių rampos',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Plotis (m)',
-      },
-      { type: 'Čiuožykla', field: 'Plotis (m)' },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Plotis (m)',
-      },
-      { type: 'Stadionas ', field: 'Plotis (m)' },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Krepšinio aikštelė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Tinklinio aikštelė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Paplūdimio tinklinio aikštelė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Multifunkcinė aikštelė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Kita lauko aikštelė',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Lauko čiuožykla',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Lauko BMX lenktynių trasa',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Lauko ekstremalaus sporto aikštelė (Pump track)',
-        field: 'Plotis (m)',
-      },
-      {
-        type: 'Kita lauko sporto aikštelė',
-        field: 'Plotis (m)',
-      },
-      { type: 'Sporto salė', field: 'Aukštis (m)' },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Riedučių ir dviračių rampos',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Aukštis (m)',
-      },
-      { type: 'Stadionas ', field: 'Aukštis (m)' },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Aukštis (m)',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Riedučių ir dviračių rampos',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Čiuožykla',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Stacionarios žiūrovų vietos',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Riedučių ir dviračių rampos',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Čiuožykla',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Kilnojamos žiūrovų vietos',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Žiūrovų vietos (iš viso)',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Pritaikyta judėjimo negalią turintiems asmenims',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Pritaikyta regos negalią turintiems asmenims',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Čiuožykla',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Elektroninės švieslentės',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Čiuožykla',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Papildoma informacija apie el. švieslentes',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Čiuožykla',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Stacionari  įgarsinimo sistema',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Keičiama grindų danga',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Keičiama grindų danga',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Keičiama grindų danga',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Krepšinio aikštelė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Tinklinio aikštelė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Paplūdimio tinklinio aikštelė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Multifunkcinė aikštelė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Kita lauko aikštelė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Lauko BMX lenktynių trasa',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Kita lauko sporto aikštelė',
-        field: 'Grindų dangos specifika',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Apšviestumas (lx)',
-      },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Apšviestumas (lx)',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Apšviestumas (lx)',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Apšviestumas (lx)',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Apšviestumas (lx)',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Apšviestumas (lx)',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Apšviestumas (lx)',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Apšviestumas (lx)',
-      },
-      {
-        type: 'Sporto salė',
-        field: 'Kilnojamos pertvaros',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Kilnojamos pertvaros',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Kilnojamos pertvaros',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Kilnojamos pertvaros',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Kilnojamos pertvaros',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Kilnojamos pertvaros',
-      },
-      { type: 'Sporto salė', field: 'Danga' },
-      { type: 'Skvošo aikštelė', field: 'Danga' },
-      { type: 'Aerobikos salė', field: 'Danga' },
-      { type: 'Treniruoklių salė', field: 'Danga' },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Danga',
-      },
-      { type: 'Teniso kortai', field: 'Danga' },
-      { type: 'Futbolo maniežas', field: 'Danga' },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Danga',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Danga',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Danga',
-      },
-      {
-        type: 'Krepšinio aikštelė',
-        field: 'Danga',
-      },
-      {
-        type: 'Tinklinio aikštelė',
-        field: 'Danga',
-      },
-      {
-        type: 'Lauko BMX lenktynių trasa',
-        field: 'Danga',
-      },
-      { type: 'Dviračių trekas', field: 'Danga' },
-      {
-        type: 'Sporto salė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Skvošo aikštelė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Aerobikos salė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Teniso kortai',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Riedučių ir dviračių rampos',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Kitos sporto salės',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Pripučiamos konstrukcijos statinys',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Vidaus šaudykla',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Stendinio šaudymo šaudykla',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Biatlono šaudykla',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Šaudymo iš lanko šaudykla',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Slidinėjimo trasos',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Marina',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Disk golfo kortai',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Wake parkas',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Petankės aikštelė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Laipiojimas uolomis',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Kitos erdvės',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Čiuožykla',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Žirginio sporto trasa',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Atletikos salė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Boulingo takai',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Kitos vidaus sporto erdvės',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Vidaus laipiojimo uolomis ',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Pagalbinės patalpos',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Krepšinio aikštelė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Tinklinio aikštelė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Paplūdimio tinklinio aikštelė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Multifunkcinė aikštelė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Kita lauko aikštelė',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Lauko čiuožykla',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Lauko BMX lenktynių trasa',
-        field: 'Papildoma informacija',
-      },
-      {
-        type: 'Lauko ekstremalaus sporto aikštelė (Pump track)',
-        field: 'Papildoma informacija',
-      },
-      { type: 'Aerobikos salė', field: 'Turėklas' },
-      {
-        type: 'Aerobikos salė',
-        field: 'Veidrodinė siena',
-      },
-      {
-        type: 'Treniruoklių salė',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Riedučių ir dviračių rampos',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Disk golfo kortai',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Wake parkas',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Žirginio sporto trasa',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Multifunkcinė aikštelė',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Kita lauko aikštelė',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Lauko čiuožykla',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Lauko ekstremalaus sporto aikštelė (Pump track)',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Kita lauko sporto aikštelė',
-        field: 'Įranga / Aparašymas',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Ovalo takelių ilgis',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Ovalo takelių ilgis',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Ovalo takelių skaičius',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Ovalo takelių skaičius',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Tiesiosios takelio ilgis',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Tiesiosios takelio ilgis',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Tiesiosios takelių skaičius',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Tiesiosios takelių skaičius',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Rutulio stūmimo sektorius',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Rutulio stūmimo sektorius',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Trišuolio erdvė',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Trišuolio erdvė',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Šuolio su kartimi erdvė',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Šuolio su kartimi erdvė',
-      },
-      {
-        type: 'Lengvosios atletikos maniežas',
-        field: 'Šuolio į aukštį erdvė',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Šuolio į aukštį erdvė',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Šaudymo iš lanko šaudykla',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Lauko žaidimų aikštė',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Lauko jojimo bazė',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Krepšinio aikštelė',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Tinklinio aikštelė',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Paplūdimio tinklinio aikštelė',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Multifunkcinė aikštelė',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Kita lauko aikštelė',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Lauko teniso kortai',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Lauko BMX lenktynių trasa',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Lauko ekstremalaus sporto aikštelė (Pump track)',
-        field: 'Dirbtinis apšvietimas',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Futbolo aikštės ilgis',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Futbolo aikštės ilgis',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Futbolo aikštės ilgis',
-      },
-      {
-        type: 'Futbolo maniežas',
-        field: 'Futbolo aikštės plotis',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Futbolo aikštės plotis',
-      },
-      {
-        type: 'Futbolo aikštė',
-        field: 'Futbolo aikštės plotis',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Plaukimo takelių skaičius',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Minimalus gylis (m)',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Maksimalus gylis (m)',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Laiko matavimo sistema',
-      },
-      {
-        type: 'Vidaus baseinai',
-        field: 'Papildoma informacija apie laiko matavimo įrangą',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Trasos ilgis',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Trasos ilgis',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Trasos ilgis',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Trasos plotis ',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Trasos plotis ',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Trasos plotis ',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Važiavimo kryptis',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Važiavimo kryptis',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Važiavimo kryptis',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Starto vietų skaičius',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Starto vietų skaičius',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Starto vietų skaičius',
-      },
-      {
-        type: 'Automobilių ar motociklų žiedai',
-        field: 'Aukščių skirtumas',
-      },
-      {
-        type: 'Kartingų trasos',
-        field: 'Aukščių skirtumas',
-      },
-      {
-        type: 'Automobilių ar motociklų trasos',
-        field: 'Aukščių skirtumas',
-      },
-      {
-        type: 'Vidaus šaudykla',
-        field: 'Maksimalus šaudyklos ilgis',
-      },
-      {
-        type: 'Stendinio šaudymo šaudykla',
-        field: 'Maksimalus šaudyklos ilgis',
-      },
-      {
-        type: 'Biatlono šaudykla',
-        field: 'Maksimalus šaudyklos ilgis',
-      },
-      {
-        type: 'Šaudymo iš lanko šaudykla',
-        field: 'Maksimalus šaudyklos ilgis',
-      },
-      {
-        type: 'Vidaus šaudykla',
-        field: 'Taikinių skaičius',
-      },
-      {
-        type: 'Stendinio šaudymo šaudykla',
-        field: 'Taikinių skaičius',
-      },
-      {
-        type: 'Biatlono šaudykla',
-        field: 'Taikinių skaičius',
-      },
-      {
-        type: 'Šaudymo iš lanko šaudykla',
-        field: 'Taikinių skaičius',
-      },
-      {
-        type: 'Vidaus šaudykla',
-        field: 'Elektroniniai taikiniai',
-      },
-      {
-        type: 'Stendinio šaudymo šaudykla',
-        field: 'Elektroniniai taikiniai',
-      },
-      {
-        type: 'Biatlono šaudykla',
-        field: 'Elektroniniai taikiniai',
-      },
-      {
-        type: 'Šaudymo iš lanko šaudykla',
-        field: 'Elektroniniai taikiniai',
-      },
-      {
-        type: 'Vidaus šaudykla',
-        field: 'Judantys taikiniai',
-      },
-      {
-        type: 'Stendinio šaudymo šaudykla',
-        field: 'Judantys taikiniai',
-      },
-      {
-        type: 'Biatlono šaudykla',
-        field: 'Judantys taikiniai',
-      },
-      {
-        type: 'Šaudymo iš lanko šaudykla',
-        field: 'Judantys taikiniai',
-      },
-      {
-        type: 'Aerodromas',
-        field: 'Pakilimo tako parametrai',
-      },
-      { type: 'Marina', field: 'Vandens telkinys' },
-      {
-        type: 'Wake parkas',
-        field: 'Vandens telkinys',
-      },
-      {
-        type: 'Marina',
-        field: 'Prieplaukų skaičius',
-      },
-      {
-        type: 'Marina',
-        field: 'Maksimali grimzlė',
-      },
-      { type: 'Marina', field: 'Valtinė' },
-      {
-        type: 'Disk golfo kortai',
-        field: 'Krepšių skaičius',
-      },
-      {
-        type: 'Petankės aikštelė',
-        field: 'Takelių skaičius',
-      },
-      {
-        type: 'Boulingo takai',
-        field: 'Takelių skaičius',
-      },
-      {
-        type: 'Laipiojimas uolomis',
-        field: 'Sienos plotis',
-      },
-      {
-        type: 'Vidaus laipiojimo uolomis ',
-        field: 'Sienos plotis',
-      },
-      {
-        type: 'Laipiojimas uolomis',
-        field: 'Sienos aukštis',
-      },
-      {
-        type: 'Vidaus laipiojimo uolomis ',
-        field: 'Sienos aukštis',
-      },
-      {
-        type: 'Žirginio sporto trasa',
-        field: 'Kliūtys',
-      },
-      {
-        type: 'Jojimo maniežas',
-        field: 'Ovalo ilgis',
-      },
-      { type: 'Hipodromas', field: 'Ovalo ilgis' },
-      {
-        type: 'Dviračių trekas',
-        field: 'Ovalo ilgis',
-      },
-      { type: 'Hipodromas', field: 'Ovalo plotis' },
-      {
-        type: 'Dviračių trekas',
-        field: 'Ovalo plotis',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Vidurio aikštės ilgis',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Vidurio aikštės ilgis',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Vidurio aikštės ilgis',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Vidurio aikštės plotis',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Vidurio aikštės plotis',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Vidurio aikštės plotis',
-      },
-      {
-        type: 'Hipodromas',
-        field: 'Vidurio aikštės danga',
-      },
-      {
-        type: 'Stadionas ',
-        field: 'Vidurio aikštės danga',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Vidurio aikštės danga',
-      },
-      {
-        type: 'Paplūdimio tinklinio aikštelė',
-        field: 'Smėlio gylis',
-      },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Holes',
-      },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Plotas (m2)',
-      },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Golfo kortų tipas',
-      },
-      { type: 'Lauko golfo kortai', field: 'Par' },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Golfo praktikavimosi erdvė',
-      },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Nuvažiuojamas atstumas (metrais)',
-      },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Practice green',
-      },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Putting green',
-      },
-      {
-        type: 'Lauko golfo kortai',
-        field: 'Bunker',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Posvyrio kampas tiesiojoje (Laipsniais)',
-      },
-      {
-        type: 'Dviračių trekas',
-        field: 'Posvyrio kampas posūkyje (Laipsniais)',
-      },
-    ];
+    const fieldsSource: any = {
+      // Erdvės išmatavimai
+      1: 'Erdvės ilgis',
+      2: 'Erdvės plotis',
+      3: 'Erdvės plotas',
+      4: 'Erdvės aukštis  iki žemiausios vietos',
+      5: 'Žaidybinės aikštelės ilgis',
+      6: 'Žaidybinės akštelės plotis',
 
-    for (const item of data) {
-      this.createEntity(null, {
-        type: typesIds[item.type],
-        field: fieldsIds[item.field],
-      });
+      // Žiūrovų vietos
+      7: 'Stacionarios žiūrovų vietos',
+      8: 'Kilnojamos žiūrovų vietos',
+
+      // Pritaikymas žmonėms su negalia
+      9: 'Patekimas pritaikytas asmenims su judėjimo negalią',
+      10: 'Patekimas pritaikytas regos negalią turintiems asmenims',
+
+      // Dangos
+      11: 'Nuolatinė danga',
+      12: 'Turimos kitos pakeičiamos dangos',
+      13: 'Žaidybinės aikštės danga',
+      14: 'Trasos danga',
+
+      //Ypatybės
+      15: 'Pripučiamas (nuimamas) kupolas',
+      16: 'Kilnojamos pertvaros',
+      17: 'Veidrodinė siena',
+      18: 'Apšvietimas',
+      19: 'Elektroninės švieslentės',
+      20: 'Stacionari įgarsinimo sistema',
+      21: 'Laiko matavimo sistema',
+      22: 'Diskgolfo krepšių skaičius',
+      23: 'Duobučių skaičius',
+      24: 'PAR',
+      25: 'Takų skaičius',
+      26: 'Kliūtys',
+      27: 'Disciplinos',
+      28: 'Pakilimo tako parametrai',
+
+      // Papildomi sektoriai
+      29: 'Rutulio stūmimo sektorius',
+      30: 'Disko metimo sektorius',
+      31: 'Kūjo metimo sektorius',
+      32: 'Trišuolio, šuolio į tolį sektorius',
+      33: 'Šuolio su kartimi sektorius',
+      34: 'Šuolio į aukštį sektorius',
+      35: 'Ovalo takelių skaičius',
+      36: 'Ovalo takelių ilgis',
+      37: 'Ar yra barjerinio bėgimo tiesioji (110 m)',
+      38: 'Bėgimo takelio sprintui ilgis',
+      39: 'Bėgimo takelių sprintui skaičius',
+      66: 'Kliūties su vandeniu vieta',
+
+      // Baseino parametrai
+      40: 'Minimalus gylis',
+      41: 'Maksimalus gylis',
+      42: 'Takelių ilgis',
+      43: 'Plaukimo takelių skaičius',
+      44: 'Plaukimo takelių plotis',
+      65: 'Šuolių į vandenį tramplinas / platforma',
+
+      // Trasos parametrai
+      45: 'Trasos ilgis',
+      46: 'Minimalus trasos plotis',
+      47: 'Važiavimo kryptis',
+      48: 'Starto vietų skaičius',
+      49: 'Aukščių skirtumas',
+
+      // Šaudyklos parametrai
+      50: 'Maksimalus šaudyklos ilgis',
+      51: 'Taikinių skaičius',
+      52: 'Elektroniniai taikiniai',
+      53: 'Judantys taikiniai',
+      54: 'Šaudyklos įrangos aprašymas',
+
+      // Prieplaukos parametrai
+      55: 'Vandens telkinys',
+      56: 'Prieplaukų skaičius',
+      57: 'Maksimali grimzlė',
+
+      // Dušų skaičius
+      58: 'Dušų skaičius',
+
+      // Persirengimo spintelių skaičius
+      59: 'Persirengimo spintelių skaičius',
+
+      // Apgyvendinimo vietų skaičius
+      60: 'Apgyvendinimo vietų skaičius',
+      61: 'Konferencijos erdvės vietų skaičius',
+      62: 'Maitinimo vietų skaičius',
+
+      63: 'Paslaugos',
+
+      // Papildoma informacija
+      64: 'Papildoma informacija',
+    };
+
+    const typesSource: any = {
+      // Uždarų patalpų erdvės
+      1: 'Gimnastikos salė',
+      2: 'Boulingo takai',
+      3: 'Laipiojimo sporto erdvė',
+      4: 'Lengvosios atletikos maniežas',
+      5: 'Padelio aikštelė',
+      6: 'Badmintono aikštelė',
+      7: 'Riedučių ir dviračių rampos',
+      8: 'Skvošo aikštelė',
+      9: 'Sporto salė',
+      10: 'Bokso salė su ringu',
+      11: 'Sunkiosios atletikos salė',
+      12: 'Teniso kortai',
+      13: 'Treniruoklių salė',
+      14: 'Vidaus Dviračių trekai',
+      15: 'Kitos vidaus sporto erdvės',
+
+      // Lauko aikštynai
+      16: 'Futbolo aikštelė',
+      17: 'Beisbolo aikštė',
+      18: 'Padelio aikštelė',
+      19: 'Krepšinio aikštelė',
+      20: 'Petankės aikštelė',
+      21: 'Piklbolo aištelė',
+      22: 'Žolės riedulio aikštelė',
+      23: 'Badmintono aikštelė',
+      24: 'Teniso kortai',
+      25: 'Paplūdinio tinklinio aikštelė',
+      64: 'Paplūdimio futbolo aikštelė',
+      26: 'Stadionas (Ne mažesnis nei 100 m x 64 m žaidimo aikštelės dydis)',
+      27: 'Tinklinio aikštelė',
+      28: 'Kita lauko aikštelė',
+
+      // Kitos lauko erdvės
+      29: 'Diskgolfo parkas',
+      30: 'Golfo aikštynas',
+      31: 'Irklavimo bazė',
+      32: 'BMX lenktynių trasa',
+      33: 'Dviračių trasa',
+      34: 'Ekstremalaus sporto aikštelė ("Pump track")',
+      35: 'Laipiojimo sporto erdvė',
+      36: '„Wake“ parkas',
+      37: 'Treniruokliai',
+      38: 'Kita lauko erdvė',
+
+      // Baseinai
+      39: 'Vidaus baseinai',
+
+      // Šaudyklos
+      40: 'Biatlono šaudykla',
+      41: 'Lauko šaudykla',
+      42: 'Stendinio šaudymo šaudykla',
+      43: 'Šaudymo iš lanko šaudykla',
+      44: 'Vidaus šaudykla',
+      45: 'Kita šaudykla',
+
+      //Žiemos sporto erdvės
+      46: 'Vidaus čiuožykla',
+      47: 'Lauko čiuožykla',
+      48: 'Slidinėjimo trasa',
+      49: 'Lauko kalnų slidinėjimo trasa',
+      50: 'Uždarų patalpų kalnų slidinėjimo trasa',
+      51: 'Kita žiemos sporto erdvė',
+
+      //Techninio sporto erdvės
+      52: 'Aerodromas',
+      53: 'Automobilių, motociklų, motorinių transporto priemonių trasa',
+      54: 'Kartingų trasa',
+      55: 'Prieplauka',
+
+      //Žirgų sporto erdvės
+      56: 'Hipodromas',
+      57: 'Jojimo maniežas',
+
+      // Pagalbinės patalpos
+      58: 'Persirengimo patalpos',
+      59: 'Pagalbinės patalpos',
+
+      //Apgyvendinimo, maitinimo, konferencinės erdvės
+      60: 'Apgyvendinimo erdvė',
+      61: 'Konferencinė erdvė',
+      62: 'Maitinimo erdvė',
+      63: 'Reabilitacijos erdvė',
+    };
+
+    const relationsSource: any = {
+      // Uždarų patalpų erdvės
+
+      1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 20, 64], // Gimnastikos sale
+      2: [1, 2, 3, 7, 8, 9, 10, 19, 20, 25, 64], // Boulingo takai
+      3: [1, 2, 3, 4, 7, 8, 9, 10, 19, 20, 21, 64], // Laipiojimo sporto erdve (vidaus)
+      4: [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 19, 20, 32, 33, 34, 38, 39, 64], // lengvosios atletikos maniezas
+      5: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 64], // Padelio aikstele
+      6: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 64], // Badmintono aikstele
+      7: [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 64], // Rieduciu ir dviraciu rampos
+      8: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 64], // Skvoso aikstele
+      9: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 19, 20, 64], // Sporto sale
+      10: [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 20, 64], // Bokso sale su ringu
+      11: [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 64], // sunkiosios atletikos sale
+      12: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 64], // Teniso kortai
+      13: [1, 2, 3, 4, 9, 10, 11, 12, 64], // Treniruokliu sale
+      14: [1, 2, 3, 4, 7, 8, 9, 10, 14, 45, 64], // Vidaus dviraciu trekai
+      15: [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 64], // Kitos vidaus sporto erdves
+
+      // Lauko aikštynai
+
+      16: [
+        1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 15, 18, 19, 20, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+        66, 64,
+      ], // Futbolo aikste
+      17: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 19, 20, 64], // Beisbolo aikste
+      18: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 19, 20, 64], // Lauko padelio aikstele
+      19: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 19, 20, 64], // Krepsinio aikstele
+      20: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 20, 64], // Petankes aikstele
+      21: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 19, 20, 64], // Piklbolo aikstele
+      22: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 19, 20, 64], // Zoles riedulio aikstele
+      23: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 20, 64], // Badmintono aikstele
+      24: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 19, 20, 64], // lauko teniso kortai
+      25: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 19, 20, 64], // Papludimio tinklinio aikstele
+      64: [1, 2, 3, 5, 6, 7, 8, 9, 10, 18, 19, 20, 64], // Papludimio futbolo aikstele
+      26: [
+        1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 15, 18, 19, 20, 21, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
+        39, 66, 64,
+      ], // Stadionas
+      27: [1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 20, 64], // Tinklinio aikstele
+      28: [
+        1, 2, 3, 5, 6, 7, 8, 9, 10, 13, 18, 19, 20, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 66,
+        64,
+      ], // Kita lauko aikstele
+
+      // Kitos lauko erdvės
+
+      29: [18, 22, 24, 64], // Diskolfo parkas
+      30: [18, 23, 24, 64], // Golfo aikstynai
+      31: [1, 2, 3, 7, 8, 9, 10, 18, 19, 20, 21, 55, 64], // Irklavimo baze
+      32: [7, 8, 9, 10, 14, 18, 19, 20, 21, 45, 49, 64], // Lauko BMX lenktyniu trasa
+      33: [7, 8, 9, 10, 14, 18, 19, 20, 21, 45, 49, 64], // Lauko dviraciu trasa
+      34: [1, 2, 3, 7, 8, 9, 10, 14, 18, 19, 20, 21, 64], // pump track
+      35: [1, 2, 3, 7, 8, 9, 10, 18, 19, 20, 21, 64], // laipiojimo sporto erdve (lauke)
+      36: [7, 8, 9, 10, 18, 20, 64], // Wake parkas
+      37: [1, 2, 3, 9, 10, 18, 64], // Lauko treniruokliai
+      38: [1, 2, 3, 7, 8, 9, 10, 18, 19, 20, 21, 64], // Kita lauko erdve
+
+      // Baseinai
+      39: [1, 2, 3, 4, 7, 8, 9, 10, 19, 20, 21, 40, 41, 42, 43, 44, 65, 64], // Vidaus baseinas
+
+      // Saudyklos
+
+      40: [1, 2, 3, 9, 50, 51, 52, 54, 64], // biatlono saudykla
+      41: [1, 2, 3, 9, 18, 50, 51, 52, 53, 54, 64], // lauko saudykla
+      42: [1, 2, 3, 9, 50, 51, 52, 53, 54, 64], // stendinio saudymo saudykla
+      43: [1, 2, 3, 9, 50, 51, 54, 64], // saudymo is lanko saudykla
+      44: [1, 2, 3, 9, 50, 51, 52, 53, 54, 64], // vidaus saudykla
+      45: [1, 2, 3, 9, 50, 51, 52, 53, 54, 64], // kita saudykla
+
+      //Žiemos sporto erdvės
+      46: [1, 2, 3, 7, 8, 9, 10, 19, 20, 64], // Vidaus ciuozykla
+      47: [1, 2, 3, 7, 8, 9, 10, 18, 19, 20, 64], // Lauko ciuozykla
+      48: [7, 8, 9, 10, 18, 20, 21, 45, 46, 49, 64], // Slidinejimo trasa
+      49: [7, 8, 9, 10, 18, 21, 45, 49, 64], // Lauko kalnu slidinejimo trasa
+      50: [1, 2, 3, 7, 8, 9, 10, 19, 20, 21, 45, 49, 64], // Uzdaru patalpu kalnu slidinejimo trasa
+      51: [7, 8, 9, 10, 18, 19, 20, 21, 45, 46, 49, 64], // Kita ziemos sporto erdve
+
+      //Technio sporto erdves
+      52: [28, 64], //aerodromas
+      53: [7, 8, 9, 10, 14, 18, 20, 21, 45, 46, 47, 48, 49, 64], // auto moto trasos
+      54: [7, 8, 9, 10, 14, 18, 20, 21, 45, 46, 47, 48, 49, 64], // kartingu trasos
+      55: [7, 8, 9, 10, 18, 20, 21, 55, 56, 57, 64], // Prieplaukos
+
+      // zirgu sporto erdves
+      56: [1, 2, 14, 18, 20, 45, 26, 27, 64], // hipodromas
+      57: [1, 2, 4, 14, 15, 18, 20, 26, 27, 64], // jojimo maniezas
+
+      // Pagalbines patalpos
+      58: [1, 2, 3, 58, 59, 64], // persirengimo
+      59: [1, 2, 3, 64], // pagalbines
+
+      //Apgyvendinimo, maitinimo, konferencinės erdvės
+
+      60: [60, 64], // apgyvendinimo
+      61: [61, 64], // konferencijos
+      62: [62, 64], // maitinimo
+      63: [63, 64], // reabilitacijos
+    };
+
+    for (const typeIndex of Object.keys(relationsSource)) {
+      const type = typesIds[typesSource[typeIndex]];
+
+      for (const fieldIndex of relationsSource[typeIndex]) {
+        const field = fieldsIds[fieldsSource[fieldIndex]];
+
+        await this.createEntity(null, { type, field });
+      }
     }
   }
 }

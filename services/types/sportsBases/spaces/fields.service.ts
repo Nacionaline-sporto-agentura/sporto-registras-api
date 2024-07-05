@@ -25,6 +25,7 @@ export const FieldTypes = {
 interface Fields extends CommonFields {
   id: number;
   title: string;
+  required: boolean;
   precision?: number;
   scale?: number;
   options: any[];
@@ -55,6 +56,7 @@ export type SportBaseSpaceField<
         secure: true,
       },
       title: 'string',
+      required: 'boolean',
       precision: 'number|optional',
       scale: 'number|optional',
       type: {
@@ -79,164 +81,547 @@ export type SportBaseSpaceField<
 export default class extends moleculer.Service {
   @Method
   async seedDB() {
-    const data: any = [
-      { title: 'Plotas (m2)', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Ilgis (m)', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Plotis (m)', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Aukštis (m)', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Stacionarios žiūrovų vietos', type: 'NUMBER' },
-      { title: 'Kilnojamos žiūrovų vietos', type: 'NUMBER' },
-      { title: 'Žiūrovų vietos (iš viso)', type: 'NUMBER' },
-      {
-        title: 'Pritaikyta judėjimo negalią turintiems asmenims',
-        type: 'BOOLEAN',
+    const fields = {
+      // Erdvės išmatavimai
+      1: {
+        field_group: 1,
+        field_name: 'Erdvės ilgis',
+        field_description: 'Nurodomas erdvės ilgis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
       },
-      {
-        title: 'Pritaikyta regos negalią turintiems asmenims',
-        type: 'BOOLEAN',
+      2: {
+        field_group: 1,
+        field_name: 'Erdvės plotis',
+        field_description: 'Nurodomas erdvės plotis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
       },
-      { title: 'Elektroninės švieslentės', type: 'BOOLEAN' },
-      { title: 'Papildoma informacija apie el. švieslentes', type: 'TEXT_AREA' },
-      { title: 'Stacionari  įgarsinimo sistema', type: 'BOOLEAN' },
-      { title: 'Keičiama grindų danga', type: 'BOOLEAN' },
-      { title: 'Grindų dangos specifika', type: 'TEXT_AREA' },
-      { title: 'Apšviestumas (lx)', type: 'NUMBER' },
-      { title: 'Kilnojamos pertvaros', type: 'BOOLEAN' },
-      { title: 'Danga', type: 'SELECT', options: ['Parketas', 'Dirbtinė danga', 'Kita'] },
-      { title: 'Papildoma informacija', type: 'TEXT_AREA' },
-      { title: 'Turėklas', type: 'BOOLEAN' },
-      { title: 'Veidrodinė siena', type: 'BOOLEAN' },
-      { title: 'Įranga / Aparašymas', type: 'TEXT_AREA' },
-      {
-        title: 'Ovalo takelių ilgis',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
+      3: {
+        field_group: 1,
+        field_name: 'Erdvės plotas',
+        field_description: 'Nurodomas erdvės plotas kvadratiniais metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
       },
-      { title: 'Ovalo takelių skaičius', type: 'NUMBER' },
-      {
-        title: 'Tiesiosios takelio ilgis',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
+      4: {
+        field_group: 1,
+        field_name: 'Erdvės aukštis  iki žemiausios vietos',
+        field_description: 'Nurodomas aukštis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
       },
-      { title: 'Tiesiosios takelių skaičius', type: 'NUMBER' },
-      { title: 'Rutulio stūmimo sektorius', type: 'BOOLEAN' },
-      { title: 'Trišuolio erdvė', type: 'BOOLEAN' },
-      { title: 'Šuolio su kartimi erdvė', type: 'BOOLEAN' },
-      { title: 'Šuolio į aukštį erdvė', type: 'BOOLEAN' },
-      { title: 'Dirbtinis apšvietimas', type: 'BOOLEAN' },
-      {
-        title: 'Futbolo aikštės ilgis',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
+      5: {
+        field_group: 1,
+        field_name: 'Žaidybinės aikštelės ilgis',
+        field_description: 'Nurodomas ilgis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
       },
-      {
-        title: 'Futbolo aikštės plotis',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
+      6: {
+        field_group: 1,
+        field_name: 'Žaidybinės akštelės plotis',
+        field_description: 'Nurodomas plotis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
       },
-      { title: 'Plaukimo takelių skaičius', type: 'NUMBER' },
-      {
-        title: 'Minimalus gylis (m)',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
-      },
-      {
-        title: 'Maksimalus gylis (m)',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
-      },
-      { title: 'Laiko matavimo sistema', type: 'BOOLEAN' },
-      {
-        title: 'Papildoma informacija apie laiko matavimo įrangą',
-        type: 'TEXT_AREA',
-      },
-      { title: 'Trasos ilgis', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Trasos plotis ', type: 'NUMBER', precision: 10, scale: 2 },
-      {
-        title: 'Važiavimo kryptis',
-        type: 'SELECT',
-        options: ['Pagal laikrodžio rodyklę', 'Prieš laikrodžio rodyklę'],
-      },
-      { title: 'Starto vietų skaičius', type: 'NUMBER' },
-      {
-        title: 'Aukščių skirtumas',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
-      },
-      {
-        title: 'Maksimalus šaudyklos ilgis',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
-      },
-      { title: 'Taikinių skaičius', type: 'NUMBER' },
-      { title: 'Elektroniniai taikiniai', type: 'BOOLEAN' },
-      { title: 'Judantys taikiniai', type: 'BOOLEAN' },
-      { title: 'Pakilimo tako parametrai', type: 'TEXT_AREA' },
-      { title: 'Vandens telkinys', type: 'TEXT_AREA' },
-      { title: 'Prieplaukų skaičius', type: 'NUMBER' },
-      {
-        title: 'Maksimali grimzlė',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
-      },
-      { title: 'Valtinė', type: 'TEXT_AREA' },
-      { title: 'Krepšių skaičius', type: 'NUMBER' },
-      { title: 'Takelių skaičius', type: 'NUMBER' },
-      { title: 'Sienos plotis', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Sienos aukštis', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Kliūtys', type: 'TEXT_AREA' },
-      { title: 'Ovalo ilgis', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Ovalo plotis', type: 'NUMBER', precision: 10, scale: 2 },
-      {
-        title: 'Vidurio aikštės ilgis',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
-      },
-      {
-        title: 'Vidurio aikštės plotis',
-        type: 'NUMBER',
-        precision: 10,
-        scale: 2,
-      },
-      { title: 'Vidurio aikštės danga', type: 'SELECT', options: ['Žolė', 'Dirbtinė veja'] },
-      { title: 'Smėlio gylis', type: 'NUMBER', precision: 10, scale: 2 },
-      { title: 'Holes', type: 'NUMBER' },
-      { title: 'Plotas (m2)', type: 'NUMBER', precision: 10, scale: 2 },
-      {
-        title: 'Golfo kortų tipas',
-        type: 'SELECT',
-        options: [
-          'Links course',
-          'Parkland course',
-          'Heathland course',
-          'Sandbelt course',
-          'Stadium/Championship course',
-          'Par-3 course',
-        ],
-      },
-      { title: 'Par', type: 'NUMBER' },
-      { title: 'Golfo praktikavimosi erdvė', type: 'BOOLEAN' },
-      { title: 'Nuvažiuojamas atstumas (metrais)', type: 'NUMBER' },
-      { title: 'Practice green', type: 'NUMBER' },
-      { title: 'Putting green', type: 'NUMBER' },
-      { title: 'Bunker', type: 'NUMBER' },
-      { title: 'Chipping', type: 'NUMBER' },
-      { title: 'Posvyrio kampas tiesiojoje (Laipsniais)', type: 'NUMBER' },
-      { title: 'Posvyrio kampas posūkyje (Laipsniais)', type: 'NUMBER' },
-    ];
 
-    for (const item of data) {
-      await this.createEntity(null, item);
-    }
+      // Žiūrovų vietos
+      7: {
+        field_group: 2,
+        field_name: 'Stacionarios žiūrovų vietos',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      8: {
+        field_group: 2,
+        field_name: 'Kilnojamos žiūrovų vietos',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+
+      // Pritaikymas žmonėms su negalia
+      9: {
+        field_group: 3,
+        field_name: 'Patekimas pritaikytas asmenims su judėjimo negalią',
+        type: 'BOOLEAN',
+        field_description: '',
+        required: true,
+      },
+      10: {
+        field_group: 3,
+        field_name: 'Patekimas pritaikytas regos negalią turintiems asmenims',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+
+      // Dangos
+      11: {
+        field_group: 4,
+        field_name: 'Nuolatinė danga',
+        field_description: '',
+        type: 'CLASSIFIER',
+        options: ['Parketas', 'Dirbtinė danga', 'Kita'],
+        classifier_type: 'Uždarų patalų erdvių stacionarių grindų dangų klasifikatorius',
+        required: true,
+      },
+      12: {
+        field_group: 4,
+        field_name: 'Turimos kitos pakeičiamos dangos',
+        field_description: '(Jeigu turi)',
+        type: 'TEXTAREA',
+        required: false,
+      },
+      13: {
+        field_group: 4,
+        field_name: 'Žaidybinės aikštės danga',
+        field_description: '',
+        type: 'CLASSIFIER',
+        options: ['Parketas', 'Dirbtinė danga', 'Kita'],
+        classifier_type: 'Lauko aikštės dangos klasifikatorius',
+        required: true,
+      },
+      14: {
+        field_group: 4,
+        field_name: 'Trasos danga',
+        field_description: '',
+        type: 'TEXTAREA',
+        required: true,
+      }, // ????
+
+      //Ypatybės
+      15: {
+        field_group: 5,
+        field_name: 'Pripučiamas (nuimamas) kupolas',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      16: {
+        field_group: 5,
+        field_name: 'Kilnojamos pertvaros',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      17: {
+        field_group: 5,
+        field_name: 'Veidrodinė siena',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      18: {
+        field_group: 5,
+        field_name: 'Apšvietimas',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      19: {
+        field_group: 5,
+        field_name: 'Elektroninės švieslentės',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      20: {
+        field_group: 5,
+        field_name: 'Stacionari įgarsinimo sistema',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      21: {
+        field_group: 5,
+        field_name: 'Laiko matavimo sistema',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      22: {
+        field_group: 5,
+        field_name: 'Diskgolfo krepšių skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      23: {
+        field_group: 5,
+        field_name: 'Duobučių skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      24: {
+        field_group: 5,
+        field_name: 'PAR',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      25: {
+        field_group: 5,
+        field_name: 'Takų skaičius',
+        field_description: 'Nurodomas boulingo takų skaičius',
+        type: 'INTEGER',
+        required: true,
+      },
+      26: {
+        field_group: 5,
+        field_name: 'Kliūtys',
+        field_description: '',
+        type: 'TEXTAREA',
+        required: true,
+      },
+      27: {
+        field_group: 5,
+        field_name: 'Disciplinos',
+        field_description:
+          'Nurodoma kokios disciplinos gali būti erdvėje (konkūrai, dailusis jojimas, trikovės jojimas, ištvermės jojimas, važiavimas kinkiniais)',
+        type: 'TEXTAREA',
+        required: true,
+      },
+      28: {
+        field_group: 5,
+        field_name: 'Pakilimo tako parametrai',
+        field_description: '',
+        type: 'TEXTAREA',
+        required: true,
+      },
+
+      // Papildomi sektoriai
+      29: {
+        field_group: 6,
+        field_name: 'Rutulio stūmimo sektorius',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      30: {
+        field_group: 6,
+        field_name: 'Disko metimo sektorius',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      31: {
+        field_group: 6,
+        field_name: 'Kūjo metimo sektorius',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      32: {
+        field_group: 6,
+        field_name: 'Trišuolio, šuolio į tolį sektorius',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      33: {
+        field_group: 6,
+        field_name: 'Šuolio su kartimi sektorius',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      34: {
+        field_group: 6,
+        field_name: 'Šuolio į aukštį sektorius',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      35: {
+        field_group: 6,
+        field_name: 'Ovalo takelių skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      36: {
+        field_group: 6,
+        field_name: 'Ovalo takelių ilgis',
+        field_description: '',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+      37: {
+        field_group: 6,
+        field_name: 'Ar yra barjerinio bėgimo tiesioji (110 m)',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      38: {
+        field_group: 6,
+        field_name: 'Bėgimo takelio sprintui ilgis',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      39: {
+        field_group: 6,
+        field_name: 'Bėgimo takelių sprintui skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      66: {
+        field_group: 6,
+        field_name: 'Kliūties su vandeniu vieta',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+
+      // Baseino parametrai
+      40: {
+        field_group: 7,
+        field_name: 'Minimalus gylis',
+        field_description: 'Nurodomas minimalus gylis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+      41: {
+        field_group: 7,
+        field_name: 'Maksimalus gylis',
+        field_description: 'Nurodomas maksimalus gylis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+      42: {
+        field_group: 7,
+        field_name: 'Takelių ilgis',
+        field_description: 'Nurodomas ilgis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+      43: {
+        field_group: 7,
+        field_name: 'Plaukimo takelių skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      44: {
+        field_group: 7,
+        field_name: 'Plaukimo takelių plotis',
+        field_description: 'Nurodomas takelių plotis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+      65: {
+        field_group: 7,
+        field_name: 'Šuolių į vandenį tramplinas / platforma',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+
+      // Trasos parametrai
+      45: {
+        field_group: 8,
+        field_name: 'Trasos ilgis',
+        field_description: 'Nurodomas trasos ilgis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+      46: {
+        field_group: 8,
+        field_name: 'Minimalus trasos plotis',
+        field_description: 'Nurodomas plotis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+      47: {
+        field_group: 8,
+        field_name: 'Važiavimo kryptis',
+        field_description: 'Nurodoma trasos važiavimo kryptis standartinėje trasos konfigūracijoje',
+        type: 'CLASSIFIER',
+        options: ['Pagal laikrodžio rodyklę', 'Prieš laikrodžio rodyklę'],
+        classifier_type: 'Trasos krypties klasifikatorius',
+        required: true,
+      },
+      48: {
+        field_group: 8,
+        field_name: 'Starto vietų skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      49: {
+        field_group: 8,
+        field_name: 'Aukščių skirtumas',
+        field_description: 'Nurodomas aukščių skirtumas metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+
+      // Šaudyklos parametrai
+      50: {
+        field_group: 9,
+        field_name: 'Maksimalus šaudyklos ilgis',
+        field_description: 'Nurodomas ilgis metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+      51: {
+        field_group: 9,
+        field_name: 'Taikinių skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      52: {
+        field_group: 9,
+        field_name: 'Elektroniniai taikiniai',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      53: {
+        field_group: 9,
+        field_name: 'Judantys taikiniai',
+        field_description: '',
+        type: 'BOOLEAN',
+        required: true,
+      },
+      54: {
+        field_group: 9,
+        field_name: 'Šaudyklos įrangos aprašymas',
+        field_description: '',
+        type: 'TEXTAREA',
+        required: true,
+      },
+
+      // Prieplaukos parametrai
+      55: {
+        field_group: 10,
+        field_name: 'Vandens telkinys',
+        field_description: '',
+        type: 'TEXTAREA',
+        required: true,
+      },
+      56: {
+        field_group: 10,
+        field_name: 'Prieplaukų skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      57: {
+        field_group: 10,
+        field_name: 'Maksimali grimzlė',
+        field_description: 'Nurodoma grimzlė metrais',
+        type: 'DECIMAL(10,2)',
+        required: true,
+      },
+
+      // Dušų skaičius
+      58: {
+        field_group: 11,
+        field_name: 'Dušų skaičius',
+        field_description: 'Nurodomas dušo galvučių skaičius',
+        type: 'INTEGER',
+        required: true,
+      },
+
+      // Persirengimo spintelių skaičius
+      59: {
+        field_group: 11,
+        field_name: 'Persirengimo spintelių skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+
+      // Apgyvendinimo vietų skaičius
+      60: {
+        field_group: 11,
+        field_name: 'Apgyvendinimo vietų skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      61: {
+        field_group: 11,
+        field_name: 'Konferencijos erdvės vietų skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+      62: {
+        field_group: 11,
+        field_name: 'Maitinimo vietų skaičius',
+        field_description: '',
+        type: 'INTEGER',
+        required: true,
+      },
+
+      63: {
+        field_group: 11,
+        field_name: 'Paslaugos',
+        field_description: '',
+        type: 'TEXTAREA',
+        required: true,
+      },
+
+      // Papildoma informacija
+      64: {
+        field_group: 11,
+        field_name: 'Papildoma informacija',
+        field_description: '',
+        type: 'TEXTAREA',
+        required: false,
+      },
+    };
+
+    const typeMap = (source: string) => {
+      switch (source) {
+        case 'TEXTAREA':
+          return FieldTypes.TEXT_AREA;
+
+        case 'INTEGER':
+        case 'DECIMAL':
+          return FieldTypes.NUMBER;
+
+        case 'BOOLEAN':
+          return FieldTypes.BOOLEAN;
+
+        case 'CLASSIFIER':
+          return FieldTypes.SELECT;
+      }
+    };
+
+    const data: any = Object.values(fields).map((field) => {
+      let precision: number | undefined = undefined;
+      let scale: number | undefined = undefined;
+      let type: string = typeMap(field.type);
+
+      const reg = /(\w+)\((\d+),(\d+)\)/;
+
+      if (reg.test(field.type)) {
+        const matches = field.type.match(reg);
+        type = typeMap(matches[1]);
+        precision = Number(matches[2]);
+        scale = Number(matches[3]);
+      }
+
+      return {
+        title: field.field_name,
+        required: field.required,
+        type,
+        precision,
+        scale,
+        options: (field as any).options,
+      };
+    });
+
+    await this.createEntities(null, data);
   }
 }

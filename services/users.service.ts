@@ -601,21 +601,37 @@ export default class extends moleculer.Service {
       phone: 'string|optional',
       firstName: 'string|optional',
       lastName: 'string|optional',
+      password: 'string|optional',
+      oldPassword: 'string|optional',
     },
     auth: [RestrictionType.USER, RestrictionType.ADMIN],
   })
   async updateMe(
     ctx: Context<
       {
-        email: string;
-        firstName: string;
-        lastName: string;
-        phone: string;
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        phone?: string;
+        password?: string;
+        oldPassword?: string;
       },
       UserAuthMeta
     >,
   ) {
     const { email, phone, firstName, lastName } = ctx.params;
+
+    if (ctx.meta.user.authStrategy === UserAuthStrategy.PASSWORD) {
+      await ctx.call(`${SN_AUTH}.users.update`, {
+        id: ctx.meta.user.authUser,
+        email,
+        firstName,
+        lastName,
+        password: ctx.params.password,
+        oldPassword: ctx.params.oldPassword,
+        phone,
+      });
+    }
 
     return ctx.call(`${SN_USERS}.update`, {
       id: ctx.meta.user.id,

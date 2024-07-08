@@ -22,6 +22,20 @@ export const FieldTypes = {
   NUMBER: 'NUMBER',
 };
 
+const FIELD_GROUPS = {
+  1: 'ERDVES_ISMATAVIMAI',
+  2: 'ZIUROVU_VIETOS',
+  3: 'PRITAIKYMAS_ASMENIMS_SU_NEGALIA',
+  4: 'DANGOS',
+  5: 'YPATYBES',
+  6: 'PAPILDOMI_SEKTORIAI',
+  7: 'BASEINO_PARAMETRAI',
+  8: 'TRASOS_PARAMETRAI',
+  9: 'SAUDYKLOS_PARAMETRAI',
+  10: 'PRIEPLAUKU_PARAMETRAI',
+  11: 'PAPILDOMA_INFORMACIJA',
+} as const;
+
 interface Fields extends CommonFields {
   id: number;
   title: string;
@@ -30,6 +44,7 @@ interface Fields extends CommonFields {
   scale?: number;
   options: any[];
   type: keyof typeof FieldTypes;
+  fieldGroup: (typeof FIELD_GROUPS)[keyof typeof FIELD_GROUPS];
 }
 
 interface Populates extends CommonPopulates {}
@@ -64,7 +79,11 @@ export type SportBaseSpaceField<
         enum: Object.values(FieldTypes),
         required: true,
       },
-
+      fieldGroup: {
+        type: 'string',
+        enum: Object.values(FIELD_GROUPS),
+        required: true,
+      },
       options: {
         type: 'array',
         columnType: 'json',
@@ -81,7 +100,18 @@ export type SportBaseSpaceField<
 export default class extends moleculer.Service {
   @Method
   async seedDB() {
-    const fields = {
+    const fields: Record<
+      number,
+      {
+        field_group: keyof typeof FIELD_GROUPS;
+        field_name: string;
+        field_description: string;
+        type: string;
+        required: boolean;
+        options?: string[];
+        classifier_type?: string;
+      }
+    > = {
       // Erdvės išmatavimai
       1: {
         field_group: 1,
@@ -619,6 +649,7 @@ export default class extends moleculer.Service {
         precision,
         scale,
         options: (field as any).options,
+        fieldGroup: FIELD_GROUPS[field.field_group],
       };
     });
 

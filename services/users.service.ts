@@ -595,6 +595,38 @@ export default class extends moleculer.Service {
   }
 
   @Action({
+    rest: 'PATCH /me',
+    params: {
+      email: 'string|optional',
+      phone: 'string|optional',
+      firstName: 'string|optional',
+      lastName: 'string|optional',
+    },
+    auth: [RestrictionType.USER, RestrictionType.ADMIN],
+  })
+  async updateMe(
+    ctx: Context<
+      {
+        email: string;
+        firstName: string;
+        lastName: string;
+        phone: string;
+      },
+      UserAuthMeta
+    >,
+  ) {
+    const { email, phone, firstName, lastName } = ctx.params;
+
+    return ctx.call(`${SN_USERS}.update`, {
+      id: ctx.meta.user.id,
+      firstName,
+      lastName,
+      email,
+      phone,
+    });
+  }
+
+  @Action({
     rest: 'PATCH /:id',
     params: {
       id: 'number|convert',

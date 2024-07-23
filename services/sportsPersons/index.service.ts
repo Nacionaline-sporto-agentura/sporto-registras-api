@@ -1,5 +1,5 @@
 'use strict';
-import moleculer, { Context } from 'moleculer';
+import moleculer, { Context, RestSchema } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 import DbConnection, { PopulateHandlerFn } from '../../mixins/database.mixin';
 
@@ -15,6 +15,7 @@ import {
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   OverrideArray,
+  RestrictionType,
   TENANT_FIELD,
   TYPE_ID_OR_OBJECT_WITH_ID,
   TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
@@ -345,5 +346,47 @@ export default class extends moleculer.Service {
         'referee',
       ],
     });
+  }
+
+  @Action({
+    rest: <RestSchema>{
+      method: 'GET',
+      basePath: '/public/sportsPersons',
+      path: '/',
+    },
+    auth: RestrictionType.PUBLIC,
+  })
+  async publicSportsPersons(ctx: Context<{ id: string }>) {
+    const sportsPersonTypes = [
+      'athlete',
+      'coach',
+      'referee',
+      'amsInstructor',
+      'faInstructor',
+      'faSpecialist',
+    ];
+
+    const sportsPersons: SportsPerson<'sportTypes'>[] = await this.findEntities(ctx, {
+      ...ctx.params,
+      fields: ['sportTypes', ...sportsPersonTypes],
+      populate: ['sportTypes'],
+    });
+
+    const data = sportsPersons.reduce((acc, sportsPerson) => {
+      sportsPerson.sportTypes.forEach(({ name }) => {
+        if (!acc[name]) {
+          acc[name] = { sportTypeName: name };
+        }
+
+        sportsPersonTypes.forEach((type) => {
+          if (sportsPerson[type as keyof SportsPerson]) {
+            acc[name][type] = (acc[name][type] || 0) + 1;
+          }
+        });
+      });
+      return acc;
+    }, {} as { [key: string]: any });
+
+    return Object.values(data);
   }
 }

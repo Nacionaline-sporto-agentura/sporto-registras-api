@@ -112,7 +112,7 @@ interface Fields extends CommonFields {
 }
 
 interface Populates extends CommonPopulates {
-  spaces: SportBaseSpace<'technicalCondition' | 'type' | 'sportTypes', 'buildingPurpose'>[];
+  spaces: SportBaseSpace<'technicalCondition' | 'type' | 'sportTypes' | 'buildingPurpose'>[];
   lastRequest: Request;
   investments: SportBaseInvestment<'items'>[];
   owners: SportsBaseOwner<'user' | 'tenant'>[];
@@ -583,7 +583,7 @@ export default class extends moleculer.Service {
       }
     }
 
-    return randomArray(3, () => ({
+    return randomArray(30, () => ({
       name: faker.lorem.words({ min: 1, max: 3 }),
       type: faker.helpers.arrayElement(sportsBasesTypes),
       level: faker.helpers.arrayElement(sportsBasesLevels),

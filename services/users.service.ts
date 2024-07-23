@@ -621,9 +621,14 @@ export default class extends moleculer.Service {
   ) {
     const { email, phone, firstName, lastName } = ctx.params;
 
-    if (ctx.meta.user.authStrategy === UserAuthStrategy.PASSWORD) {
+    const userToUpdate: User = await ctx.call(`${SN_USERS}.resolve`, {
+      id: ctx.meta.user.id,
+      throwIfNotExist: true,
+    });
+
+    if (userToUpdate.authStrategy === UserAuthStrategy.PASSWORD) {
       await ctx.call(`${SN_AUTH}.users.update`, {
-        id: ctx.meta.user.authUser,
+        id: userToUpdate.authUser,
         email,
         firstName,
         lastName,

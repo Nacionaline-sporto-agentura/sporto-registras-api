@@ -127,3 +127,8 @@ export const GET_REST_ONLY_ACCESSIBLE_TO_ADMINS: { [key: string]: { rest: any } 
 };
 
 export const NSA_GROUP_ID = process.env.NSA_GROUP_ID;
+
+export enum DateFormats {
+  YEAR = 'YYYY',
+  DAY = 'YYYY-MM-DD',
+}

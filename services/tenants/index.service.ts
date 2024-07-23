@@ -3,7 +3,7 @@
 import moleculer, { Context, RestSchema } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 
-import _, { merge } from 'lodash';
+import _ from 'lodash';
 import filtersMixin from 'moleculer-knex-filters';
 import DbConnection, { PopulateHandlerFn } from '../../mixins/database.mixin';
 import RequestMixin, { REQUEST_FIELDS } from '../../mixins/request.mixin';
@@ -22,6 +22,7 @@ import {
 } from '../../types';
 import {
   SN_AUTH,
+  SN_REQUESTS,
   SN_SPORTSBASES,
   SN_TENANTS,
   SN_TENANTS_FUNDINGSOURCES,
@@ -32,9 +33,13 @@ import {
   SN_TENANTUSERS,
   SN_USERS,
 } from '../../types/serviceNames';
+import { getFormattedDate, getFormattedYear, handleFormatResponse } from '../../utils';
 import { UserAuthMeta } from '../api.service';
-import { RequestEntityTypes } from '../requests/index.service';
+import { Request, RequestEntityTypes, RequestStatus } from '../requests/index.service';
+import { SportsBase } from '../sportsBases/index.service';
 import { TenantUser, TenantUserRole } from '../tenantUsers.service';
+import { SportType } from '../types/sportTypes/index.service';
+import { TenantSportOrganizationTypes } from '../types/tenants/sportOrganizationTypes.service';
 import { User, UserType } from '../users.service';
 import { TenantFundingSource } from './fundingSources.service';
 import { TenantGoverningBody } from './governingBodies.service';
@@ -49,15 +54,28 @@ interface Fields extends CommonFields {
   fundingSources: undefined;
   governingBodies: undefined;
   memberships: undefined;
+  address: string;
+  sportsBases: undefined;
+  type: undefined;
+  data: {
+    url: string;
+    foundedAt: Date;
+    hasBeneficiaryStatus: boolean;
+    nonGovernmentalOrganization: boolean;
+    nonFormalEducation: boolean;
+    canHaveChildren: boolean;
+  };
 }
 
 interface Populates extends CommonPopulates {
   role: TenantUserRole;
   authGroup: any;
   parent: Tenant;
+  type: TenantSportOrganizationTypes;
   fundingSources: Array<TenantFundingSource<'type'>>;
   governingBodies: TenantGoverningBody[];
   memberships: TenantMembership[];
+  sportsBases: SportsBase<'spaces'>[];
 }
 
 export type Tenant<
@@ -69,20 +87,6 @@ export enum TenantTenantType {
   MUNICIPALITY = 'MUNICIPALITY',
   ORGANIZATION = 'ORGANIZATION',
 }
-
-const publicFields = [
-  'id',
-  'name',
-  'code',
-  'phone',
-  'email',
-  'legalForm',
-  'type',
-  'data',
-  'sportsBases',
-];
-
-const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
 
 @Service({
   name: SN_TENANTS,
@@ -266,7 +270,7 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
         },
       },
 
-      publicSportsBases: {
+      sportsBases: {
         type: 'array',
         items: { type: 'object' },
         virtual: true,
@@ -278,8 +282,8 @@ const publicPopulates = ['legalForm', 'type', 'publicSportsBases'];
             queryKey: 'tenant',
             mappingMulti: true,
             sort: 'name',
-            populate: ['publicSpaces'],
-            fields: ['id', 'name', 'address', 'publicSpaces', 'tenant', 'type'],
+            populate: ['spaces'],
+            fields: ['id', 'name', 'spaces', 'tenant', 'address'],
           },
         },
       },
@@ -557,19 +561,82 @@ export default class extends moleculer.Service {
       path: '/',
     },
     auth: RestrictionType.PUBLIC,
+    params: {
+      pageSize: {
+        type: 'number',
+        convert: true,
+        integer: true,
+        optional: true,
+        default: 10,
+        min: 1,
+      },
+      page: {
+        type: 'number',
+        convert: true,
+        integer: true,
+        min: 1,
+        optional: true,
+        default: 1,
+      },
+    },
   })
-  async publicOrganizations(ctx: Context) {
-    const params = merge({}, ctx.params || {}, {
-      query: { tenantType: TenantTenantType.ORGANIZATION },
+  async publicOrganizations(
+    ctx: Context<{
+      [key: string]: any;
+    }>,
+  ) {
+    const page = ctx?.params?.page;
+    const pageSize = ctx?.params?.pageSize;
+    const sort = ctx?.params?.sort;
+    const query = ctx?.params?.query;
+
+    const organizations: Tenant<'sportsBases'>[] = await this.findEntities(ctx, {
+      fields: ['id', 'name', 'address', 'data', 'sportsBases', 'type'],
+      populate: ['sportsBases', 'legalForm', 'type'],
+      query: {
+        tenantType: TenantTenantType.ORGANIZATION,
+      },
     });
 
-    const organizations = await ctx.call('tenants.list', {
-      ...params,
-      fields: publicFields,
-      populate: publicPopulates,
+    const mappedOrganizations = organizations.map((organization) => {
+      const mappedOrganization: any = {
+        id: organization.id,
+        name: organization.name,
+        address: organization.address,
+        type: organization.type,
+      };
+
+      if (query?.hasBeneficiaryStatus) {
+        mappedOrganization.hasBeneficiaryStatus = organization?.data?.hasBeneficiaryStatus;
+      }
+
+      if (query?.nonGovernmentalOrganization) {
+        mappedOrganization.nonGovernmentalOrganization =
+          organization?.data?.nonGovernmentalOrganization;
+      }
+
+      if (query?.nonFormalEducation) {
+        mappedOrganization.nonFormalEducation = organization?.data?.nonFormalEducation;
+      }
+      if (query?.sportType) {
+        const uniqueSportTypeIds = this.getOrganizationUniqueSportTypes(organization).map(
+          (sportType) => sportType.id,
+        );
+
+        mappedOrganization.sportType = uniqueSportTypeIds;
+      }
+
+      return mappedOrganization;
     });
 
-    return organizations;
+    return handleFormatResponse({
+      data: mappedOrganizations,
+      page,
+      pageSize,
+      sort,
+      search: query,
+      fields: ['id', 'name', 'address', 'type'],
+    });
   }
 
   @Action({
@@ -587,10 +654,21 @@ export default class extends moleculer.Service {
     },
   })
   async publicOrganization(ctx: Context<{ id: string }>) {
-    const organization: Tenant = await this.findEntity(ctx, {
+    const organization: Tenant<'sportsBases'> = await this.findEntity(ctx, {
       ...ctx.params,
-      fields: publicFields,
-      populate: publicPopulates,
+      fields: [
+        'id',
+        'name',
+        'code',
+        'sportsBases',
+        'address',
+        'email',
+        'phone',
+        'type',
+        'legalForm',
+        'data',
+      ],
+      populate: ['sportsBases', 'legalForm', 'type'],
       query: {
         id: ctx.params.id,
         tenantType: TenantTenantType.ORGANIZATION,
@@ -601,7 +679,35 @@ export default class extends moleculer.Service {
       throwNotFoundError('Organization not found');
     }
 
-    return organization;
+    const { data, ...rest } = organization;
+
+    const lastApprovedRequest: Request = await ctx.call(`${SN_REQUESTS}.findOne`, {
+      query: {
+        entityType: RequestEntityTypes.TENANTS,
+        entity: organization.id,
+        status: RequestStatus.APPROVED,
+      },
+      sort: '-updatedAt',
+    });
+
+    const uniqueSportTypes = this.getOrganizationUniqueSportTypes(organization);
+
+    const sportsBases = organization?.sportsBases?.map((sportsBase) => ({
+      name: sportsBase?.name,
+      address: sportsBase?.address,
+      sportTypes: this.getSportsBasesUniqueSportTypes(sportsBase),
+    }));
+
+    const mappedOrganization = {
+      ...rest,
+      sportTypes: uniqueSportTypes,
+      sportsBases: sportsBases,
+      url: data?.url,
+      foundedAt: getFormattedDate(data?.foundedAt),
+      lastApprovedRequestAt: getFormattedYear(lastApprovedRequest?.updatedAt),
+    };
+
+    return mappedOrganization;
   }
 
   @Action({
@@ -615,4 +721,26 @@ export default class extends moleculer.Service {
 
     return ctx.call('tenants.list', params);
   }
+
+  getOrganizationUniqueSportTypes = (organization: Tenant<'sportsBases'>): SportType[] => {
+    const sportTypes = organization.sportsBases.flatMap((sportsBase) =>
+      sportsBase.spaces.flatMap((space) => space.sportTypes),
+    );
+
+    const uniqueSportTypes = Array.from(new Set(sportTypes.map((sportType) => sportType.name))).map(
+      (name) => sportTypes.find((sportType) => sportType.name === name),
+    );
+
+    return uniqueSportTypes;
+  };
+
+  getSportsBasesUniqueSportTypes = (sportsBase: SportsBase<'spaces'>): SportType[] => {
+    const sportTypes = sportsBase.spaces.flatMap((space) => space.sportTypes);
+
+    const uniqueSportTypes = Array.from(new Set(sportTypes.map((sportType) => sportType.name))).map(
+      (name) => sportTypes.find((sportType) => sportType.name === name),
+    );
+
+    return uniqueSportTypes;
+  };
 }

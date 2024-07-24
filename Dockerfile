@@ -2,7 +2,7 @@
 FROM node:20-alpine as base
 
 # Required for dependencies coming from git
-RUN apk add --no-cache git
+RUN apk add --no-cache git python3 make g++
 
 # Stage 2: Builder image
 FROM base as builder

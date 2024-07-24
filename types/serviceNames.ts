@@ -62,3 +62,7 @@ export const SN_TYPES_RENTS_UNITS = 'types.rents.units';
 export const SN_BONUSES = 'bonuses';
 export const SN_NATIONALTEAMS = 'nationalTeams';
 export const SN_TILES_SPORTSBASES = 'tiles.sportsBases';
+export const SN_RC_ADDRESSES = 'rc.addresses';
+export const SN_RC_RESIDENTIAL_AREAS = 'rc.residentialAreas';
+export const SN_RC_ROOMS = 'rc.rooms';
+export const SN_RC_STREETS = 'rc.streets';

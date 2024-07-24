@@ -71,6 +71,7 @@ export type SportBaseSpaceField<
         secure: true,
       },
       title: 'string',
+      description: 'string',
       required: 'boolean',
       precision: 'number|optional',
       scale: 'number|optional',
@@ -644,6 +645,7 @@ export default class extends moleculer.Service {
 
       return {
         title: field.field_name,
+        description: field.field_description,
         required: field.required,
         type,
         precision,

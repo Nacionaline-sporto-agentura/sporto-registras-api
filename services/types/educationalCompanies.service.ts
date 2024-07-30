@@ -1,30 +1,38 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
-import DbConnection from '../../../mixins/database.mixin';
+import DbConnection from '../../mixins/database.mixin';
+
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
   COMMON_SCOPES,
   CommonFields,
-} from '../../../types';
-import {
-  SN_TYPES_EDUCATIONAL_COMPANIES,
-  SN_TYPES_STUDIES_PROGRAMS,
-} from '../../../types/serviceNames';
-import { TEMP_FAKE_TYPE_NAMES } from '../../../utils';
+  CommonPopulates,
+  Table,
+} from '../../types';
+import { SN_TYPES_EDUCATIONAL_COMPANIES } from '../../types/serviceNames';
+import { TEMP_FAKE_TYPE_NAMES, tableName } from '../../utils';
 
-export interface TypeStudiesProgram extends CommonFields {
+interface Fields extends CommonFields {
   id: number;
   name: string;
+  code: string;
 }
 
+interface Populates extends CommonPopulates {}
+
+export type EducationalCompany<
+  P extends keyof Populates = never,
+  F extends keyof (Fields & Populates) = keyof Fields,
+> = Table<Fields, Populates, P, F>;
+
 @Service({
-  name: SN_TYPES_STUDIES_PROGRAMS,
+  name: SN_TYPES_EDUCATIONAL_COMPANIES,
   mixins: [
     DbConnection({
-      collection: 'typesStudiesPrograms',
+      collection: tableName(SN_TYPES_EDUCATIONAL_COMPANIES),
     }),
   ],
   settings: {
@@ -36,14 +44,7 @@ export interface TypeStudiesProgram extends CommonFields {
         secure: true,
       },
       name: 'string',
-
-      company: {
-        columnName: 'studiesCompanyId',
-        immutable: true,
-        optional: true,
-        populate: `${SN_TYPES_EDUCATIONAL_COMPANIES}.resolve`,
-      },
-
+      code: 'string',
       ...COMMON_FIELDS,
     },
     scopes: { ...COMMON_SCOPES },
@@ -56,10 +57,7 @@ export default class extends moleculer.Service {
   async seedDB() {
     await this.createEntities(
       null,
-      TEMP_FAKE_TYPE_NAMES('Studijų programa', 10).map((i) => ({
-        ...i,
-        company: Math.ceil(Math.random() * 2), // random company
-      })),
+      TEMP_FAKE_TYPE_NAMES('Mokymosi įstaiga').map((o) => ({ ...o, code: 111 })),
     );
   }
 }

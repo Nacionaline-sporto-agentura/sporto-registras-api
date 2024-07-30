@@ -10,6 +10,7 @@ import {
   throwUnauthorizedError,
 } from '../types';
 import { SN_API, SN_AUTH, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
+import { parseQueryIfNeeded } from '../utils';
 import { Tenant } from './tenants/index.service';
 import { User } from './users.service';
 
@@ -52,11 +53,7 @@ export enum AuthUserRole {
         const removeScopes = (query: any) => {
           if (!query) return query;
 
-          if (typeof query !== 'object') {
-            try {
-              query = JSON.parse(query);
-            } catch (err) {}
-          }
+          query = parseQueryIfNeeded(query);
 
           if (!query || typeof query !== 'object') return query;
 

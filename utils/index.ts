@@ -1,6 +1,6 @@
 import { get, isEmpty } from 'lodash';
 import moment from 'moment';
-import { DateFormats } from '../types';
+import { DBPagination, DateFormats } from '../types';
 
 export * from './scopes';
 export * from './temp';
@@ -25,13 +25,13 @@ export const handlePagination = ({
   data: any[];
   page: number;
   pageSize: number;
-}) => {
+}): DBPagination<any> => {
   const start = (page - 1) * pageSize;
   const end = page * pageSize;
   const totalPages = Math.ceil(data.length / pageSize);
   const rows = data.slice(start, end);
 
-  return { totalPages, page, rows };
+  return { rows, totalPages, page, total: data.length, pageSize };
 };
 
 export const sortByField = ({ data, field }: { data: any[]; field: string }) => {
@@ -200,3 +200,15 @@ export const formatDate = (date: string | Date, format: DateFormats) =>
   date ? moment(date).format(format) : '-';
 
 export const parseDate = (date: string | Date) => moment(date, 'YYYY-MM-DD').startOf('day');
+
+export function parseQueryIfNeeded(query: any) {
+  if (!query) return query;
+
+  if (typeof query !== 'object') {
+    try {
+      query = JSON.parse(query);
+    } catch (err) {}
+  }
+
+  return query;
+}

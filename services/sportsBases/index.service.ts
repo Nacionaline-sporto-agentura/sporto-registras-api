@@ -27,8 +27,6 @@ import {
   SN_SPORTSBASES_LEVELS,
   SN_SPORTSBASES_OWNERS,
   SN_SPORTSBASES_SPACES,
-  SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
-  SN_SPORTSBASES_SPACES_ENERGYCLASSES,
   SN_SPORTSBASES_SPACES_TYPES,
   SN_SPORTSBASES_TECHNICALCONDITIONS,
   SN_SPORTSBASES_TENANTS,
@@ -42,8 +40,6 @@ import { LKS_SRID } from '../tiles/sportsBases.service';
 import { SportType } from '../types/sportTypes/index.service';
 import { SportBaseInvestmentSource } from '../types/sportsBases/investments/sources.service';
 import { SportsBasesLevel } from '../types/sportsBases/levels.service';
-import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
-import { SportBaseSpaceEnergyClass } from '../types/sportsBases/spaces/energyClasses.service';
 import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
 import SportsBasesTechnicalConditionsService, {
   SportsBasesTechicalCondition,
@@ -531,14 +527,6 @@ export default class extends moleculer.Service {
     );
     const sportsBasesSpacesSportTypes: SportType[] = await ctx.call(`${SN_TYPES_SPORTTYPES}.find`);
 
-    const sportsBasesSpacesBuildingPurposes: SportBaseSpaceBuildingPurpose[] = await ctx.call(
-      `${SN_SPORTSBASES_SPACES_BUILDINGPURPOSES}.find`,
-    );
-
-    const sportsBasesSpacesEnergyClasses: SportBaseSpaceEnergyClass[] = await ctx.call(
-      `${SN_SPORTSBASES_SPACES_ENERGYCLASSES}.find`,
-    );
-
     const sportsBasesInvestmentsSources: SportBaseInvestmentSource[] = await ctx.call(
       `${SN_SPORTSBASES_INVESTMENTS_SOURCES}.find`,
     );
@@ -616,8 +604,8 @@ export default class extends moleculer.Service {
         name: faker.lorem.words({ min: 1, max: 3 }),
         technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions),
         type: faker.helpers.arrayElement(sportsBasesSpacesTypes),
-        buildingPurpose: faker.helpers.arrayElement(sportsBasesSpacesBuildingPurposes),
-        energyClass: faker.helpers.arrayElement(sportsBasesSpacesEnergyClasses),
+        buildingPurpose: faker.lorem.words({ min: 1, max: 2 }),
+        energyClass: faker.string.alpha().toUpperCase(),
         sportTypes: faker.helpers.arrayElements(sportsBasesSpacesSportTypes),
         buildingNumber: faker.number.int(10000),
         buildingArea: faker.number.int(1000),
@@ -645,8 +633,6 @@ export default class extends moleculer.Service {
       SN_SPORTSBASES_TECHNICALCONDITIONS,
       SN_SPORTSBASES_SPACES_TYPES,
       SN_TYPES_SPORTTYPES,
-      SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
-      SN_SPORTSBASES_SPACES_ENERGYCLASSES,
       SN_SPORTSBASES_INVESTMENTS_SOURCES,
     ]);
 

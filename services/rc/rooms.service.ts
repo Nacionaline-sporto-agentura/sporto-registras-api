@@ -3,11 +3,10 @@ import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../../mixins/database.mixin';
 import RcSyncMixin from '../../mixins/rcSync.mixin';
-import { CommonFields } from '../../types';
 import { SN_RC_ROOMS } from '../../types/serviceNames';
 import { tableName } from '../../utils';
 
-export interface RcRoom extends CommonFields {
+export interface RcRoom {
   id: number;
   name: string;
 }

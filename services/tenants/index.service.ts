@@ -564,7 +564,7 @@ export default class extends moleculer.Service {
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      path: '/public',
+      path: 'organizations/public',
     },
     auth: RestrictionType.PUBLIC,
     params: {
@@ -648,7 +648,7 @@ export default class extends moleculer.Service {
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      path: '/:id/public',
+      path: 'organizations/:id/public',
     },
     auth: RestrictionType.PUBLIC,
     params: {

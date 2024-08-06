@@ -20,20 +20,22 @@ import {
   SN_SPORTSBASES_TENANTS,
   SN_SPORTSBASES_TENANTS_BASIS,
 } from '../../types/serviceNames';
-import { Tenant } from '../tenants/index.service';
+import { SportsBasesTenantsBasis } from '../types/sportsBases/tenants/basis.service';
 import { SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
-  tenant: Tenant['id'];
   sportBase: SportsBase['id'];
+  companyName: string;
+  companyCode: string;
+  basis: SportsBasesTenantsBasis['id'];
   startAt: Date;
   endAt: Date;
 }
 
 interface Populates extends CommonPopulates {
-  tenant: Tenant;
   sportBase: SportsBase;
+  basis: SportsBasesTenantsBasis;
 }
 
 export type SportsBaseTenant<

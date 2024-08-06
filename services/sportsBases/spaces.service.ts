@@ -13,10 +13,10 @@ import {
   FieldHookCallback,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
-  TYPE_ID_OR_OBJECT_WITH_ID,
-  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
   throwValidationError,
+  TYPE_ID_OR_OBJECT_WITH_ID,
+  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
 } from '../../types';
 import {
   SN_SPORTSBASES,
@@ -27,10 +27,10 @@ import {
   SN_SPORTSBASES_TECHNICALCONDITIONS,
   SN_TYPES_SPORTTYPES,
 } from '../../types/serviceNames';
-import { SportType } from '../types/sportTypes/index.service';
 import { FieldTypes } from '../types/sportsBases/spaces/fields.service';
 import { SportBaseSpaceTypeAndField } from '../types/sportsBases/spaces/typesAndFields.service';
 import { SportsBasesType } from '../types/sportsBases/types.service';
+import { SportType } from '../types/sportTypes/index.service';
 import { SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
@@ -46,6 +46,7 @@ interface Fields extends CommonFields {
   energyClass: number;
   constructionDate: Date;
   latestRenovationDate: Date;
+  additionalValues: { [key: string]: any }[];
 }
 
 interface Populates extends CommonPopulates {

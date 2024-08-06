@@ -1,5 +1,6 @@
 import { get, isEmpty } from 'lodash';
 import moment from 'moment';
+import { SportsBase } from '../services/sportsBases/index.service';
 import { DBPagination, DateFormats } from '../types';
 
 export * from './scopes';
@@ -190,6 +191,20 @@ export const handleFormatResponse = ({
     page,
     totalPages,
   };
+};
+
+export const getSportsBaseUniqueSportTypes = (
+  sportsBase:
+    | SportsBase<'spaces'>
+    | SportsBase<'tenant' | 'spaces' | 'tenants'>
+    | SportsBase<'spaces' | 'tenant' | 'type'>,
+) => {
+  const sportTypes = sportsBase.spaces.flatMap((space) => space.sportTypes);
+  const uniqueSportTypes = Array.from(new Set(sportTypes.map((sportType) => sportType.name))).map(
+    (name) => sportTypes.find((sportType) => sportType.name === name),
+  );
+
+  return uniqueSportTypes;
 };
 
 export const getFormattedDate = (date?: string | Date) => formatDate(date, DateFormats.DAY);

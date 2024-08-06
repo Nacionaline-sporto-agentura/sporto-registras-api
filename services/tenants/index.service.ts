@@ -33,7 +33,12 @@ import {
   SN_TENANTUSERS,
   SN_USERS,
 } from '../../types/serviceNames';
-import { getFormattedDate, getFormattedYear, handleFormatResponse } from '../../utils';
+import {
+  getFormattedDate,
+  getFormattedYear,
+  getSportsBaseUniqueSportTypes,
+  handleFormatResponse,
+} from '../../utils';
 import { UserAuthMeta } from '../api.service';
 import { Request, RequestEntityTypes, RequestStatus } from '../requests/index.service';
 import { SportsBase } from '../sportsBases/index.service';
@@ -48,6 +53,8 @@ import { TenantMembership } from './memberships.service';
 interface Fields extends CommonFields {
   id: number;
   name: string;
+  email: string;
+  phone: string;
   role: undefined;
   authGroup: number;
   parent: number;
@@ -557,8 +564,7 @@ export default class extends moleculer.Service {
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      basePath: '/public/organizations',
-      path: '/',
+      path: '/public',
     },
     auth: RestrictionType.PUBLIC,
     params: {
@@ -642,8 +648,7 @@ export default class extends moleculer.Service {
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      basePath: '/public/organizations/:id',
-      path: '/',
+      path: '/:id/public',
     },
     auth: RestrictionType.PUBLIC,
     params: {
@@ -695,7 +700,7 @@ export default class extends moleculer.Service {
     const sportsBases = organization?.sportsBases?.map((sportsBase) => ({
       name: sportsBase?.name,
       address: sportsBase?.address,
-      sportTypes: this.getSportsBasesUniqueSportTypes(sportsBase),
+      sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
     }));
 
     const mappedOrganization = {
@@ -726,16 +731,6 @@ export default class extends moleculer.Service {
     const sportTypes = organization.sportsBases.flatMap((sportsBase) =>
       sportsBase.spaces.flatMap((space) => space.sportTypes),
     );
-
-    const uniqueSportTypes = Array.from(new Set(sportTypes.map((sportType) => sportType.name))).map(
-      (name) => sportTypes.find((sportType) => sportType.name === name),
-    );
-
-    return uniqueSportTypes;
-  };
-
-  getSportsBasesUniqueSportTypes = (sportsBase: SportsBase<'spaces'>): SportType[] => {
-    const sportTypes = sportsBase.spaces.flatMap((space) => space.sportTypes);
 
     const uniqueSportTypes = Array.from(new Set(sportTypes.map((sportType) => sportType.name))).map(
       (name) => sportTypes.find((sportType) => sportType.name === name),

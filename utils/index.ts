@@ -36,24 +36,27 @@ export const handlePagination = ({
 };
 
 export const sortByField = ({ data, field }: { data: any[]; field: string }) => {
-  if (isEmpty(data)) return [];
+  if (!Array.isArray(data) || data.length === 0) return [];
 
   const isDesc = field[0] === '-';
   const sortField = isDesc ? field.slice(1) : field;
   const isNumberValue = typeof get(data[0], sortField) === 'number';
 
   return data.sort((first, second) => {
+    const firstValue = get(first, sortField);
+    const secondValue = get(second, sortField);
+
     if (isDesc) {
       if (isNumberValue) {
-        return get(second, sortField) - get(first, sortField);
+        return (secondValue ?? 0) - (firstValue ?? 0);
       } else {
-        return get(second, sortField).localeCompare(get(first, sortField));
+        return (secondValue ?? '').localeCompare(firstValue ?? '');
       }
     } else {
       if (isNumberValue) {
-        return get(first, sortField) - get(second, sortField);
+        return (firstValue ?? 0) - (secondValue ?? 0);
       } else {
-        return get(first, sortField).localeCompare(get(second, sortField));
+        return (firstValue ?? '').localeCompare(secondValue ?? '');
       }
     }
   });

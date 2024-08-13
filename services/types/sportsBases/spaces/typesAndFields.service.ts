@@ -77,8 +77,7 @@ export default class extends moleculer.Service {
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      basePath: '/public/typesAndFields',
-      path: '/',
+      path: '/public',
     },
     auth: RestrictionType.PUBLIC,
   })

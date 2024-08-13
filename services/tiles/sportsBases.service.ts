@@ -251,54 +251,6 @@ export function parseToJsonIfNeeded(query: QueryObject | string): QueryObject {
         },
       },
 
-      publicSpaces: {
-        type: 'array',
-        items: { type: 'object' },
-        virtual: true,
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSBASES_SPACES}.populateByProp`),
-          params: {
-            queryKey: 'sportBase',
-            mappingMulti: true,
-            fields: [
-              'id',
-              'type',
-              'name',
-              'sportBase',
-              'sportTypes',
-              'technicalCondition',
-              'constructionDate',
-              'latestRenovationDate',
-              'energyClass',
-              'photos',
-              'additionalValues',
-            ],
-            populate: ['technicalCondition', 'type', 'sportTypes'],
-            sort: 'name',
-          },
-        },
-      },
-
-      publicTenants: {
-        type: 'array',
-        items: { type: 'object' },
-        virtual: true,
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSBASES_TENANTS}.populateByProp`),
-          params: {
-            queryKey: 'sportBase',
-            mappingMulti: true,
-            fields: ['id', 'sportBase', 'name', 'companyName', 'companyCode', 'basis'],
-            populate: ['basis'],
-            sort: '-createdAt',
-          },
-        },
-      },
-
       ...COMMON_FIELDS,
     },
     scopes: {

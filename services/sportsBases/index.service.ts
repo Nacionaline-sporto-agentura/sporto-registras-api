@@ -87,18 +87,13 @@ interface Fields extends CommonFields {
     public?: boolean;
   }>;
   plotNumber: string;
-  disabledAccessible: boolean;
-  blindAccessible: boolean;
   plotArea: number;
   areaUnits: AreaUnits;
   builtPlotArea: number;
   audienceSeats: number;
   parkingPlaces: number;
-  dressingRooms: number;
   methodicalClasses: number;
   saunas: number;
-  diningPlaces: number;
-  accommodationPlaces: number;
   publicWifi: boolean;
 
   plans: Array<{
@@ -216,8 +211,6 @@ export type SportsBase<
         required: true,
       },
       plotNumber: 'string|required',
-      disabledAccessible: 'boolean', // for people with physical disability
-      blindAccessible: 'boolean', // for blind people
       plotArea: 'number|required',
       areaUnits: {
         type: 'enum',
@@ -227,11 +220,8 @@ export type SportsBase<
       builtPlotArea: 'number|required',
 
       parkingPlaces: 'number|required',
-      dressingRooms: 'number|required',
       methodicalClasses: 'number|required',
       saunas: 'number|required',
-      diningPlaces: 'number|required',
-      accommodationPlaces: 'number|required',
       publicWifi: 'boolean',
 
       plans: {
@@ -342,7 +332,7 @@ export type SportsBase<
       ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.scopes,
     },
   },
-  actions: ONLY_GET_REST_ENABLED,
+  actions: { ...ONLY_GET_REST_ENABLED },
 })
 export default class extends moleculer.Service {
   @Action({
@@ -423,16 +413,7 @@ export default class extends moleculer.Service {
     const sportsBases: SportsBase<'spaces' | 'tenant' | 'type'>[] = await ctx.call(
       'sportsBases.find',
       {
-        fields: [
-          'id',
-          'name',
-          'type',
-          'address',
-          'spaces',
-          'tenant',
-          'spaces',
-          'disabledAccessible',
-        ],
+        fields: ['id', 'name', 'type', 'address', 'spaces', 'tenant', 'spaces'],
         populate: ['type', 'spaces', 'tenant'],
       },
     );
@@ -444,7 +425,6 @@ export default class extends moleculer.Service {
         tenant: { id: sportsBase?.tenant?.id, name: sportsBase?.tenant?.name },
         municipality: sportsBase?.address?.municipality,
         type: { id: sportsBase.type.id, name: sportsBase?.type?.name },
-        disabledAccessible: sportsBase?.disabledAccessible,
         spacesCount: sportsBase?.spaces?.length,
         sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
       };
@@ -484,13 +464,8 @@ export default class extends moleculer.Service {
           'name',
           'photos',
           'parkingPlaces',
-          'dressingRooms',
           'methodicalClasses',
           'saunas',
-          'diningPlaces',
-          'accommodationPlaces',
-          'disabledAccessible',
-          'blindAccessible',
           'publicWifi',
           'address',
           'tenant',
@@ -509,13 +484,8 @@ export default class extends moleculer.Service {
       name: sportsBase.name,
       photos: sportsBase.photos,
       parkingPlaces: sportsBase.parkingPlaces,
-      dressingRooms: sportsBase.dressingRooms,
       methodicalClasses: sportsBase.methodicalClasses,
       saunas: sportsBase.saunas,
-      diningPlaces: sportsBase.diningPlaces,
-      accommodationPlaces: sportsBase.accommodationPlaces,
-      blindAccessible: sportsBase.blindAccessible,
-      disabledAccessible: sportsBase.disabledAccessible,
       publicWifi: sportsBase.publicWifi,
       tenant: {
         name: tenant?.name,
@@ -639,18 +609,13 @@ export default class extends moleculer.Service {
       webPage: faker.internet.url(),
       photos: getPhotos(),
       plotNumber: `${faker.number.int(10000)}`,
-      disabledAccessible: faker.datatype.boolean(),
-      blindAccessible: faker.datatype.boolean(),
       plotArea: faker.number.int(1000),
       areaUnits: faker.helpers.enumValue(AreaUnits),
       builtPlotArea: faker.number.int(1000),
       audienceSeats: faker.number.int(1000),
       parkingPlaces: faker.number.int(1000),
-      dressingRooms: faker.number.int(10),
       methodicalClasses: faker.number.int(10),
       saunas: faker.number.int(10),
-      diningPlaces: faker.number.int(5),
-      accommodationPlaces: faker.number.int(100),
       publicWifi: faker.datatype.boolean(),
       spaces: randomArray(3, () => ({
         name: faker.lorem.words({ min: 1, max: 3 }),

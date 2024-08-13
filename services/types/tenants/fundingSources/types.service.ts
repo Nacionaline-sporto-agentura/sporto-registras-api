@@ -47,7 +47,7 @@ export type TenantFundingSourceType<
     },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
   },
-  actions: ONLY_GET_REST_ENABLED,
+  actions: { ...ONLY_GET_REST_ENABLED },
 })
 export default class extends moleculer.Service {
   async seedDB() {

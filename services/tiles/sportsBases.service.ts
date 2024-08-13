@@ -140,17 +140,12 @@ export function parseToJsonIfNeeded(query: QueryObject | string): QueryObject {
         min: 1,
       },
       plotNumber: 'string',
-      disabledAccessible: 'boolean', // for people with physical disability
-      blindAccessible: 'boolean', // for blind people
       plotArea: 'number',
       builtPlotArea: 'number',
 
       parkingPlaces: 'number',
-      dressingRooms: 'number',
       methodicalClasses: 'number',
       saunas: 'number',
-      diningPlaces: 'number',
-      accommodationPlaces: 'number',
       publicWifi: 'boolean',
 
       plans: {

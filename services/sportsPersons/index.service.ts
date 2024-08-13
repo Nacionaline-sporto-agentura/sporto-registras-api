@@ -33,16 +33,16 @@ import {
   SN_SPORTSPERSONS_REFEREES,
   SN_TENANTS,
   SN_TENANTS_WORKRELATIONS,
+  SN_TYPES_EDUCATIONAL_COMPANIES,
   SN_TYPES_SPORTTYPES,
-  SN_TYPES_STUDIES_COMPANIES,
   SN_TYPES_STUDIES_PROGRAMS,
 } from '../../types/serviceNames';
 import { tableName } from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
 import { SportsBase } from '../sportsBases/index.service';
 import { Tenant } from '../tenants/index.service';
+import { EducationalCompany } from '../types/educationalCompanies.service';
 import { SportType } from '../types/sportTypes/index.service';
-import { TypeStudiesCompany } from '../types/studies/companies.service';
 import { TypeStudiesProgram } from '../types/studies/programs.service';
 import { TenantWorkRelations } from '../types/tenants/workRelations.service';
 import { SportsPersonAmsInstructor } from './amsInstructors.service';
@@ -66,7 +66,7 @@ interface Fields extends CommonFields {
   nationality: string;
   education: Array<{
     type: StudiesType;
-    company: TypeStudiesCompany['id'];
+    company: EducationalCompany['id'];
     program: TypeStudiesProgram['id'];
     startAt: Date;
     endAt: Date;
@@ -79,7 +79,7 @@ interface Fields extends CommonFields {
   }>;
   studies: Array<{
     type: StudiesType;
-    company: TypeStudiesCompany['id'];
+    company: EducationalCompany['id'];
     program: TypeStudiesProgram['id'];
     startAt: Date;
     endAt: Date;
@@ -98,7 +98,7 @@ interface Populates extends CommonPopulates {
   sportTypes: SportType[];
   education: OverrideArray<
     Fields['education'],
-    { company: TypeStudiesCompany; program: TypeStudiesProgram }
+    { company: EducationalCompany; program: TypeStudiesProgram }
   >;
   workRelations: OverrideArray<
     Fields['workRelations'],
@@ -106,7 +106,7 @@ interface Populates extends CommonPopulates {
   >;
   studies: OverrideArray<
     Fields['studies'],
-    { company: TypeStudiesCompany; program: TypeStudiesProgram }
+    { company: EducationalCompany; program: TypeStudiesProgram }
   >;
   sportsBases: SportsBase[];
   athlete: SportsPersonAthlete;
@@ -170,7 +170,7 @@ export type SportsPerson<
           },
         },
         populate: PopulateHandlerFn({
-          company: `${SN_TYPES_STUDIES_COMPANIES}.resolve`,
+          company: `${SN_TYPES_EDUCATIONAL_COMPANIES}.resolve`,
           program: `${SN_TYPES_STUDIES_PROGRAMS}.resolve`,
         }),
       },
@@ -206,7 +206,7 @@ export type SportsPerson<
           },
         },
         populate: PopulateHandlerFn({
-          company: `${SN_TYPES_STUDIES_COMPANIES}.resolve`,
+          company: `${SN_TYPES_EDUCATIONAL_COMPANIES}.resolve`,
           program: `${SN_TYPES_STUDIES_PROGRAMS}.resolve`,
         }),
       },
@@ -248,7 +248,7 @@ export type SportsPerson<
         populate: {
           action: `${SN_SPORTSPERSONS_FAINSTRUCTORS}.resolve`,
           params: {
-            populate: ['sportsBases', 'competences', 'workRelations', 'studies'],
+            populate: ['faSpecialists'],
             sort: 'id',
           },
         },
@@ -343,6 +343,7 @@ export default class extends moleculer.Service {
         'athlete',
         'coach',
         'faInstructor',
+        'faSpecialist',
         'referee',
       ],
     });
@@ -351,8 +352,7 @@ export default class extends moleculer.Service {
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      basePath: '/public/sportsPersons',
-      path: '/',
+      path: '/count/public',
     },
     auth: RestrictionType.PUBLIC,
   })

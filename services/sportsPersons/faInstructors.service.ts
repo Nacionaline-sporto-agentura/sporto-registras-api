@@ -14,63 +14,25 @@ import {
   ONLY_GET_REST_ENABLED,
   OverrideArray,
   TYPE_ID_OR_OBJECT_WITH_ID,
-  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../types';
-import {
-  SN_SPORTSBASES,
-  SN_SPORTSPERSONS,
-  SN_SPORTSPERSONS_FAINSTRUCTORS,
-  SN_TENANTS,
-  SN_TENANTS_WORKRELATIONS,
-  SN_TYPES_STUDIES_COMPANIES,
-  SN_TYPES_STUDIES_PROGRAMS,
-} from '../../types/serviceNames';
-import { SportsBase } from '../sportsBases/index.service';
-import { Tenant } from '../tenants/index.service';
-import { TypeStudiesCompany } from '../types/studies/companies.service';
-import { TypeStudiesProgram } from '../types/studies/programs.service';
-import { TenantWorkRelations } from '../types/tenants/workRelations.service';
+import { SN_SPORTSPERSONS, SN_SPORTSPERSONS_FAINSTRUCTORS } from '../../types/serviceNames';
 import { SportsPerson } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
-  sportsBases: number[];
-  faSpecialists: Array<SportsPerson['id']>;
-  competences: {
-    company: Tenant['id'];
-    documentNumber: string;
-    formCode: string;
-    position: string;
-    series: string;
-    issuedAt: Date;
-    expiresAt: Date;
-  }[];
-  workRelations: {
-    organization: Tenant['id'];
-    basis: TenantWorkRelations['id'];
-    position: string;
-    startAt: Date;
-    endAt: Date;
-  }[];
-  studies: {
-    company: TypeStudiesCompany['id'];
-    program: TypeStudiesProgram['id'];
-    startAt: Date;
-    endAt: Date;
-  }[];
+  faSpecialists: Array<{
+    faSpecialist: SportsPerson['id'];
+    dateFrom: Date;
+    dateTo: Date;
+  }>;
 }
 interface Populates extends CommonPopulates {
-  faSpecialists: Array<SportsPerson<'faSpecialist'>>;
-  sportsBases: SportsBase[];
-  competences: OverrideArray<Fields['competences'], { company: Tenant }>;
-  workRelations: OverrideArray<
-    Fields['workRelations'],
-    { organization: Tenant; basis: TenantWorkRelations }
-  >;
-  studies: OverrideArray<
-    Fields['studies'],
-    { company: TypeStudiesCompany; program: TypeStudiesProgram }
+  faSpecialists: OverrideArray<
+    Fields['faSpecialists'],
+    {
+      faSpecialist: SportsPerson;
+    }
   >;
 }
 
@@ -95,68 +57,18 @@ export type SportsPersonFaInstructor<
         primaryKey: true,
         secure: true,
       },
-      sportsBases: {
-        ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
-        populate: `${SN_SPORTSBASES}.resolve`,
-      },
       faSpecialists: {
-        ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
-        populate: {
-          action: `${SN_SPORTSPERSONS}.resolve`,
-          params: {
-            populate: ['faSpecialist'],
-          },
-        },
-      },
-      competences: {
         type: 'array',
         items: {
           type: 'object',
           properties: {
-            company: TYPE_ID_OR_OBJECT_WITH_ID,
-            documentNumber: 'string',
-            formCode: 'string',
-            position: 'string',
-            series: 'string',
-            issuedAt: 'date',
-            expiresAt: 'date',
+            faSpecialist: TYPE_ID_OR_OBJECT_WITH_ID,
+            dateFrom: 'date',
+            dateTo: 'date',
           },
         },
         populate: PopulateHandlerFn({
-          company: `${SN_TENANTS}.resolve`,
-        }),
-      },
-      workRelations: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            organization: TYPE_ID_OR_OBJECT_WITH_ID,
-            basis: TYPE_ID_OR_OBJECT_WITH_ID,
-            position: 'string',
-            startAt: 'date',
-            endAt: 'date',
-          },
-        },
-        populate: PopulateHandlerFn({
-          organization: `${SN_TENANTS}.resolve`,
-          basis: `${SN_TENANTS_WORKRELATIONS}.resolve`,
-        }),
-      },
-      studies: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            company: TYPE_ID_OR_OBJECT_WITH_ID,
-            program: TYPE_ID_OR_OBJECT_WITH_ID,
-            startAt: 'date',
-            endAt: 'date',
-          },
-        },
-        populate: PopulateHandlerFn({
-          company: `${SN_TYPES_STUDIES_COMPANIES}.resolve`,
-          program: `${SN_TYPES_STUDIES_PROGRAMS}.resolve`,
+          faSpecialist: `${SN_SPORTSPERSONS}.resolve`,
         }),
       },
       ...COMMON_FIELDS,

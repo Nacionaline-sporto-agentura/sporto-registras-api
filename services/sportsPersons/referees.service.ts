@@ -18,13 +18,9 @@ import {
 } from '../../types';
 import {
   SN_SPORTSPERSONS_REFEREES,
-  SN_TYPES_CATEGORIES_COMPANIES,
-  SN_TYPES_STUDIES_COMPANIES,
-  SN_TYPES_STUDIES_PROGRAMS,
+  SN_TYPES_EDUCATIONAL_COMPANIES,
 } from '../../types/serviceNames';
-import { TypeCategoryCompany } from '../types/categories/companies.service';
-import { TypeStudiesCompany } from '../types/studies/companies.service';
-import { TypeStudiesProgram } from '../types/studies/programs.service';
+import { EducationalCompany } from '../types/educationalCompanies.service';
 
 enum StudiesType {
   LEARNING = 'LEARNING',
@@ -33,28 +29,17 @@ enum StudiesType {
 
 interface Fields extends CommonFields {
   id: number;
-  categories: {
-    company: TypeCategoryCompany['id'];
+  categories: Array<{
+    company: EducationalCompany['id'];
     documentNumber: string;
     formCode: string;
     series: string;
     issuedAt: Date;
-  }[];
-  studies: {
-    type: StudiesType;
-    company: TypeStudiesCompany['id'];
-    program: TypeStudiesProgram['id'];
-    startAt: Date;
-    endAt: Date;
-  }[];
+  }>;
   careerEndedAt: Date;
 }
 interface Populates extends CommonPopulates {
-  categories: OverrideArray<Fields['categories'], { company: TypeCategoryCompany }>;
-  studies: OverrideArray<
-    Fields['studies'],
-    { company: TypeStudiesCompany; program: TypeStudiesProgram }
-  >;
+  categories: OverrideArray<Fields['categories'], { company: EducationalCompany }>;
 }
 
 export type SportsPersonsReferees<
@@ -91,27 +76,7 @@ export type SportsPersonsReferees<
           },
         },
         populate: PopulateHandlerFn({
-          company: `${SN_TYPES_CATEGORIES_COMPANIES}.resolve`,
-        }),
-      },
-      studies: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            type: {
-              type: 'string',
-              enum: Object.values(StudiesType),
-            },
-            company: TYPE_ID_OR_OBJECT_WITH_ID,
-            program: TYPE_ID_OR_OBJECT_WITH_ID,
-            startAt: 'date',
-            endAt: 'date',
-          },
-        },
-        populate: PopulateHandlerFn({
-          company: `${SN_TYPES_STUDIES_COMPANIES}.resolve`,
-          program: `${SN_TYPES_STUDIES_PROGRAMS}.resolve`,
+          company: `${SN_TYPES_EDUCATIONAL_COMPANIES}.resolve`,
         }),
       },
       careerEndedAt: 'date',

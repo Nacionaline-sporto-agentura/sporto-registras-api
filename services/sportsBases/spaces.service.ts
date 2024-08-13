@@ -13,27 +13,24 @@ import {
   FieldHookCallback,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
-  TYPE_ID_OR_OBJECT_WITH_ID,
-  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
   throwValidationError,
+  TYPE_ID_OR_OBJECT_WITH_ID,
+  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
 } from '../../types';
 import {
   SN_SPORTSBASES,
   SN_SPORTSBASES_SPACES,
-  SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
-  SN_SPORTSBASES_SPACES_ENERGYCLASSES,
   SN_SPORTSBASES_SPACES_GROUPS,
   SN_SPORTSBASES_SPACES_TYPES,
   SN_SPORTSBASES_SPACES_TYPESANDFIELDS,
   SN_SPORTSBASES_TECHNICALCONDITIONS,
   SN_TYPES_SPORTTYPES,
 } from '../../types/serviceNames';
-import { SportType } from '../types/sportTypes/index.service';
-import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
 import { FieldTypes } from '../types/sportsBases/spaces/fields.service';
 import { SportBaseSpaceTypeAndField } from '../types/sportsBases/spaces/typesAndFields.service';
 import { SportsBasesType } from '../types/sportsBases/types.service';
+import { SportType } from '../types/sportTypes/index.service';
 import { SportsBase } from './index.service';
 
 interface Fields extends CommonFields {
@@ -44,18 +41,19 @@ interface Fields extends CommonFields {
   sportTypes: SportType['id'][];
   sportBase: SportsBase;
   buildingNumber: string;
-  buildingPurpose: SportBaseSpaceBuildingPurpose['id'];
+  buildingPurpose: string;
   buildingArea: number;
   energyClass: number;
   constructionDate: Date;
   latestRenovationDate: Date;
+  additionalValues: { [key: string]: any }[];
 }
 
 interface Populates extends CommonPopulates {
   technicalCondition: any;
   type: SportsBasesType;
   sportTypes: SportType[];
-  buildingPurpose: SportBaseSpaceBuildingPurpose;
+  buildingPurpose: string;
 }
 
 export type SportBaseSpace<
@@ -130,17 +128,7 @@ export type SportBaseSpace<
         optional: true,
         populate: `${SN_SPORTSBASES}.resolve`,
       },
-      buildingPurpose: {
-        ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportBaseSpaceBuildingPurposeId',
-        required: true,
-        populate: {
-          action: `${SN_SPORTSBASES_SPACES_BUILDINGPURPOSES}.resolve`,
-          params: {
-            fields: 'id,name',
-          },
-        },
-      },
+      buildingPurpose: 'string',
 
       buildingNumber: {
         type: 'string',
@@ -148,17 +136,7 @@ export type SportBaseSpace<
         validate: 'validateBuildingNumber',
       },
       buildingArea: 'number',
-      energyClass: {
-        ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportBaseSpaceEnergyClassId',
-        required: true,
-        populate: {
-          action: `${SN_SPORTSBASES_SPACES_ENERGYCLASSES}.resolve`,
-          params: {
-            fields: 'id,name',
-          },
-        },
-      },
+      energyClass: 'string',
       constructionDate: 'date',
       latestRenovationDate: 'date',
 

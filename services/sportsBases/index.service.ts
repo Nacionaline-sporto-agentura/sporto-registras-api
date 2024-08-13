@@ -22,28 +22,31 @@ import {
 import filtersMixin from 'moleculer-knex-filters';
 import PostgisMixin from 'moleculer-postgis';
 import {
+  SN_SPORTSBASES,
   SN_SPORTSBASES_INVESTMENTS,
   SN_SPORTSBASES_INVESTMENTS_SOURCES,
   SN_SPORTSBASES_LEVELS,
   SN_SPORTSBASES_OWNERS,
   SN_SPORTSBASES_SPACES,
-  SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
-  SN_SPORTSBASES_SPACES_ENERGYCLASSES,
   SN_SPORTSBASES_SPACES_TYPES,
   SN_SPORTSBASES_TECHNICALCONDITIONS,
   SN_SPORTSBASES_TENANTS,
   SN_SPORTSBASES_TYPES,
+  SN_SPORTSPERSONS,
+  SN_TENANTS,
   SN_TYPES_SPORTTYPES,
 } from '../../types/serviceNames';
-import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
+import {
+  VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE,
+  getSportsBaseUniqueSportTypes,
+  handleFormatResponse,
+} from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
 import { Tenant, TenantTenantType } from '../tenants/index.service';
 import { LKS_SRID } from '../tiles/sportsBases.service';
 import { SportType } from '../types/sportTypes/index.service';
 import { SportBaseInvestmentSource } from '../types/sportsBases/investments/sources.service';
 import { SportsBasesLevel } from '../types/sportsBases/levels.service';
-import { SportBaseSpaceBuildingPurpose } from '../types/sportsBases/spaces/buildingsPurposes.service';
-import { SportBaseSpaceEnergyClass } from '../types/sportsBases/spaces/energyClasses.service';
 import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
 import SportsBasesTechnicalConditionsService, {
   SportsBasesTechicalCondition,
@@ -116,41 +119,15 @@ interface Populates extends CommonPopulates {
   lastRequest: Request;
   investments: SportBaseInvestment<'items'>[];
   owners: SportsBaseOwner<'user' | 'tenant'>[];
-  tenants: SportsBaseTenant<'tenant'>[];
+  tenants: SportsBaseTenant<'basis'>[];
   tenant: Tenant;
+  type: SportsBasesType;
 }
 
 export type SportsBase<
   P extends keyof Populates = never,
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
-
-const publicFields = [
-  'id',
-  'name',
-  'address',
-  'type',
-  'technicalCondition',
-  'level',
-  'webPage',
-  'photos',
-  'sportsBases',
-  'parkingPlaces',
-  'dressingRooms',
-  'methodicalClasses',
-  'saunas',
-  'diningPlaces',
-  'accommodationPlaces',
-  'publicWifi',
-  'publicSpaces',
-  'publicTenants',
-  'blindAccessible',
-  'disabledAccessible',
-];
-
-const publicPopulates = ['type', 'level', 'technicalCondition', 'publicSpaces', 'publicTenants'];
-
-export const SN_SPORTSBASES = 'sportsBases';
 
 @Service({
   name: SN_SPORTSBASES,
@@ -355,54 +332,6 @@ export const SN_SPORTSBASES = 'sportsBases';
         },
       },
 
-      publicSpaces: {
-        type: 'array',
-        items: { type: 'object' },
-        virtual: true,
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSBASES_SPACES}.populateByProp`),
-          params: {
-            queryKey: 'sportBase',
-            mappingMulti: true,
-            fields: [
-              'id',
-              'type',
-              'name',
-              'sportBase',
-              'sportTypes',
-              'technicalCondition',
-              'constructionDate',
-              'latestRenovationDate',
-              'energyClass',
-              'photos',
-              'additionalValues',
-            ],
-            populate: ['technicalCondition', 'type', 'sportTypes'],
-            sort: 'name',
-          },
-        },
-      },
-
-      publicTenants: {
-        type: 'array',
-        items: { type: 'object' },
-        virtual: true,
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSBASES_TENANTS}.populateByProp`),
-          params: {
-            queryKey: 'sportBase',
-            mappingMulti: true,
-            fields: ['id', 'sportBase', 'name', 'companyName', 'companyCode', 'basis'],
-            populate: ['basis'],
-            sort: '-createdAt',
-          },
-        },
-      },
-
       ...REQUEST_FIELDS(RequestEntityTypes.SPORTS_BASES),
       ...TENANT_FIELD,
       ...COMMON_FIELDS,
@@ -444,45 +373,98 @@ export default class extends moleculer.Service {
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      basePath: '/public/sportsRegister/count',
-      path: '/',
+      path: '/sportsRegister/count/public',
     },
     auth: RestrictionType.PUBLIC,
   })
   async publicSportsRegisterCount(ctx: Context) {
     const sportBases = await ctx.call(`${SN_SPORTSBASES}.count`);
-    const organizations = await ctx.call('tenants.count', {
+    const organizations = await ctx.call(`${SN_TENANTS}.count`, {
       query: { tenantType: TenantTenantType.ORGANIZATION },
     });
 
-    return { sportBases, organizations };
+    const sportsPersons = await ctx.call(`${SN_SPORTSPERSONS}.count`);
+
+    return { sportBases, organizations, sportsPersons };
   }
 
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      basePath: '/public/sportsBases',
-      path: '/',
+      path: '/public',
     },
     auth: RestrictionType.PUBLIC,
+    params: {
+      pageSize: {
+        type: 'number',
+        convert: true,
+        integer: true,
+        optional: true,
+        default: 10,
+        min: 1,
+      },
+      page: {
+        type: 'number',
+        convert: true,
+        integer: true,
+        min: 1,
+        optional: true,
+        default: 1,
+      },
+    },
   })
   async publicSportBases(ctx: Context) {
     const params: any = ctx?.params || {};
+    const page = params?.page;
+    const pageSize = params?.pageSize;
+    const sort = params?.sort;
+    const query = params?.query;
 
-    const sportsBases = await ctx.call(`${SN_SPORTSBASES}.list`, {
-      ...params,
-      fields: publicFields,
-      populate: publicPopulates,
+    const sportsBases: SportsBase<'spaces' | 'tenant' | 'type'>[] = await ctx.call(
+      'sportsBases.find',
+      {
+        fields: [
+          'id',
+          'name',
+          'type',
+          'address',
+          'spaces',
+          'tenant',
+          'spaces',
+          'disabledAccessible',
+        ],
+        populate: ['type', 'spaces', 'tenant'],
+      },
+    );
+
+    const mappedSportsBases = sportsBases.map((sportsBase) => {
+      const mappedSportsBase: any = {
+        id: sportsBase.id,
+        name: sportsBase.name,
+        tenant: { id: sportsBase?.tenant?.id, name: sportsBase?.tenant?.name },
+        municipality: sportsBase?.address?.municipality,
+        type: { id: sportsBase.type.id, name: sportsBase?.type?.name },
+        disabledAccessible: sportsBase?.disabledAccessible,
+        spacesCount: sportsBase?.spaces?.length,
+        sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
+      };
+
+      return mappedSportsBase;
     });
 
-    return sportsBases;
+    return handleFormatResponse({
+      data: mappedSportsBases,
+      page,
+      pageSize,
+      sort,
+      search: query,
+    });
   }
 
   @Action({
     rest: <RestSchema>{
       method: 'GET',
-      basePath: '/public/sportsBases/:id',
-      path: '/',
+      path: '/:id/public',
     },
     auth: RestrictionType.PUBLIC,
     params: {
@@ -493,19 +475,85 @@ export default class extends moleculer.Service {
     },
   })
   async publicSportBase(ctx: Context<{ id: string }>) {
-    const sportsBase: SportsBase = await ctx.call(`${SN_SPORTSBASES}.resolve`, {
-      ...ctx.params,
-      fields: publicFields,
-      populate: publicPopulates,
-      id: ctx.params.id,
-      throwIfNotExist: true,
-    });
+    const sportsBase: SportsBase<'tenant' | 'spaces' | 'tenants'> = await ctx.call(
+      `${SN_SPORTSBASES}.resolve`,
+      {
+        ...ctx.params,
+        fields: [
+          'id',
+          'name',
+          'photos',
+          'parkingPlaces',
+          'dressingRooms',
+          'methodicalClasses',
+          'saunas',
+          'diningPlaces',
+          'accommodationPlaces',
+          'disabledAccessible',
+          'blindAccessible',
+          'publicWifi',
+          'address',
+          'tenant',
+          'spaces',
+        ],
+        populate: ['spaces', 'tenant'],
+        id: ctx.params.id,
+        throwIfNotExist: true,
+      },
+    );
 
-    return sportsBase;
+    const tenant = sportsBase?.tenant;
+
+    const mappedSportsBase = {
+      id: sportsBase.id,
+      name: sportsBase.name,
+      photos: sportsBase.photos,
+      parkingPlaces: sportsBase.parkingPlaces,
+      dressingRooms: sportsBase.dressingRooms,
+      methodicalClasses: sportsBase.methodicalClasses,
+      saunas: sportsBase.saunas,
+      diningPlaces: sportsBase.diningPlaces,
+      accommodationPlaces: sportsBase.accommodationPlaces,
+      blindAccessible: sportsBase.blindAccessible,
+      disabledAccessible: sportsBase.disabledAccessible,
+      publicWifi: sportsBase.publicWifi,
+      tenant: {
+        name: tenant?.name,
+        email: tenant?.email,
+        phone: tenant?.phone,
+        url: tenant?.data?.url,
+      },
+      address: sportsBase.address,
+      spaceBuildingDate: sportsBase.spaces.reduce((oldest, current) => {
+        return new Date(current.createdAt) < new Date(oldest) ? current.createdAt : oldest;
+      }, sportsBase.spaces[0].createdAt),
+      type: sportsBase.type,
+      spaces: sportsBase?.spaces?.map((space) => ({
+        name: space?.name,
+        type: { id: space?.type?.id, name: space?.type?.name },
+        sportTypes: space?.sportTypes.map((sportType) => ({
+          id: sportType.id,
+          name: sportType.name,
+        })),
+        technicalCondition: {
+          id: space?.technicalCondition?.id,
+          name: space?.technicalCondition?.name,
+        },
+        additionalValues: space?.additionalValues,
+      })),
+      tenants: sportsBase?.tenants?.map((tenant) => ({
+        name: tenant.companyName,
+        code: tenant.companyCode,
+        basis: tenant.basis,
+      })),
+      sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
+    };
+
+    return mappedSportsBase;
   }
 
   @Method
-  async validatePhotos({ value, operation }: FieldHookCallback) {
+  validatePhotos({ value, operation }: FieldHookCallback) {
     if (operation === 'create' || operation === 'update') {
       const representativeCount = value.filter(
         (photo: { representative?: boolean }) => photo.representative,
@@ -530,14 +578,6 @@ export default class extends moleculer.Service {
       `${SN_SPORTSBASES_SPACES_TYPES}.find`,
     );
     const sportsBasesSpacesSportTypes: SportType[] = await ctx.call(`${SN_TYPES_SPORTTYPES}.find`);
-
-    const sportsBasesSpacesBuildingPurposes: SportBaseSpaceBuildingPurpose[] = await ctx.call(
-      `${SN_SPORTSBASES_SPACES_BUILDINGPURPOSES}.find`,
-    );
-
-    const sportsBasesSpacesEnergyClasses: SportBaseSpaceEnergyClass[] = await ctx.call(
-      `${SN_SPORTSBASES_SPACES_ENERGYCLASSES}.find`,
-    );
 
     const sportsBasesInvestmentsSources: SportBaseInvestmentSource[] = await ctx.call(
       `${SN_SPORTSBASES_INVESTMENTS_SOURCES}.find`,
@@ -616,8 +656,8 @@ export default class extends moleculer.Service {
         name: faker.lorem.words({ min: 1, max: 3 }),
         technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions),
         type: faker.helpers.arrayElement(sportsBasesSpacesTypes),
-        buildingPurpose: faker.helpers.arrayElement(sportsBasesSpacesBuildingPurposes),
-        energyClass: faker.helpers.arrayElement(sportsBasesSpacesEnergyClasses),
+        buildingPurpose: faker.lorem.words({ min: 1, max: 2 }),
+        energyClass: faker.string.alpha().toUpperCase(),
         sportTypes: faker.helpers.arrayElements(sportsBasesSpacesSportTypes),
         buildingNumber: faker.number.int(10000),
         buildingArea: faker.number.int(1000),
@@ -645,8 +685,6 @@ export default class extends moleculer.Service {
       SN_SPORTSBASES_TECHNICALCONDITIONS,
       SN_SPORTSBASES_SPACES_TYPES,
       SN_TYPES_SPORTTYPES,
-      SN_SPORTSBASES_SPACES_BUILDINGPURPOSES,
-      SN_SPORTSBASES_SPACES_ENERGYCLASSES,
       SN_SPORTSBASES_INVESTMENTS_SOURCES,
     ]);
 

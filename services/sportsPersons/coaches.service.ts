@@ -1,6 +1,6 @@
 'use strict';
-import moleculer from 'moleculer';
-import { Service } from 'moleculer-decorators';
+import moleculer, { Context } from 'moleculer';
+import { Method, Service } from 'moleculer-decorators';
 import DbConnection, { PopulateHandlerFn } from '../../mixins/database.mixin';
 
 import RequestMixin from '../../mixins/request.mixin';
@@ -10,75 +10,47 @@ import {
   COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  FieldHookCallback,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   OverrideArray,
   TYPE_ID_OR_OBJECT_WITH_ID,
-  TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
   Table,
 } from '../../types';
 import {
-  SN_SPORTSBASES,
+  SN_BONUSES,
+  SN_NATIONALTEAMS,
+  SN_SPORTSPERSONS,
   SN_SPORTSPERSONS_COACHES,
-  SN_TENANTS,
-  SN_TENANTS_WORKRELATIONS,
-  SN_TYPES_NATIONAL_TEAM_AGE_GROUP,
-  SN_TYPES_NATIONAL_TEAM_GENDER,
-  SN_TYPES_SPORTTYPES,
-  SN_TYPES_STUDIES_COMPANIES,
-  SN_TYPES_STUDIES_PROGRAMS,
+  SN_TYPES_EDUCATIONAL_COMPANIES,
+  SN_TYPES_QUALIFICATION_CATEGORIES,
 } from '../../types/serviceNames';
-import { SportsBase } from '../sportsBases/index.service';
-import { Tenant } from '../tenants/index.service';
-import { TypeNationalTeamAgeGroup } from '../types/nationalTeams/ageGroups.service';
-import { TypeNationalTeamGender } from '../types/nationalTeams/genders.service';
-import { SportType } from '../types/sportTypes/index.service';
-import { TypeStudiesCompany } from '../types/studies/companies.service';
-import { TypeStudiesProgram } from '../types/studies/programs.service';
-import { TenantWorkRelations } from '../types/tenants/workRelations.service';
+import { Bonus } from '../bonuses/index.service';
+import { NationalTeam } from '../nationalTeams/index.service';
+import { EducationalCompany } from '../types/educationalCompanies.service';
+import { QualificationCategory } from '../types/qualificationCategories.service';
+import { SportsPerson } from './index.service';
 
 interface Fields extends CommonFields {
   id: number;
-  sportsBases: number[];
-  nationalTeams: {
-    sportType: SportType['id'];
-    ageGroup: TypeNationalTeamAgeGroup['id'];
-    gender: TypeNationalTeamGender['id'];
-    startAt: Date;
-    endAt: Date;
-  }[];
-  bonuses: { date: Date; amount: number };
-  workRelations: {
-    organization: Tenant['id'];
-    basis: TenantWorkRelations['id'];
-    position: string;
-    startAt: Date;
-    endAt: Date;
-  }[];
-  competences: {
-    company: Tenant['id'];
-  }[];
-  studies: {
-    company: TypeStudiesCompany['id'];
-    program: TypeStudiesProgram['id'];
-    startAt: Date;
-    endAt: Date;
-  }[];
+  nationalTeams: Array<NationalTeam['id']>;
+  bonuses: Array<Bonus['id']>;
+  competences: Array<{
+    company: EducationalCompany['id'];
+    category: QualificationCategory['id'];
+    issuedAt: Date;
+    expiresAt: Date;
+  }>;
 }
 interface Populates extends CommonPopulates {
-  sportsBases: SportsBase[];
-  nationalTeams: OverrideArray<
-    Fields['nationalTeams'],
-    { sportType: SportType; ageGroup: TypeNationalTeamAgeGroup; gender: TypeNationalTeamGender }
-  >;
-  workRelations: OverrideArray<
-    Fields['workRelations'],
-    { organization: Tenant; basis: TenantWorkRelations }
-  >;
-  competences: OverrideArray<Fields['competences'], { company: Tenant }>;
-  studies: OverrideArray<
-    Fields['studies'],
-    { company: TypeStudiesCompany; program: TypeStudiesProgram }
+  nationalTeams: Array<NationalTeam<'ageGroup' | 'gender' | 'sportType' | 'coaches' | 'athletes'>>;
+  bonuses: Array<Bonus<'result'>>;
+  competences: OverrideArray<
+    Fields['competences'],
+    {
+      company: EducationalCompany;
+      category: QualificationCategory;
+    }
   >;
 }
 
@@ -103,89 +75,66 @@ export type SportsPersonCoach<
         primaryKey: true,
         secure: true,
       },
-      sportsBases: {
-        ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
-        populate: `${SN_SPORTSBASES}.resolve`,
-      },
       nationalTeams: {
         type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            sportType: TYPE_ID_OR_OBJECT_WITH_ID,
-            ageGroup: TYPE_ID_OR_OBJECT_WITH_ID,
-            gender: TYPE_ID_OR_OBJECT_WITH_ID,
-            startAt: 'date',
-            endAt: 'date',
-          },
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        async get({ ctx, entity }: FieldHookCallback) {
+          if (!entity?.id) return [];
+
+          const sportsPerson: SportsPerson = await this.getSportsPerson(ctx, entity.id);
+          if (!sportsPerson?.id) return [];
+
+          return ctx.call(`${SN_NATIONALTEAMS}.find`, {
+            populate: ['ageGroup', 'gender', 'sportType', 'athletes', 'coaches'],
+            query: {
+              $raw: {
+                condition: `coaches @> ?`,
+                bindings: [sportsPerson.id],
+              },
+            },
+          });
         },
-        populate: PopulateHandlerFn({
-          sportType: `${SN_TYPES_SPORTTYPES}.resolve`,
-          ageGroup: `${SN_TYPES_NATIONAL_TEAM_AGE_GROUP}.resolve`,
-          gender: `${SN_TYPES_NATIONAL_TEAM_GENDER}.resolve`,
-        }),
       },
+
       bonuses: {
         type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            date: 'date',
-            amount: 'number',
-          },
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        async get({ ctx, entity }: FieldHookCallback) {
+          if (!entity?.id) return [];
+
+          const sportsPerson: SportsPerson = await this.getSportsPerson(ctx, entity.id);
+          if (!sportsPerson?.id) return [];
+
+          return ctx.call(`${SN_BONUSES}.find`, {
+            populate: ['results'],
+            query: {
+              sportsPerson: sportsPerson.id,
+            },
+          });
         },
       },
-      workRelations: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            organization: TYPE_ID_OR_OBJECT_WITH_ID,
-            basis: TYPE_ID_OR_OBJECT_WITH_ID,
-            position: 'string',
-            startAt: 'date',
-            endAt: 'date',
-          },
-        },
-        populate: PopulateHandlerFn({
-          organization: `${SN_TENANTS}.resolve`,
-          basis: `${SN_TENANTS_WORKRELATIONS}.resolve`,
-        }),
-      },
+
       competences: {
         type: 'array',
         items: {
           type: 'object',
           properties: {
             company: TYPE_ID_OR_OBJECT_WITH_ID,
-            documentNumber: 'string',
-            formCode: 'string',
-            position: 'string',
-            series: 'string',
+            category: TYPE_ID_OR_OBJECT_WITH_ID,
             issuedAt: 'date',
             expiresAt: 'date',
           },
         },
         populate: PopulateHandlerFn({
-          company: `${SN_TENANTS}.resolve`, // TODO: galimai bus kitaip??
+          company: `${SN_TYPES_EDUCATIONAL_COMPANIES}.resolve`,
+          category: `${SN_TYPES_QUALIFICATION_CATEGORIES}.resolve`,
         }),
       },
-      studies: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            company: TYPE_ID_OR_OBJECT_WITH_ID,
-            program: TYPE_ID_OR_OBJECT_WITH_ID,
-            startAt: 'date',
-            endAt: 'date',
-          },
-        },
-        populate: PopulateHandlerFn({
-          company: `${SN_TYPES_STUDIES_COMPANIES}.resolve`,
-          program: `${SN_TYPES_STUDIES_PROGRAMS}.resolve`,
-        }),
-      },
+
       ...COMMON_FIELDS,
     },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
@@ -193,4 +142,11 @@ export type SportsPersonCoach<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class extends moleculer.Service {}
+export default class extends moleculer.Service {
+  @Method
+  getSportsPerson(ctx: Context, entityId: unknown) {
+    return ctx.call(`${SN_SPORTSPERSONS}.findOne`, {
+      query: { coach: entityId },
+    });
+  }
+}

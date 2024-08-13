@@ -70,8 +70,8 @@ export function throwUnauthorizedError(message?: string): Errors.MoleculerError 
   throw new Moleculer.Errors.MoleculerClientError(message || `Unauthorized.`, 401, 'UNAUTHORIZED');
 }
 
-export function throwNotFoundError(message?: string): Errors.MoleculerError {
-  throw new Moleculer.Errors.MoleculerClientError(message || `Not found.`, 404, 'NOT_FOUND');
+export function throwNotFoundError(message?: string, data?: any): Errors.MoleculerError {
+  throw new Moleculer.Errors.MoleculerClientError(message || `Not found.`, 404, 'NOT_FOUND', data);
 }
 
 export function throwNoRightsError(message?: string): Errors.MoleculerError {

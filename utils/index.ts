@@ -1,6 +1,7 @@
 import { get, isEmpty } from 'lodash';
 import moment from 'moment';
-import { DateFormats } from '../types';
+import { SportsBase } from '../services/sportsBases/index.service';
+import { DBPagination, DateFormats } from '../types';
 
 export * from './scopes';
 export * from './temp';
@@ -25,34 +26,37 @@ export const handlePagination = ({
   data: any[];
   page: number;
   pageSize: number;
-}) => {
+}): DBPagination<any> => {
   const start = (page - 1) * pageSize;
   const end = page * pageSize;
   const totalPages = Math.ceil(data.length / pageSize);
   const rows = data.slice(start, end);
 
-  return { totalPages, page, rows };
+  return { rows, totalPages, page, total: data.length, pageSize };
 };
 
 export const sortByField = ({ data, field }: { data: any[]; field: string }) => {
-  if (isEmpty(data)) return [];
+  if (!Array.isArray(data) || data.length === 0) return [];
 
   const isDesc = field[0] === '-';
   const sortField = isDesc ? field.slice(1) : field;
   const isNumberValue = typeof get(data[0], sortField) === 'number';
 
   return data.sort((first, second) => {
+    const firstValue = get(first, sortField);
+    const secondValue = get(second, sortField);
+
     if (isDesc) {
       if (isNumberValue) {
-        return get(second, sortField) - get(first, sortField);
+        return (secondValue ?? 0) - (firstValue ?? 0);
       } else {
-        return get(second, sortField).localeCompare(get(first, sortField));
+        return (secondValue ?? '').localeCompare(firstValue ?? '');
       }
     } else {
       if (isNumberValue) {
-        return get(first, sortField) - get(second, sortField);
+        return (firstValue ?? 0) - (secondValue ?? 0);
       } else {
-        return get(first, sortField).localeCompare(get(second, sortField));
+        return (firstValue ?? '').localeCompare(secondValue ?? '');
       }
     }
   });
@@ -192,6 +196,20 @@ export const handleFormatResponse = ({
   };
 };
 
+export const getSportsBaseUniqueSportTypes = (
+  sportsBase:
+    | SportsBase<'spaces'>
+    | SportsBase<'tenant' | 'spaces' | 'tenants'>
+    | SportsBase<'spaces' | 'tenant' | 'type'>,
+) => {
+  const sportTypes = sportsBase.spaces.flatMap((space) => space.sportTypes);
+  const uniqueSportTypes = Array.from(new Set(sportTypes.map((sportType) => sportType.name))).map(
+    (name) => sportTypes.find((sportType) => sportType.name === name),
+  );
+
+  return uniqueSportTypes;
+};
+
 export const getFormattedDate = (date?: string | Date) => formatDate(date, DateFormats.DAY);
 
 export const getFormattedYear = (date?: string | Date) => formatDate(date, DateFormats.YEAR);
@@ -200,3 +218,15 @@ export const formatDate = (date: string | Date, format: DateFormats) =>
   date ? moment(date).format(format) : '-';
 
 export const parseDate = (date: string | Date) => moment(date, 'YYYY-MM-DD').startOf('day');
+
+export function parseQueryIfNeeded(query: any) {
+  if (!query) return query;
+
+  if (typeof query !== 'object') {
+    try {
+      query = JSON.parse(query);
+    } catch (err) {}
+  }
+
+  return query;
+}

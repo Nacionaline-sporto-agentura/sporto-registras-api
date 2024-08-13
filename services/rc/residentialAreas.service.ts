@@ -3,11 +3,10 @@ import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../../mixins/database.mixin';
 import RcSyncMixin from '../../mixins/rcSync.mixin';
-import { CommonFields } from '../../types';
 import { SN_RC_RESIDENTIAL_AREAS } from '../../types/serviceNames';
 import { tableName } from '../../utils';
 
-export interface RcResidentialArea extends CommonFields {
+export interface RcResidentialArea {
   id: number;
   name: string;
 }

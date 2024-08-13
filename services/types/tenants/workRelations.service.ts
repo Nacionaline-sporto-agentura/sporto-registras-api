@@ -48,7 +48,7 @@ export type TenantWorkRelations<
     scopes: { ...COMMON_SCOPES },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],
   },
-  actions: ACTIONS_MUTATE_ADMIN_ONLY,
+  actions: { ...ACTIONS_MUTATE_ADMIN_ONLY },
 })
 export default class extends moleculer.Service {
   @Method

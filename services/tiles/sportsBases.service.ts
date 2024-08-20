@@ -107,11 +107,41 @@ export function parseToJsonIfNeeded(query: QueryObject | string): QueryObject {
       address: {
         type: 'object',
         properties: {
-          municipality: 'string',
-          city: 'string',
-          street: 'string',
-          house: 'string',
-          apartment: 'string',
+          municipality: {
+            type: 'object',
+            properties: {
+              code: 'number',
+              name: 'string',
+            },
+          },
+          city: {
+            type: 'object',
+            properties: {
+              code: 'number',
+              name: 'string',
+            },
+          },
+          street: {
+            type: 'object',
+            properties: {
+              code: 'number',
+              name: 'string',
+            },
+          },
+          house: {
+            type: 'object',
+            properties: {
+              code: 'number',
+              plot_or_building_number: 'string',
+            },
+          },
+          apartment: {
+            type: 'object',
+            properties: {
+              code: 'number',
+              room_number: 'string',
+            },
+          },
         },
       },
       geom: {
@@ -140,17 +170,12 @@ export function parseToJsonIfNeeded(query: QueryObject | string): QueryObject {
         min: 1,
       },
       plotNumber: 'string',
-      disabledAccessible: 'boolean', // for people with physical disability
-      blindAccessible: 'boolean', // for blind people
       plotArea: 'number',
       builtPlotArea: 'number',
 
       parkingPlaces: 'number',
-      dressingRooms: 'number',
       methodicalClasses: 'number',
       saunas: 'number',
-      diningPlaces: 'number',
-      accommodationPlaces: 'number',
       publicWifi: 'boolean',
 
       plans: {

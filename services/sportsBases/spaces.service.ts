@@ -28,6 +28,7 @@ import {
   SN_TYPES_SPORTTYPES,
 } from '../../types/serviceNames';
 import { FieldTypes } from '../types/sportsBases/spaces/fields.service';
+import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
 import { SportBaseSpaceTypeAndField } from '../types/sportsBases/spaces/typesAndFields.service';
 import { SportsBasesType } from '../types/sportsBases/types.service';
 import { SportType } from '../types/sportTypes/index.service';
@@ -44,8 +45,8 @@ interface Fields extends CommonFields {
   buildingPurpose: string;
   buildingArea: number;
   energyClass: number;
-  constructionDate: Date;
-  latestRenovationDate: Date;
+  constructionDate: string;
+  latestRenovationDate: string;
   additionalValues: { [key: string]: any }[];
 }
 
@@ -114,7 +115,26 @@ export type SportBaseSpace<
         ...TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
         columnType: 'json',
         columnName: 'sportBaseSpaceSportTypes',
-        required: true,
+        async validate({ ctx, value, entity, params }: FieldHookCallback) {
+          const typeId = params.type || entity?.sportBaseSpaceTypeId;
+          if (!typeId) return true;
+
+          if (value?.length) return true;
+
+          const item: SportBaseSpaceType = await ctx.call(
+            `${SN_SPORTSBASES_SPACES_TYPES}.resolve`,
+            {
+              id: typeId,
+              throwIfNotExist: true,
+            },
+          );
+
+          if (item.needSportType && !value?.length) {
+            return 'sportTypes are required!';
+          }
+
+          return true;
+        },
         populate: {
           action: `${SN_TYPES_SPORTTYPES}.resolve`,
           params: {
@@ -137,8 +157,8 @@ export type SportBaseSpace<
       },
       buildingArea: 'number',
       energyClass: 'string',
-      constructionDate: 'date',
-      latestRenovationDate: 'date',
+      constructionDate: 'string|convert|max:4',
+      latestRenovationDate: 'string|convert|max:4',
 
       photos: {
         type: 'array',

@@ -67,7 +67,7 @@
     "moleculer-knex-filters": "github:DadPatch/moleculer-knex-filters",
     "moleculer-minio": "github:zeckon/moleculer-minio",
     "moleculer-postgis": "^0.3.3",
-    "moleculer-web": "^0.10.5",
+    "moleculer-web": "^0.10.7",
     "moment": "^2.30.1",
     "objection": "^3.0.1",
     "pg": "^8.10.0",

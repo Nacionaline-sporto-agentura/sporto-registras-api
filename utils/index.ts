@@ -200,7 +200,7 @@ export const getSportsBaseUniqueSportTypes = (
   sportsBase:
     | SportsBase<'spaces'>
     | SportsBase<'tenant' | 'spaces' | 'tenants'>
-    | SportsBase<'spaces' | 'tenant' | 'type'>,
+    | SportsBase<'spaces' | 'tenant' | 'type' | 'tenants'>,
 ) => {
   const sportTypes = sportsBase.spaces.flatMap((space) => space.sportTypes);
   const uniqueSportTypes = Array.from(new Set(sportTypes.map((sportType) => sportType.name))).map(

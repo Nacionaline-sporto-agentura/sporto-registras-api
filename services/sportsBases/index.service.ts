@@ -429,7 +429,7 @@ export default class extends moleculer.Service {
   async publicSportsRegisterCount(ctx: Context) {
     const sportBases = await ctx.call(`${SN_SPORTSBASES}.count`);
     const organizations = await ctx.call(`${SN_TENANTS}.count`, {
-      query: { tenantType: TenantTenantType.ORGANIZATION },
+      query: { name: { $exists: true }, tenantType: TenantTenantType.ORGANIZATION },
     });
 
     const sportsPersons = await ctx.call(`${SN_SPORTSPERSONS}.count`);
@@ -554,8 +554,8 @@ export default class extends moleculer.Service {
       },
       address: sportsBase.address,
       spaceBuildingDate: sportsBase.spaces.reduce((oldest, current) => {
-        return new Date(current.createdAt) < new Date(oldest) ? current.createdAt : oldest;
-      }, sportsBase.spaces[0].createdAt),
+        return current.constructionDate < oldest ? current.constructionDate : oldest;
+      }, sportsBase.spaces[0].constructionDate),
       type: sportsBase.type,
       spaces: sportsBase?.spaces?.map((space) => ({
         name: space?.name,

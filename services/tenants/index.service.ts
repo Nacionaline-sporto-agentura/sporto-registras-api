@@ -600,6 +600,7 @@ export default class extends moleculer.Service {
       fields: ['id', 'name', 'address', 'data', 'sportsBases', 'type'],
       populate: ['sportsBases', 'legalForm', 'type'],
       query: {
+        name: { $exists: true },
         tenantType: TenantTenantType.ORGANIZATION,
       },
     });

@@ -574,7 +574,7 @@ export default class extends moleculer.Service {
       tenants: sportsBase?.tenants?.map((tenant) => ({
         name: tenant.companyName,
         code: tenant.companyCode,
-        basis: tenant.basis,
+        basis: { id: tenant.basis.id, name: tenant.basis.name },
       })),
       sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
     };

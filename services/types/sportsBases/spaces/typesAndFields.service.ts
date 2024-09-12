@@ -74,6 +74,7 @@ export type SportBaseSpaceTypeAndField<
   actions: { ...ACTIONS_MUTATE_ADMIN_ONLY },
 })
 export default class extends moleculer.Service {
+  // todo: remove
   @Action({
     rest: <RestSchema>{
       method: 'GET',

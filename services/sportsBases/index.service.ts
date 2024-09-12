@@ -31,6 +31,7 @@ import {
   SN_SPORTSBASES_SPACES_TYPES,
   SN_SPORTSBASES_TECHNICALCONDITIONS,
   SN_SPORTSBASES_TENANTS,
+  SN_SPORTSBASES_TENANTS_BASIS,
   SN_SPORTSBASES_TYPES,
   SN_SPORTSPERSONS,
   SN_TENANTS,
@@ -51,6 +52,7 @@ import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
 import SportsBasesTechnicalConditionsService, {
   SportsBasesTechicalCondition,
 } from '../types/sportsBases/technicalConditions.service';
+import { SportsBasesTenantsBasis } from '../types/sportsBases/tenants/basis.service';
 import { SportsBasesType } from '../types/sportsBases/types.service';
 import { SportBaseInvestment } from './investments/index.service';
 import { SportsBaseOwner } from './owners.service';
@@ -419,6 +421,7 @@ export default class extends moleculer.Service {
     });
   }
 
+  // TODO: remove
   @Action({
     rest: <RestSchema>{
       method: 'GET',
@@ -429,7 +432,7 @@ export default class extends moleculer.Service {
   async publicSportsRegisterCount(ctx: Context) {
     const sportBases = await ctx.call(`${SN_SPORTSBASES}.count`);
     const organizations = await ctx.call(`${SN_TENANTS}.count`, {
-      query: { name: { $exists: true }, tenantType: TenantTenantType.ORGANIZATION },
+      query: { tenantType: TenantTenantType.ORGANIZATION },
     });
 
     const sportsPersons = await ctx.call(`${SN_SPORTSPERSONS}.count`);
@@ -437,6 +440,7 @@ export default class extends moleculer.Service {
     return { sportBases, organizations, sportsPersons };
   }
 
+  // TODO: remove
   @Action({
     rest: <RestSchema>{
       method: 'GET',
@@ -500,6 +504,7 @@ export default class extends moleculer.Service {
     });
   }
 
+  // TODO: remove
   @Action({
     rest: <RestSchema>{
       method: 'GET',
@@ -528,10 +533,9 @@ export default class extends moleculer.Service {
           'publicWifi',
           'address',
           'tenant',
-          'tenants',
           'spaces',
         ],
-        populate: ['spaces', 'tenant', 'tenants'],
+        populate: ['spaces', 'tenant'],
         id: ctx.params.id,
         throwIfNotExist: true,
       },
@@ -555,8 +559,8 @@ export default class extends moleculer.Service {
       },
       address: sportsBase.address,
       spaceBuildingDate: sportsBase.spaces.reduce((oldest, current) => {
-        return current.constructionDate < oldest ? current.constructionDate : oldest;
-      }, sportsBase.spaces[0].constructionDate),
+        return new Date(current.createdAt) < new Date(oldest) ? current.createdAt : oldest;
+      }, sportsBase.spaces[0].createdAt),
       type: sportsBase.type,
       spaces: sportsBase?.spaces?.map((space) => ({
         name: space?.name,
@@ -574,7 +578,7 @@ export default class extends moleculer.Service {
       tenants: sportsBase?.tenants?.map((tenant) => ({
         name: tenant.companyName,
         code: tenant.companyCode,
-        basis: { id: tenant.basis.id, name: tenant.basis.name },
+        basis: tenant.basis,
       })),
       sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
     };
@@ -612,9 +616,12 @@ export default class extends moleculer.Service {
     const sportsBasesInvestmentsSources: SportBaseInvestmentSource[] = await ctx.call(
       `${SN_SPORTSBASES_INVESTMENTS_SOURCES}.find`,
     );
+    const sportsBasesTenantsBasis: SportsBasesTenantsBasis[] = await ctx.call(
+      `${SN_SPORTSBASES_TENANTS_BASIS}.find`,
+    );
 
-    function randomArray(length: number, cb: Function) {
-      return Array.apply(null, Array(faker.number.int({ min: 1, max: length }))).map(cb);
+    function randomArray(length: number, cb: Function, min: number = 1) {
+      return Array.apply(null, Array(faker.number.int({ min, max: length }))).map(cb);
     }
 
     function getPhotos() {
@@ -696,10 +703,11 @@ export default class extends moleculer.Service {
         spaces: randomArray(3, () => ({
           name: faker.lorem.words({ min: 1, max: 3 }),
           technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions),
+          constructionDate: faker.date.anytime().getFullYear(),
           type: faker.helpers.arrayElement(sportsBasesSpacesTypes),
           buildingPurpose: faker.lorem.words({ min: 1, max: 2 }),
           energyClass: faker.string.alpha().toUpperCase(),
-          sportTypes: faker.helpers.arrayElements(sportsBasesSpacesSportTypes),
+          sportTypes: faker.helpers.arrayElements(sportsBasesSpacesSportTypes, { min: 1, max: 10 }),
           buildingNumber: faker.number.int(10000),
           buildingArea: faker.number.int(1000),
           photos: getPhotos(),
@@ -710,8 +718,14 @@ export default class extends moleculer.Service {
           improvements: faker.lorem.sentence(),
           appointedAt: faker.date.anytime(),
         })),
+        tenants: randomArray(3, () => ({
+          companyName: faker.company.name(),
+          companyCode: faker.number.int({ min: 100000000, max: 999999999 }),
+          basis: faker.helpers.arrayElement(sportsBasesTenantsBasis).id,
+        })),
         geom: getGeom(),
       }),
+      5,
     );
   }
 

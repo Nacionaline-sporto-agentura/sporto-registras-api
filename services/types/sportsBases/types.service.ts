@@ -2,6 +2,7 @@
 import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../../../mixins/database.mixin';
+import { PublicActions } from '../../../mixins/publicActions.mixin';
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
   COMMON_DEFAULT_SCOPES,
@@ -22,6 +23,10 @@ export interface SportsBasesType extends CommonFields {
   mixins: [
     DbConnection({
       collection: tableName(SN_SPORTSBASES_TYPES),
+    }),
+    PublicActions({
+      fields: ['id', 'name'],
+      path: '/sportsBaseTypes',
     }),
   ],
   settings: {

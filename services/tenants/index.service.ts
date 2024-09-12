@@ -561,6 +561,7 @@ export default class extends moleculer.Service {
     return ctx.call('tenants.list', params);
   }
 
+  // todo: remove
   @Action({
     rest: <RestSchema>{
       method: 'GET',
@@ -600,7 +601,6 @@ export default class extends moleculer.Service {
       fields: ['id', 'name', 'address', 'data', 'sportsBases', 'type'],
       populate: ['sportsBases', 'legalForm', 'type'],
       query: {
-        name: { $exists: true },
         tenantType: TenantTenantType.ORGANIZATION,
       },
     });
@@ -646,6 +646,7 @@ export default class extends moleculer.Service {
     });
   }
 
+  // todo: remove
   @Action({
     rest: <RestSchema>{
       method: 'GET',
@@ -699,7 +700,6 @@ export default class extends moleculer.Service {
     const uniqueSportTypes = this.getOrganizationUniqueSportTypes(organization);
 
     const sportsBases = organization?.sportsBases?.map((sportsBase) => ({
-      id: sportsBase?.id,
       name: sportsBase?.name,
       address: sportsBase?.address,
       sportTypes: getSportsBaseUniqueSportTypes(sportsBase),

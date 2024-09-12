@@ -349,6 +349,7 @@ export default class extends moleculer.Service {
     });
   }
 
+  // todo: remove
   @Action({
     rest: <RestSchema>{
       method: 'GET',

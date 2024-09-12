@@ -65,3 +65,5 @@ export const SN_RC_RESIDENTIAL_AREAS = 'rc.residentialAreas';
 export const SN_RC_ROOMS = 'rc.rooms';
 export const SN_RC_STREETS = 'rc.streets';
 export const SN_RC = 'rc';
+export const SN_PUBLIC_SPORTS_BASES = 'public.sportsBases';
+export const SN_PUBLIC_ORGANIZATIONS = 'public.organizations';

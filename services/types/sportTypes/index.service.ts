@@ -3,6 +3,7 @@ import moleculer from 'moleculer';
 import { Method, Service } from 'moleculer-decorators';
 import DbConnection from '../../../mixins/database.mixin';
 
+import { PublicActions } from '../../../mixins/publicActions.mixin';
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
   COMMON_DEFAULT_SCOPES,
@@ -37,6 +38,10 @@ export type SportType<
   mixins: [
     DbConnection({
       collection: tableName(SN_TYPES_SPORTTYPES),
+    }),
+    PublicActions({
+      fields: ['id', 'name'],
+      path: '/sportsTypes',
     }),
   ],
   settings: {

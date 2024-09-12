@@ -5,6 +5,11 @@ import { Context } from 'moleculer';
 const DbService = require('@moleculer/database').Service;
 const knex = require('../knexfile');
 
+export const MaterializedView = {
+  ORGANIZATIONS: 'publishing.organizations',
+  SPORTS_BASES: 'publishing.sportsBases',
+};
+
 type ActionType = string | { [key: string]: string };
 
 const PromiseAllObject = (obj: any) => {
@@ -221,6 +226,14 @@ export default function (opts: any = {}) {
         queryIds = (Array.isArray(queryIds) ? queryIds : [queryIds]).map((id: any) => parseInt(id));
 
         return ids.filter((id) => queryIds.indexOf(id) >= 0);
+      },
+      async refreshMaterializedView(ctx: Context, name: string) {
+        const adapter = await this.getAdapter(ctx);
+
+        await adapter.client.schema.refreshMaterializedView(name);
+        return {
+          success: true,
+        };
       },
       async rawQuery(ctx: Context, sql: string) {
         const adapter = await this.getAdapter(ctx);

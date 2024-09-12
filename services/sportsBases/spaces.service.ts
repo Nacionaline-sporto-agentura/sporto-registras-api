@@ -85,7 +85,7 @@ export type SportBaseSpace<
         populate: {
           action: `${SN_SPORTSBASES_TECHNICALCONDITIONS}.resolve`,
           params: {
-            fields: 'id,name',
+            fields: 'id,name,color',
           },
         },
       },

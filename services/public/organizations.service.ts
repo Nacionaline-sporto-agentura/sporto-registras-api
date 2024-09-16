@@ -1,9 +1,9 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
-import DbConnection from '../../mixins/database.mixin';
+import DbConnection, { MaterializedView } from '../../mixins/database.mixin';
 
-import { COMMON_FIELDS, ONLY_GET_REST_ENABLED, RestrictionType } from '../../types';
+import { ONLY_GET_REST_ENABLED, RestrictionType } from '../../types';
 
 import { SN_PUBLIC_ORGANIZATIONS } from '../../types/serviceNames';
 
@@ -11,7 +11,7 @@ import { SN_PUBLIC_ORGANIZATIONS } from '../../types/serviceNames';
   name: SN_PUBLIC_ORGANIZATIONS,
   mixins: [
     DbConnection({
-      collection: 'publishing.organizations',
+      collection: MaterializedView.ORGANIZATIONS,
     }),
   ],
   settings: {
@@ -119,7 +119,6 @@ import { SN_PUBLIC_ORGANIZATIONS } from '../../types/serviceNames';
           },
         },
       },
-      ...COMMON_FIELDS,
     },
   },
   actions: { ...ONLY_GET_REST_ENABLED },

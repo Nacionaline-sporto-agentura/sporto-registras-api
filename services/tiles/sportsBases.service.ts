@@ -4,29 +4,17 @@ import { Knex } from 'knex';
 import moleculer, { Context, GenericObject } from 'moleculer';
 import { Action, Event, Method, Service } from 'moleculer-decorators';
 import PostgisMixin from 'moleculer-postgis';
-import { PopulateHandlerFn } from 'moleculer-postgis/src/mixin';
 import Supercluster from 'supercluster';
-import DbConnection from '../../mixins/database.mixin';
+import DbConnection, { MaterializedView } from '../../mixins/database.mixin';
 import {
-  COMMON_DEFAULT_SCOPES,
-  COMMON_FIELDS,
-  COMMON_SCOPES,
+  ONLY_GET_REST_ENABLED,
   QueryObject,
   RestrictionType,
   throwNotFoundError,
 } from '../../types';
 // @ts-ignore
 import vtpbf from 'vt-pbf';
-import {
-  SN_SPORTSBASES_INVESTMENTS,
-  SN_SPORTSBASES_LEVELS,
-  SN_SPORTSBASES_OWNERS,
-  SN_SPORTSBASES_SPACES,
-  SN_SPORTSBASES_TECHNICALCONDITIONS,
-  SN_SPORTSBASES_TENANTS,
-  SN_SPORTSBASES_TYPES,
-  SN_TILES_SPORTSBASES,
-} from '../../types/serviceNames';
+import { SN_TILES_SPORTSBASES } from '../../types/serviceNames';
 import { SportsBase } from '../sportsBases/index.service';
 
 export type TilesSportsBase = SportsBase;
@@ -65,13 +53,7 @@ export function parseToJsonIfNeeded(query: QueryObject | string): QueryObject {
   name: SN_TILES_SPORTSBASES,
   mixins: [
     DbConnection({
-      collection: 'sportsBases',
-      createActions: {
-        create: false,
-        update: false,
-        createMany: false,
-        remove: false,
-      },
+      collection: MaterializedView.SPORTS_BASES,
     }),
     PostgisMixin({
       srid: WGS_SRID,
@@ -81,6 +63,7 @@ export function parseToJsonIfNeeded(query: QueryObject | string): QueryObject {
     }),
   ],
   settings: {
+    auth: RestrictionType.PUBLIC,
     fields: {
       id: {
         type: 'number',
@@ -91,19 +74,19 @@ export function parseToJsonIfNeeded(query: QueryObject | string): QueryObject {
       name: 'string',
       email: 'string',
       phone: 'string',
-      type: {
-        columnName: 'sportBaseTypeId',
-        populate: `${SN_SPORTSBASES_TYPES}.resolve`,
+      photos: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            url: 'string',
+            public: 'boolean',
+            description: 'string',
+            representative: 'boolean',
+          },
+        },
       },
-      level: {
-        columnName: 'sportBaseLevelId',
-        populate: `${SN_SPORTSBASES_LEVELS}.resolve`,
-      },
-      technicalCondition: {
-        columnName: 'sportBaseTechnicalConditionId',
-        populate: `${SN_SPORTSBASES_TECHNICALCONDITIONS}.resolve`,
-      },
-
+      webPage: 'string',
       address: {
         type: 'object',
         properties: {
@@ -144,159 +127,96 @@ export function parseToJsonIfNeeded(query: QueryObject | string): QueryObject {
           },
         },
       },
-      geom: {
-        type: 'any',
-        geom: {
-          properties: ['id'],
-        },
-      },
-      webPage: 'string',
-      photos: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            url: 'string',
-            description: 'string',
-            representative: {
-              type: 'boolean',
-            },
-            public: {
-              type: 'boolean',
-            },
-          },
-        },
-        validate: 'validatePhotos',
-        min: 1,
-      },
-      plotNumber: 'string',
-      plotArea: 'number',
-      builtPlotArea: 'number',
-
       parkingPlaces: 'number',
       methodicalClasses: 'number',
       saunas: 'number',
       publicWifi: 'boolean',
-
-      plans: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            url: 'string',
-            name: 'string',
-            size: 'number',
-          },
+      geom: {
+        type: 'any',
+        geom: true,
+      },
+      tenant: {
+        type: 'object',
+        properties: {
+          id: 'number',
+          name: 'string',
+          phone: 'string',
+          email: 'string',
+          url: 'string',
         },
-        min: 0,
-        default: [],
       },
 
       spaces: {
         type: 'array',
-        items: { type: 'object' },
-        virtual: true,
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSBASES_SPACES}.populateByProp`),
-          params: {
-            queryKey: 'sportBase',
-            mappingMulti: true,
-            populate: ['technicalCondition', 'type', 'sportTypes', 'buildingType'],
-            sort: 'name',
+        items: {
+          type: 'object',
+          properties: {
+            id: 'number',
+            name: 'string',
+            type: {
+              type: 'object',
+              properties: {
+                id: 'number',
+                name: 'string',
+              },
+            },
+            sportTypes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: 'number',
+                  name: 'string',
+                },
+              },
+            },
+            additionalValues: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: 'number',
+                  name: 'string',
+                  value: 'string',
+                },
+              },
+            },
+            constructionDate: 'string',
+            technicalCondition: {
+              type: 'object',
+              properties: {
+                id: 'number',
+                name: 'string',
+                color: 'string',
+              },
+            },
           },
-        },
-        requestHandler: {
-          service: SN_SPORTSBASES_SPACES,
-          relationField: 'sportBase',
         },
       },
 
-      investments: {
+      sportTypes: {
         type: 'array',
-        items: { type: 'object' },
-        virtual: true,
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSBASES_INVESTMENTS}.populateByProp`),
-          params: {
-            queryKey: 'sportBase',
-            mappingMulti: true,
-            populate: ['items'],
-            sort: '-createdAt',
+        items: {
+          type: 'object',
+          properties: {
+            id: 'number',
+            name: 'string',
           },
         },
-        requestHandler: {
-          service: SN_SPORTSBASES_INVESTMENTS,
-          relationField: 'sportBase',
+      },
+      constructionDate: 'string',
+      type: {
+        type: 'object',
+        properties: {
+          id: 'number',
+          name: 'string',
         },
       },
-
-      owners: {
-        type: 'array',
-        items: { type: 'object' },
-        virtual: true,
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSBASES_OWNERS}.populateByProp`),
-          params: {
-            queryKey: 'sportBase',
-            mappingMulti: true,
-            populate: ['user', 'tenant'],
-            sort: '-createdAt',
-          },
-        },
-        requestHandler: {
-          service: SN_SPORTSBASES_OWNERS,
-          relationField: 'sportBase',
-        },
-      },
-
-      tenants: {
-        type: 'array',
-        items: { type: 'object' },
-        virtual: true,
-        readonly: true,
-        populate: {
-          keyField: 'id',
-          handler: PopulateHandlerFn(`${SN_SPORTSBASES_TENANTS}.populateByProp`),
-          params: {
-            queryKey: 'sportBase',
-            mappingMulti: true,
-            populate: ['basis'],
-            sort: '-createdAt',
-          },
-        },
-        requestHandler: {
-          service: SN_SPORTSBASES_TENANTS,
-          relationField: 'sportBase',
-        },
-      },
-
-      ...COMMON_FIELDS,
-    },
-    scopes: {
-      ...COMMON_SCOPES,
-    },
-    defaultScopes: [...COMMON_DEFAULT_SCOPES],
-  },
-  actions: {
-    list: {
-      auth: RestrictionType.PUBLIC,
-    },
-    get: {
-      auth: RestrictionType.PUBLIC,
-    },
-    find: {
-      rest: null,
-    },
-    count: {
-      rest: null,
     },
   },
+
+  actions: { ...ONLY_GET_REST_ENABLED },
+
   hooks: {
     before: {
       list: ['applyFilters'],

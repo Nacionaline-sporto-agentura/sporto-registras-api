@@ -14,7 +14,7 @@ import {
   throwNotFoundError,
   throwUnauthorizedError,
 } from '../types';
-import { SN_AUTH, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
+import { SN_AUTH, SN_TENANTS, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
 import { UserAuthMeta } from './api.service';
 import { Tenant } from './tenants/index.service';
 import { User, UserType } from './users.service';
@@ -235,6 +235,7 @@ export default class extends moleculer.Service {
   })
   async findIdsByTenant(ctx: Context<{ id: number; role?: string }>) {
     const { id, role } = ctx.params;
+
     const query: any = {
       tenant: id,
     };
@@ -544,15 +545,24 @@ export default class extends moleculer.Service {
   async addUser(ctx: Context<{ userId: number; tenantId: number; role: string }, UserAuthMeta>) {
     const { profile } = ctx.meta;
     const { userId, tenantId, role } = ctx.params;
-    if (
-      profile?.id &&
-      (Number(profile?.id) !== tenantId || profile?.role !== TenantUserRole.ADMIN)
-    ) {
-      return throwUnauthorizedError('Tenant is not accessable.');
+
+    if (profile?.id) {
+      const availableTenantIds: number[] = await ctx.call(`${SN_TENANTS}.getAvailableTenantIds`, {
+        id: profile.id,
+      });
+
+      const availableTenantIdsWithoutProfile = availableTenantIds?.filter((i) => i !== profile.id);
+
+      const sameProfileEditing = profile.id === tenantId && profile.role === TenantUserRole.ADMIN;
+
+      if (!sameProfileEditing && !availableTenantIdsWithoutProfile.includes(tenantId)) {
+        return throwUnauthorizedError('Tenant is not accessable.');
+      }
     }
 
-    const user: User = await ctx.call(`${SN_USERS}.resolve`, { id: userId });
+    const user: User = await ctx.call(`${SN_USERS}.resolve`, { id: userId, scope: '-tenant' });
     const tenant: Tenant = await ctx.call('tenants.resolve', { id: tenantId });
+
     if (!user || !tenant) {
       return throwNotFoundError('User/Tenant not found.');
     }

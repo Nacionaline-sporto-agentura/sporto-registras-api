@@ -64,6 +64,7 @@ interface Fields extends CommonFields {
   address: string;
   sportsBases: undefined;
   type: undefined;
+  children: undefined;
   data: {
     url: string;
     foundedAt: Date;
@@ -77,6 +78,7 @@ interface Fields extends CommonFields {
 interface Populates extends CommonPopulates {
   role: TenantUserRole;
   authGroup: any;
+  children: Tenant[];
   parent: Tenant;
   type: TenantSportOrganizationTypes;
   fundingSources: Array<TenantFundingSource<'type'>>;
@@ -740,4 +742,35 @@ export default class extends moleculer.Service {
 
     return uniqueSportTypes;
   };
+
+  @Action({
+    params: {
+      id: 'number|convert',
+    },
+  })
+  async getAvailableTenantIds(ctx: Context<{ id: number }>) {
+    const { id } = ctx.params;
+
+    const availableTenant: Tenant<'children'> = await ctx.call(`${SN_TENANTS}.resolve`, {
+      id,
+      populate: 'children',
+      scopes: ['-user', '-noParent'],
+    });
+
+    const flattenChildren = (tenant: Tenant<'children'>): number[] => {
+      const result: number[] = [];
+
+      const getChildrenIds = (tenant: Tenant<'children'>) => {
+        result.push(tenant.id);
+        if (!!tenant.children?.length) {
+          tenant.children.forEach((child) => getChildrenIds(child));
+        }
+      };
+
+      getChildrenIds(tenant);
+      return result;
+    };
+
+    return flattenChildren(availableTenant);
+  }
 }

@@ -1,9 +1,9 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
-import DbConnection from '../../mixins/database.mixin';
+import DbConnection, { MaterializedView } from '../../mixins/database.mixin';
 
-import { COMMON_FIELDS, ONLY_GET_REST_ENABLED, RestrictionType } from '../../types';
+import { ONLY_GET_REST_ENABLED, RestrictionType } from '../../types';
 
 import PostgisMixin from 'moleculer-postgis';
 import { SN_PUBLIC_SPORTS_BASES } from '../../types/serviceNames';
@@ -13,7 +13,7 @@ import { LKS_SRID } from '../tiles/sportsBases.service';
   name: SN_PUBLIC_SPORTS_BASES,
   mixins: [
     DbConnection({
-      collection: 'publishing.sportsBases',
+      collection: MaterializedView.SPORTS_BASES,
     }),
     PostgisMixin({
       srid: LKS_SRID,
@@ -172,7 +172,6 @@ import { LKS_SRID } from '../tiles/sportsBases.service';
           name: 'string',
         },
       },
-      ...COMMON_FIELDS,
     },
   },
   actions: { ...ONLY_GET_REST_ENABLED },

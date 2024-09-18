@@ -3,7 +3,7 @@ import * as jsonpatch from 'fast-json-patch';
 import { Operation } from 'fast-json-patch';
 import moleculer, { Context } from 'moleculer';
 import { Action, Event, Method, Service } from 'moleculer-decorators';
-import DbConnection from '../../mixins/database.mixin';
+import DbConnection, { MaterializedView } from '../../mixins/database.mixin';
 
 import _ from 'lodash';
 import {
@@ -454,6 +454,9 @@ export default class extends moleculer.Service {
             entity: entityWithId.id,
           });
         }
+
+        await this.refreshMaterializedView(ctx, MaterializedView.ORGANIZATIONS);
+        await this.refreshMaterializedView(ctx, MaterializedView.SPORTS_BASES);
       }
     }
   }

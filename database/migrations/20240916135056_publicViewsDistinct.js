@@ -1,3 +1,7 @@
+const {
+  sportsBasesQuery: sportsBasesQueryOld,
+  organizationsQuery: organizationsQueryOld,
+} = require('./20240911150952_addingPublicViews');
 const sportsBasesQuery = `
 WITH fields_translates AS (
   SELECT
@@ -31,7 +35,7 @@ mapped_sport_types AS (
   SELECT
     sbsst.id AS space_id,
     jsonb_agg(
-      jsonb_build_object('id', sbsst.st_id, 'name', sbsst.st_name)
+      DISTINCT jsonb_build_object('id', sbsst.st_id, 'name', sbsst.st_name)
     ) AS sport_types
   FROM
     (
@@ -51,7 +55,7 @@ mapped_additional_values AS (
   SELECT
     sbs.id AS space_id,
     jsonb_agg(
-      jsonb_build_object(
+      DISTINCT jsonb_build_object(
         'id',
         ft.id,
         'name',
@@ -96,7 +100,7 @@ mapped_sports_spaces AS (
     jsonb_agg(DISTINCT st.item) AS sport_types,
     min(sbs.construction_date) AS construction_date,
     jsonb_agg(
-      jsonb_build_object(
+      DISTINCT jsonb_build_object(
         'id',
         sbs.id,
         'name',
@@ -185,7 +189,7 @@ mapped_sport_types AS (
   SELECT
     sbsst.id AS space_id,
     jsonb_agg(
-      jsonb_build_object('id', sbsst.st_id, 'name', sbsst.st_name)
+      DISTINCT jsonb_build_object('id', sbsst.st_id, 'name', sbsst.st_name)
     ) AS sport_types
   FROM
     (
@@ -217,7 +221,7 @@ mapped_sports_bases AS (
     sb.tenant_id,
     jsonb_agg(DISTINCT st.item) AS sports_types,
     jsonb_agg(
-      jsonb_build_object(
+      DISTINCT jsonb_build_object(
         'id',
         sb.id,
         'name',
@@ -304,8 +308,10 @@ exports.organizationsQuery = organizationsQuery;
  */
 exports.up = function (knex) {
   return knex.schema
-    .raw('CREATE SCHEMA IF NOT EXISTS publishing')
     .withSchema('publishing')
+    .raw(`DROP INDEX publishing.publishing_sports_bases_geom_idx`)
+    .dropMaterializedView('sportsBases')
+    .dropMaterializedView('organizations')
     .createMaterializedView('sportsBases', function (view) {
       view.as(knex.raw(sportsBasesQuery));
     })
@@ -327,5 +333,13 @@ exports.down = function (knex) {
     .raw(`DROP INDEX publishing.publishing_sports_bases_geom_idx`)
     .dropMaterializedView('sportsBases')
     .dropMaterializedView('organizations')
-    .raw('DROP SCHEMA IF EXISTS publishing');
+    .createMaterializedView('sportsBases', function (view) {
+      view.as(knex.raw(sportsBasesQueryOld));
+    })
+    .raw(
+      `CREATE INDEX publishing_sports_bases_geom_idx ON publishing.sports_bases USING GIST (geom)`,
+    )
+    .createMaterializedView('organizations', function (view) {
+      view.as(knex.raw(organizationsQueryOld));
+    });
 };

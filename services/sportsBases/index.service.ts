@@ -271,14 +271,13 @@ export type SportsBase<
         min: 1,
         required: true,
       },
-      plotNumber: 'string|required',
-      plotArea: 'number|required',
+      plotNumber: 'string',
+      plotArea: 'number',
       areaUnits: {
         type: 'enum',
-        required: true,
         values: Object.values(AreaUnits),
       },
-      builtPlotArea: 'number|required',
+      builtPlotArea: 'number',
 
       parkingPlaces: 'number|required',
       methodicalClasses: 'number|required',

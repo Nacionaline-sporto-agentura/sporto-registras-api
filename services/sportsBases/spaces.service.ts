@@ -1,6 +1,6 @@
 'use strict';
-import moleculer from 'moleculer';
-import { Method, Service } from 'moleculer-decorators';
+import moleculer, { Context } from 'moleculer';
+import { Event, Method, Service } from 'moleculer-decorators';
 import DbConnection from '../../mixins/database.mixin';
 
 import RequestMixin from '../../mixins/request.mixin';
@@ -10,6 +10,7 @@ import {
   COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  EntityChangedParams,
   FieldHookCallback,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
@@ -153,7 +154,6 @@ export type SportBaseSpace<
       buildingNumber: {
         type: 'string',
         required: true,
-        validate: 'validateBuildingNumber',
       },
       buildingArea: 'number',
       energyClass: 'string',
@@ -202,19 +202,6 @@ export default class extends moleculer.Service {
       value.filter((photo: any) => photo.representative).length === 1 ||
       'One photo must be representative'
     );
-  }
-
-  @Method
-  async validateBuildingNumber({ value, entity }: FieldHookCallback) {
-    if (entity?.buildingNumber !== value) {
-      const found: number = await this.broker.call(`${SN_SPORTSBASES_SPACES}.count`, {
-        query: { buildingNumber: value },
-      });
-      if (!!found) {
-        return `Sports base with buildingNumber '${value}' already exists.`;
-      }
-    }
-    return true;
   }
 
   @Method
@@ -272,5 +259,16 @@ export default class extends moleculer.Service {
     }
 
     return true;
+  }
+
+  @Event()
+  async 'sportsBases.removed'(ctx: Context<EntityChangedParams<SportsBase>>) {
+    const sportBase = ctx.params.data as SportsBase;
+
+    await this.removeEntities(ctx, {
+      query: {
+        sportBase: sportBase.id,
+      },
+    });
   }
 }

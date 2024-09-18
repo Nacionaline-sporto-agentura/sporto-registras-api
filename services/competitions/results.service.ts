@@ -1,6 +1,6 @@
 'use strict';
-import moleculer from 'moleculer';
-import { Service } from 'moleculer-decorators';
+import moleculer, { Context } from 'moleculer';
+import { Event, Service } from 'moleculer-decorators';
 import DbConnection from '../../mixins/database.mixin';
 import RequestMixin from '../../mixins/request.mixin';
 import {
@@ -10,9 +10,10 @@ import {
   COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
-  Table,
+  EntityChangedParams,
   TYPE_ID_OR_OBJECT_WITH_ID,
   TYPE_MULTI_ID_OR_OBJECT_WITH_ID,
+  Table,
 } from '../../types';
 import {
   SN_COMPETITIONS,
@@ -137,4 +138,15 @@ export type CompetitionResult<
   },
   actions: { ...ACTIONS_MUTATE_ADMIN_ONLY },
 })
-export default class extends moleculer.Service {}
+export default class extends moleculer.Service {
+  @Event()
+  async 'competitions.removed'(ctx: Context<EntityChangedParams<Competition>>) {
+    const competition = ctx.params.data as Competition;
+
+    await this.removeEntities(ctx, {
+      query: {
+        competition: competition.id,
+      },
+    });
+  }
+}

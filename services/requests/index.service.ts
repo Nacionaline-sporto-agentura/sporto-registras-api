@@ -402,6 +402,54 @@ export default class extends moleculer.Service {
     });
   }
 
+  @Action({
+    // TODO: superadmin only?
+    auth: RestrictionType.ADMIN,
+    rest: 'POST /:id/apply',
+    timeout: 0,
+  })
+  async apply(ctx: Context<{ id: Request['id'] }>) {
+    const request: Request<'entity'> = await this.resolveEntities(ctx, {
+      id: ctx.params.id,
+      populate: 'entity',
+    });
+    const oldEntity = request.entity;
+    const entity = jsonpatch.applyPatch(oldEntity, request.changes, false, false).newDocument;
+
+    const serviceName = SERVICE_BY_REQUEST_TYPE[request.entityType];
+
+    const meta: Partial<UserAuthMeta> = {};
+
+    if (request.createdBy) {
+      meta.user = await ctx.call(`${SN_USERS}.resolve`, { id: request.createdBy });
+    }
+    if (request.tenant) {
+      meta.profile = await ctx.call('tenants.resolve', { id: request.tenant });
+    }
+
+    const entityWithId: { id: number } = await ctx.call(
+      `${serviceName}.applyOrValidateRequestChanges`,
+      {
+        entity,
+        oldEntity,
+        apply: true,
+      },
+      {
+        meta,
+      },
+    );
+
+    if (!request.entity?.id) {
+      await this.updateEntity(ctx, {
+        id: request.id,
+        entity: entityWithId.id,
+      });
+    }
+
+    await this.refreshMaterializedView(ctx, MaterializedView.ORGANIZATIONS);
+    await this.refreshMaterializedView(ctx, MaterializedView.SPORTS_BASES);
+  }
+
   @Event()
   async 'requests.updated'(ctx: Context<EntityChangedParams<Request>>) {
     const { oldData, data } = ctx.params;
@@ -418,45 +466,7 @@ export default class extends moleculer.Service {
       await this.createRequestHistory(ctx, data, typesByStatus[data.status]);
 
       if (data.status === RequestStatus.APPROVED) {
-        const request: Request<'entity'> = await this.resolveEntities(ctx, {
-          id: data.id,
-          populate: 'entity',
-        });
-        const oldEntity = request.entity;
-        const entity = jsonpatch.applyPatch(oldEntity, request.changes, false, false).newDocument;
-
-        const serviceName = SERVICE_BY_REQUEST_TYPE[request.entityType];
-
-        const meta: Partial<UserAuthMeta> = {};
-
-        if (request.createdBy) {
-          meta.user = await ctx.call(`${SN_USERS}.resolve`, { id: request.createdBy });
-        }
-        if (request.tenant) {
-          meta.profile = await ctx.call('tenants.resolve', { id: request.tenant });
-        }
-
-        const entityWithId: { id: number } = await ctx.call(
-          `${serviceName}.applyOrValidateRequestChanges`,
-          {
-            entity,
-            oldEntity,
-            apply: true,
-          },
-          {
-            meta,
-          },
-        );
-
-        if (!request.entity?.id) {
-          await this.updateEntity(ctx, {
-            id: request.id,
-            entity: entityWithId.id,
-          });
-        }
-
-        await this.refreshMaterializedView(ctx, MaterializedView.ORGANIZATIONS);
-        await this.refreshMaterializedView(ctx, MaterializedView.SPORTS_BASES);
+        return this.actions.apply({ id: data.id });
       }
     }
   }

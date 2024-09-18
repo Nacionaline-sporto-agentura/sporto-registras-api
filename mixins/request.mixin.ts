@@ -180,7 +180,7 @@ const RequestMixin = {
                   arrValues[childEntityKey] = 111;
                 }
               } else {
-                arrValues[childEntityKey] = (response as any).id;
+                arrValues[childEntityKey] = (response as any)?.id;
               }
             }
 
@@ -195,7 +195,7 @@ const RequestMixin = {
               for (const oldChildEntity of oldEntity[fieldName]) {
                 const childEntity =
                   oldChildEntity.id &&
-                  entity?.[fieldName]?.find((e: any) => oldChildEntity.id === e.id);
+                  entity?.[fieldName]?.find?.((e: any) => oldChildEntity.id === e.id);
 
                 if (!childEntity) {
                   //removes
@@ -214,11 +214,18 @@ const RequestMixin = {
         // ==============================
 
         if (opertion === 'remove') {
-          return validate
-            ? true
-            : this.removeEntity(ctx, {
-                id: oldEntity.id,
-              });
+          if (validate) {
+            return true;
+          }
+
+          try {
+            return this.removeEntity(ctx, {
+              id: oldEntity.id,
+            });
+          } catch (e) {
+            this.logger.error('APPLY_REQUEST_CHANGES_ERROR: remove', e);
+            return false;
+          }
         }
 
         let entityWithId: any = {};
@@ -247,7 +254,11 @@ const RequestMixin = {
               }
             }
           } else {
-            entityWithId = await this.updateEntity(ctx, updateData);
+            try {
+              entityWithId = await this.updateEntity(ctx, updateData);
+            } catch (e) {
+              this.logger.error('APPLY_REQUEST_CHANGES_ERROR: update', e);
+            }
           }
         } else {
           if (validate) {
@@ -260,7 +271,11 @@ const RequestMixin = {
               }
             }
           } else {
-            entityWithId = await this.createEntity(ctx, updateData);
+            try {
+              entityWithId = await this.createEntity(ctx, updateData);
+            } catch (e) {
+              this.logger.error('APPLY_REQUEST_CHANGES_ERROR: insert', e);
+            }
           }
         }
 
@@ -268,55 +283,59 @@ const RequestMixin = {
         // Handle remote fields
         // ==============================
 
-        for (const fieldName in serviceFields) {
-          // field settings object
-          const field: Field = getFieldSettings(serviceFields[fieldName]);
+        if (entityWithId?.id) {
+          for (const fieldName in serviceFields) {
+            // field settings object
+            const field: Field = getFieldSettings(serviceFields[fieldName]);
 
-          if (field.requestHandler?.service && field.requestHandler?.relationField) {
-            const handlerAction = `${field.requestHandler.service}.applyOrValidateRequestChanges`;
+            if (field.requestHandler?.service && field.requestHandler?.relationField) {
+              const handlerAction = `${field.requestHandler.service}.applyOrValidateRequestChanges`;
 
-            const arrValues = this.forceArrayValue(entity[fieldName], field);
-            // Handle inserts and updates
-            for (const childEntityKey in arrValues) {
-              const childEntity = arrValues[childEntityKey];
-              const oldChildEntity =
-                childEntity.id && oldEntity?.[fieldName]?.find((e: any) => childEntity.id === e.id);
+              const arrValues = this.forceArrayValue(entity[fieldName], field);
+              // Handle inserts and updates
+              for (const childEntityKey in arrValues) {
+                const childEntity = arrValues[childEntityKey];
+                const oldChildEntity =
+                  childEntity.id &&
+                  oldEntity?.[fieldName]?.find((e: any) => childEntity.id === e.id);
 
-              if (field.requestHandler.relationField) {
-                if (validate) {
-                  // TODO: de-hardcode 111, better remove from validation fields
-                  childEntity[field.requestHandler.relationField] = 111;
-                } else {
-                  childEntity[field.requestHandler.relationField] = entityWithId.id;
+                if (field.requestHandler.relationField) {
+                  if (validate) {
+                    // TODO: de-hardcode 111, better remove from validation fields
+                    childEntity[field.requestHandler.relationField] = 111;
+                  } else {
+                    childEntity[field.requestHandler.relationField] = entityWithId.id;
+                  }
+                }
+
+                // updates creates
+                const response: boolean | Record<string, any> = await ctx.call(handlerAction, {
+                  entity: childEntity,
+                  oldEntity: oldChildEntity,
+                  apply,
+                });
+
+                if (validate && response !== true) {
+                  invalidFields[fieldName] ||= {};
+                  invalidFields[fieldName][childEntityKey] = response;
                 }
               }
 
-              // updates creates
-              const response: boolean | Record<string, any> = await ctx.call(handlerAction, {
-                entity: childEntity,
-                oldEntity: oldChildEntity,
-                apply,
-              });
+              // TODO: handle deletes before updates/inserts - for unique validates
+              // Handle removes
+              if (Array.isArray(oldEntity?.[fieldName])) {
+                for (const oldChildEntity of oldEntity[fieldName]) {
+                  const childEntity =
+                    oldChildEntity.id &&
+                    entity?.[fieldName]?.find?.((e: any) => oldChildEntity.id === e.id);
 
-              if (validate && response !== true) {
-                invalidFields[fieldName] ||= {};
-                invalidFields[fieldName][childEntityKey] = response;
-              }
-            }
-
-            // Handle removes
-            if (Array.isArray(oldEntity?.[fieldName])) {
-              for (const oldChildEntity of oldEntity[fieldName]) {
-                const childEntity =
-                  oldChildEntity.id &&
-                  entity?.[fieldName]?.find((e: any) => oldChildEntity.id === e.id);
-
-                if (!childEntity) {
-                  //removes
-                  await ctx.call(handlerAction, {
-                    oldEntity: oldChildEntity,
-                    apply,
-                  });
+                  if (!childEntity) {
+                    //removes
+                    await ctx.call(handlerAction, {
+                      oldEntity: oldChildEntity,
+                      apply,
+                    });
+                  }
                 }
               }
             }

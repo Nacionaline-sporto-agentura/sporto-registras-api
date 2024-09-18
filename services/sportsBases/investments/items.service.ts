@@ -1,6 +1,6 @@
 'use strict';
-import moleculer from 'moleculer';
-import { Service } from 'moleculer-decorators';
+import moleculer, { Context } from 'moleculer';
+import { Event, Service } from 'moleculer-decorators';
 import DbConnection from '../../../mixins/database.mixin';
 
 import RequestMixin from '../../../mixins/request.mixin';
@@ -10,6 +10,7 @@ import {
   COMMON_SCOPES,
   CommonFields,
   CommonPopulates,
+  EntityChangedParams,
   GET_REST_ONLY_ACCESSIBLE_TO_ADMINS,
   ONLY_GET_REST_ENABLED,
   TYPE_ID_OR_OBJECT_WITH_ID,
@@ -85,4 +86,15 @@ export type SportBaseInvestmentItem<
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })
-export default class extends moleculer.Service {}
+export default class extends moleculer.Service {
+  @Event()
+  async 'sportsBases.investments.removed'(ctx: Context<EntityChangedParams<SportBaseInvestment>>) {
+    const sportBaseInvestment = ctx.params.data as SportBaseInvestment;
+
+    await this.removeEntities(ctx, {
+      query: {
+        sportBaseInvestment: sportBaseInvestment.id,
+      },
+    });
+  }
+}

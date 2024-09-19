@@ -106,6 +106,15 @@ import { SN_PUBLIC_ORGANIZATIONS } from '../../types/serviceNames';
                 },
               },
             },
+            photo: {
+              type: 'object',
+              properties: {
+                url: 'string',
+                public: 'boolean',
+                description: 'string',
+                representative: 'boolean',
+              },
+            },
             sportTypes: {
               type: 'array',
               items: {

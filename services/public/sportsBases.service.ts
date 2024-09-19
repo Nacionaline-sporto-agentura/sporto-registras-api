@@ -105,6 +105,23 @@ import { LKS_SRID } from '../tiles/sportsBases.service';
           url: 'string',
         },
       },
+      tenants: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            code: 'string',
+            name: 'string',
+            basis: {
+              type: 'object',
+              properties: {
+                id: 'number',
+                name: 'string',
+              },
+            },
+          },
+        },
+      },
 
       spaces: {
         type: 'array',
@@ -148,6 +165,18 @@ import { LKS_SRID } from '../tiles/sportsBases.service';
                 id: 'number',
                 name: 'string',
                 color: 'string',
+              },
+            },
+            photos: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  url: 'string',
+                  public: 'boolean',
+                  description: 'string',
+                  representative: 'boolean',
+                },
               },
             },
           },

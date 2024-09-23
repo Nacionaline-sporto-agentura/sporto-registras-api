@@ -448,6 +448,7 @@ export default class extends moleculer.Service {
 
     await this.refreshMaterializedView(ctx, MaterializedView.ORGANIZATIONS);
     await this.refreshMaterializedView(ctx, MaterializedView.SPORTS_BASES);
+    await this.broker.emit('cache.clean.tiles.sportsBases');
   }
 
   @Event()

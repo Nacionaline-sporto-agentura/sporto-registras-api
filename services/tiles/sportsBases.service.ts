@@ -450,13 +450,9 @@ export default class TilesEventsService extends moleculer.Service {
 
   @Event()
   async 'cache.clean.tiles.sportsBases'() {
-    await this.broker.cacher?.clean(`${this.fullName}.**`);
-  }
-
-  @Event()
-  async 'integrations.sync.finished'() {
     this.superclustersPromises = {};
     await this.renewSuperclusterIndex();
+    await this.broker.cacher?.clean(`${this.fullName}.**`);
   }
 
   started() {

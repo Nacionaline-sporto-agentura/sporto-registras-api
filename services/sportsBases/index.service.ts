@@ -1,6 +1,6 @@
 'use strict';
 import { faker } from '@faker-js/faker';
-import moleculer, { Context, RestSchema } from 'moleculer';
+import moleculer, { Context } from 'moleculer';
 import { Action, Method, Service } from 'moleculer-decorators';
 import DbConnection, { PopulateHandlerFn } from '../../mixins/database.mixin';
 
@@ -13,7 +13,6 @@ import {
   CommonPopulates,
   FieldHookCallback,
   ONLY_GET_REST_ENABLED,
-  RestrictionType,
   TENANT_FIELD,
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
@@ -33,25 +32,17 @@ import {
   SN_SPORTSBASES_TENANTS,
   SN_SPORTSBASES_TENANTS_BASIS,
   SN_SPORTSBASES_TYPES,
-  SN_SPORTSPERSONS,
-  SN_TENANTS,
   SN_TYPES_SPORTTYPES,
 } from '../../types/serviceNames';
-import {
-  VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE,
-  getSportsBaseUniqueSportTypes,
-  handleFormatResponse,
-} from '../../utils';
+import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
-import { Tenant, TenantTenantType } from '../tenants/index.service';
+import { Tenant } from '../tenants/index.service';
 import { LKS_SRID } from '../tiles/sportsBases.service';
 import { SportType } from '../types/sportTypes/index.service';
 import { SportBaseInvestmentSource } from '../types/sportsBases/investments/sources.service';
 import { SportsBasesLevel } from '../types/sportsBases/levels.service';
 import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
-import SportsBasesTechnicalConditionsService, {
-  SportsBasesTechicalCondition,
-} from '../types/sportsBases/technicalConditions.service';
+import { SportsBasesTechnicalCondition } from '../types/sportsBases/technicalConditions.service';
 import { SportsBasesTenantsBasis } from '../types/sportsBases/tenants/basis.service';
 import { SportsBasesType } from '../types/sportsBases/types.service';
 import { SportBaseInvestment } from './investments/index.service';
@@ -72,7 +63,6 @@ interface Fields extends CommonFields {
   phone: string;
   type: SportsBasesType['id'];
   level: SportsBasesLevel['id'];
-  technicalCondition: SportsBasesTechicalCondition['id'];
   address: {
     municipality: {
       code: number;
@@ -181,13 +171,6 @@ export type SportsBase<
         required: true,
         populate: `${SN_SPORTSBASES_LEVELS}.resolve`,
       },
-      technicalCondition: {
-        ...TYPE_ID_OR_OBJECT_WITH_ID,
-        columnName: 'sportBaseTechnicalConditionId',
-        immutable: true,
-        required: true,
-        populate: `${SN_SPORTSBASES_TECHNICALCONDITIONS}.resolve`,
-      },
 
       address: {
         type: 'object',
@@ -283,6 +266,7 @@ export type SportsBase<
       methodicalClasses: 'number|required',
       saunas: 'number|required',
       publicWifi: 'boolean',
+      notes: 'string',
 
       plans: {
         type: 'array',
@@ -409,7 +393,6 @@ export default class extends moleculer.Service {
         'canCreateRequest',
         'type',
         'level',
-        'technicalCondition',
         'spaces',
         'investments',
         'owners',
@@ -418,171 +401,6 @@ export default class extends moleculer.Service {
         'geom',
       ],
     });
-  }
-
-  // TODO: remove
-  @Action({
-    rest: <RestSchema>{
-      method: 'GET',
-      path: '/sportsRegister/count/public',
-    },
-    auth: RestrictionType.PUBLIC,
-  })
-  async publicSportsRegisterCount(ctx: Context) {
-    const sportBases = await ctx.call(`${SN_SPORTSBASES}.count`);
-    const organizations = await ctx.call(`${SN_TENANTS}.count`, {
-      query: { tenantType: TenantTenantType.ORGANIZATION },
-    });
-
-    const sportsPersons = await ctx.call(`${SN_SPORTSPERSONS}.count`);
-
-    return { sportBases, organizations, sportsPersons };
-  }
-
-  // TODO: remove
-  @Action({
-    rest: <RestSchema>{
-      method: 'GET',
-      path: '/public',
-    },
-    auth: RestrictionType.PUBLIC,
-    params: {
-      pageSize: {
-        type: 'number',
-        convert: true,
-        integer: true,
-        optional: true,
-        default: 10,
-        min: 1,
-      },
-      page: {
-        type: 'number',
-        convert: true,
-        integer: true,
-        min: 1,
-        optional: true,
-        default: 1,
-      },
-    },
-  })
-  async publicSportBases(ctx: Context) {
-    const params: any = ctx?.params || {};
-    const page = params?.page;
-    const pageSize = params?.pageSize;
-    const sort = params?.sort;
-    const query = params?.query;
-
-    const sportsBases: SportsBase<'spaces' | 'tenant' | 'type'>[] = await ctx.call(
-      'sportsBases.find',
-      {
-        fields: ['id', 'name', 'type', 'address', 'spaces', 'tenant', 'spaces'],
-        populate: ['type', 'spaces', 'tenant'],
-      },
-    );
-
-    const mappedSportsBases = sportsBases.map((sportsBase) => {
-      const mappedSportsBase: any = {
-        id: sportsBase.id,
-        name: sportsBase.name,
-        tenant: { id: sportsBase?.tenant?.id, name: sportsBase?.tenant?.name },
-        municipality: sportsBase?.address?.municipality,
-        type: { id: sportsBase.type.id, name: sportsBase?.type?.name },
-        spacesCount: sportsBase?.spaces?.length,
-        sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
-      };
-
-      return mappedSportsBase;
-    });
-
-    return handleFormatResponse({
-      data: mappedSportsBases,
-      page,
-      pageSize,
-      sort,
-      search: query,
-    });
-  }
-
-  // TODO: remove
-  @Action({
-    rest: <RestSchema>{
-      method: 'GET',
-      path: '/:id/public',
-    },
-    auth: RestrictionType.PUBLIC,
-    params: {
-      id: {
-        type: 'number',
-        convert: true,
-      },
-    },
-  })
-  async publicSportBase(ctx: Context<{ id: string }>) {
-    const sportsBase: SportsBase<'tenant' | 'spaces' | 'tenants'> = await ctx.call(
-      `${SN_SPORTSBASES}.resolve`,
-      {
-        ...ctx.params,
-        fields: [
-          'id',
-          'name',
-          'photos',
-          'parkingPlaces',
-          'methodicalClasses',
-          'saunas',
-          'publicWifi',
-          'address',
-          'tenant',
-          'spaces',
-        ],
-        populate: ['spaces', 'tenant'],
-        id: ctx.params.id,
-        throwIfNotExist: true,
-      },
-    );
-
-    const tenant = sportsBase?.tenant;
-
-    const mappedSportsBase = {
-      id: sportsBase.id,
-      name: sportsBase.name,
-      photos: sportsBase.photos,
-      parkingPlaces: sportsBase.parkingPlaces,
-      methodicalClasses: sportsBase.methodicalClasses,
-      saunas: sportsBase.saunas,
-      publicWifi: sportsBase.publicWifi,
-      tenant: {
-        name: tenant?.name,
-        email: tenant?.email,
-        phone: tenant?.phone,
-        url: tenant?.data?.url,
-      },
-      address: sportsBase.address,
-      spaceBuildingDate: sportsBase.spaces.reduce((oldest, current) => {
-        return new Date(current.createdAt) < new Date(oldest) ? current.createdAt : oldest;
-      }, sportsBase.spaces[0].createdAt),
-      type: sportsBase.type,
-      spaces: sportsBase?.spaces?.map((space) => ({
-        name: space?.name,
-        type: { id: space?.type?.id, name: space?.type?.name },
-        sportTypes: space?.sportTypes.map((sportType) => ({
-          id: sportType.id,
-          name: sportType.name,
-        })),
-        technicalCondition: {
-          id: space?.technicalCondition?.id,
-          name: space?.technicalCondition?.name,
-        },
-        additionalValues: space?.additionalValues,
-      })),
-      tenants: sportsBase?.tenants?.map((tenant) => ({
-        name: tenant.companyName,
-        code: tenant.companyCode,
-        basis: tenant.basis,
-      })),
-      sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
-    };
-
-    return mappedSportsBase;
   }
 
   @Method
@@ -604,7 +422,7 @@ export default class extends moleculer.Service {
   async fakeData(ctx: Context) {
     const sportsBasesTypes: SportsBasesType[] = await ctx.call(`${SN_SPORTSBASES_TYPES}.find`);
     const sportsBasesLevels: SportsBasesLevel[] = await ctx.call(`${SN_SPORTSBASES_LEVELS}.find`);
-    const sportsBasesTechnicalConditions: SportsBasesTechnicalConditionsService[] = await ctx.call(
+    const sportsBasesTechnicalConditions: SportsBasesTechnicalCondition[] = await ctx.call(
       `${SN_SPORTSBASES_TECHNICALCONDITIONS}.find`,
     );
     const sportsBasesSpacesTypes: SportBaseSpaceType[] = await ctx.call(
@@ -665,7 +483,6 @@ export default class extends moleculer.Service {
         name: faker.lorem.words({ min: 1, max: 3 }),
         type: faker.helpers.arrayElement(sportsBasesTypes).id,
         level: faker.helpers.arrayElement(sportsBasesLevels).id,
-        technicalCondition: faker.helpers.arrayElement(sportsBasesTechnicalConditions).id,
         address: {
           municipality: {
             name: faker.location.county(),

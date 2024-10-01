@@ -14,7 +14,7 @@ import {
 import { SN_SPORTSBASES_TECHNICALCONDITIONS } from '../../../types/serviceNames';
 import { tableName, tmpRestFix } from '../../../utils';
 
-export interface SportsBasesTechicalCondition extends CommonFields {
+export interface SportsBasesTechnicalCondition extends CommonFields {
   id: number;
   name: string;
   description: string;

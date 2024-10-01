@@ -31,6 +31,7 @@ import {
 import { FieldTypes } from '../types/sportsBases/spaces/fields.service';
 import { SportBaseSpaceType } from '../types/sportsBases/spaces/types.service';
 import { SportBaseSpaceTypeAndField } from '../types/sportsBases/spaces/typesAndFields.service';
+import { SportsBasesTechnicalCondition } from '../types/sportsBases/technicalConditions.service';
 import { SportsBasesType } from '../types/sportsBases/types.service';
 import { SportType } from '../types/sportTypes/index.service';
 import { SportsBase } from './index.service';
@@ -38,7 +39,7 @@ import { SportsBase } from './index.service';
 interface Fields extends CommonFields {
   id: number;
   name: string;
-  technicalCondition: any;
+  technicalCondition: SportsBasesTechnicalCondition['id'];
   type: SportsBasesType['id'];
   sportTypes: SportType['id'][];
   sportBase: SportsBase;
@@ -52,7 +53,7 @@ interface Fields extends CommonFields {
 }
 
 interface Populates extends CommonPopulates {
-  technicalCondition: any;
+  technicalCondition: SportsBasesTechnicalCondition;
   type: SportsBasesType;
   sportTypes: SportType[];
   buildingPurpose: string;

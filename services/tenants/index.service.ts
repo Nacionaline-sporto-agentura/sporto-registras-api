@@ -1,6 +1,6 @@
 'use strict';
 
-import moleculer, { Context, RestSchema } from 'moleculer';
+import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
 
 import _ from 'lodash';
@@ -17,12 +17,10 @@ import {
   RestrictionType,
   TYPE_ID_OR_OBJECT_WITH_ID,
   Table,
-  throwNotFoundError,
   throwUnauthorizedError,
 } from '../../types';
 import {
   SN_AUTH,
-  SN_REQUESTS,
   SN_SPORTSBASES,
   SN_TENANTS,
   SN_TENANTS_FUNDINGSOURCES,
@@ -33,14 +31,8 @@ import {
   SN_TENANTUSERS,
   SN_USERS,
 } from '../../types/serviceNames';
-import {
-  getFormattedDate,
-  getFormattedYear,
-  getSportsBaseUniqueSportTypes,
-  handleFormatResponse,
-} from '../../utils';
 import { UserAuthMeta } from '../api.service';
-import { Request, RequestEntityTypes, RequestStatus } from '../requests/index.service';
+import { RequestEntityTypes } from '../requests/index.service';
 import { SportsBase } from '../sportsBases/index.service';
 import { TenantUser, TenantUserRole } from '../tenantUsers.service';
 import { SportType } from '../types/sportTypes/index.service';
@@ -561,162 +553,6 @@ export default class extends moleculer.Service {
     });
 
     return ctx.call('tenants.list', params);
-  }
-
-  // todo: remove
-  @Action({
-    rest: <RestSchema>{
-      method: 'GET',
-      path: '/organizations/public',
-    },
-    auth: RestrictionType.PUBLIC,
-    params: {
-      pageSize: {
-        type: 'number',
-        convert: true,
-        integer: true,
-        optional: true,
-        default: 10,
-        min: 1,
-      },
-      page: {
-        type: 'number',
-        convert: true,
-        integer: true,
-        min: 1,
-        optional: true,
-        default: 1,
-      },
-    },
-  })
-  async publicOrganizations(
-    ctx: Context<{
-      [key: string]: any;
-    }>,
-  ) {
-    const page = ctx?.params?.page;
-    const pageSize = ctx?.params?.pageSize;
-    const sort = ctx?.params?.sort;
-    const query = ctx?.params?.query;
-
-    const organizations: Tenant<'sportsBases'>[] = await this.findEntities(ctx, {
-      fields: ['id', 'name', 'address', 'data', 'sportsBases', 'type'],
-      populate: ['sportsBases', 'legalForm', 'type'],
-      query: {
-        tenantType: TenantTenantType.ORGANIZATION,
-      },
-    });
-
-    const mappedOrganizations = organizations.map((organization) => {
-      const mappedOrganization: any = {
-        id: organization.id,
-        name: organization.name,
-        address: organization.address,
-        type: organization.type,
-      };
-
-      if (query?.hasBeneficiaryStatus) {
-        mappedOrganization.hasBeneficiaryStatus = organization?.data?.hasBeneficiaryStatus;
-      }
-
-      if (query?.nonGovernmentalOrganization) {
-        mappedOrganization.nonGovernmentalOrganization =
-          organization?.data?.nonGovernmentalOrganization;
-      }
-
-      if (query?.nonFormalEducation) {
-        mappedOrganization.nonFormalEducation = organization?.data?.nonFormalEducation;
-      }
-      if (query?.sportType) {
-        const uniqueSportTypeIds = this.getOrganizationUniqueSportTypes(organization).map(
-          (sportType) => sportType.id,
-        );
-
-        mappedOrganization.sportType = uniqueSportTypeIds;
-      }
-
-      return mappedOrganization;
-    });
-
-    return handleFormatResponse({
-      data: mappedOrganizations,
-      page,
-      pageSize,
-      sort,
-      search: query,
-      fields: ['id', 'name', 'address', 'type'],
-    });
-  }
-
-  // todo: remove
-  @Action({
-    rest: <RestSchema>{
-      method: 'GET',
-      path: '/organizations/:id/public',
-    },
-    auth: RestrictionType.PUBLIC,
-    params: {
-      id: {
-        type: 'number',
-        convert: true,
-      },
-    },
-  })
-  async publicOrganization(ctx: Context<{ id: string }>) {
-    const organization: Tenant<'sportsBases'> = await this.findEntity(ctx, {
-      ...ctx.params,
-      fields: [
-        'id',
-        'name',
-        'code',
-        'sportsBases',
-        'address',
-        'email',
-        'phone',
-        'type',
-        'legalForm',
-        'data',
-      ],
-      populate: ['sportsBases', 'legalForm', 'type'],
-      query: {
-        id: ctx.params.id,
-        tenantType: TenantTenantType.ORGANIZATION,
-      },
-    });
-
-    if (!organization) {
-      throwNotFoundError('Organization not found');
-    }
-
-    const { data, ...rest } = organization;
-
-    const lastApprovedRequest: Request = await ctx.call(`${SN_REQUESTS}.findOne`, {
-      query: {
-        entityType: RequestEntityTypes.TENANTS,
-        entity: organization.id,
-        status: RequestStatus.APPROVED,
-      },
-      sort: '-updatedAt',
-    });
-
-    const uniqueSportTypes = this.getOrganizationUniqueSportTypes(organization);
-
-    const sportsBases = organization?.sportsBases?.map((sportsBase) => ({
-      name: sportsBase?.name,
-      address: sportsBase?.address,
-      sportTypes: getSportsBaseUniqueSportTypes(sportsBase),
-    }));
-
-    const mappedOrganization = {
-      ...rest,
-      sportTypes: uniqueSportTypes,
-      sportsBases: sportsBases,
-      url: data?.url,
-      foundedAt: getFormattedDate(data?.foundedAt),
-      lastApprovedRequestAt: getFormattedYear(lastApprovedRequest?.updatedAt),
-    };
-
-    return mappedOrganization;
   }
 
   @Action({

@@ -91,12 +91,35 @@ function getApiRest(
       auth: RestrictionType.ADMIN,
       rest: getApiRest('/groups/:id', 'DELETE'),
     },
+    'permissions.list': {
+      auth: RestrictionType.ADMIN,
+      rest: getApiRest('/permissions'),
+    },
+    'permissions.get': {
+      auth: RestrictionType.ADMIN,
+      rest: getApiRest('/permissions/:id'),
+    },
+    'permissions.update': {
+      auth: RestrictionType.ADMIN,
+      rest: getApiRest('/permissions/:id', 'PATCH'),
+    },
+    'permissions.create': {
+      auth: RestrictionType.ADMIN,
+      rest: getApiRest('/permissions', 'POST'),
+    },
+    'permissions.remove': {
+      auth: RestrictionType.ADMIN,
+      rest: getApiRest('/permissions/:id', 'DELETE'),
+    },
   },
   hooks: {
     after: {
       login: 'afterUserLoggedIn',
       'evartai.login': 'afterUserLoggedIn',
       me: 'addProfiles',
+      'permissions.create': 'cleanCache',
+      'permissions.update': 'cleanCache',
+      'permissions.remove': 'cleanCache',
     },
     before: {
       'evartai.login': 'beforeUserLogin',
@@ -278,7 +301,10 @@ export default class extends moleculer.Service {
     ctx.params.apps = [...apps, nsaAppId];
     return ctx;
   }
-
+  @Method
+  async cleanCache() {
+    await this.broker.cacher?.clean(`${this.fullName}.**`);
+  }
   @Event()
   async 'clean.cache.auth'() {
     await this.broker.cacher?.clean(`${this.fullName}.**`);

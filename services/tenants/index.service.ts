@@ -1,7 +1,7 @@
 'use strict';
 
 import moleculer, { Context } from 'moleculer';
-import { Action, Service } from 'moleculer-decorators';
+import { Action, Method, Service } from 'moleculer-decorators';
 
 import _ from 'lodash';
 import filtersMixin from 'moleculer-knex-filters';
@@ -120,6 +120,8 @@ export enum TenantTenantType {
         columnType: 'integer',
         columnName: 'authGroupId',
         populate: `${SN_AUTH}.groups.get`,
+        immutable: true,
+        validate: 'validateAuthGroupId',
         async onRemove({ ctx, entity }: FieldHookCallback) {
           await ctx.call(
             `${SN_AUTH}.groups.remove`,
@@ -401,6 +403,7 @@ export default class extends moleculer.Service {
       query: {
         authGroup: authGroup.id,
       },
+      scope: ['-noParent', '-user'],
     });
 
     if (!update && tenant && tenant.id) return tenant;
@@ -608,5 +611,21 @@ export default class extends moleculer.Service {
     };
 
     return flattenChildren(availableTenant);
+  }
+
+  @Method
+  async validateAuthGroupId({ value, operation, ctx }: FieldHookCallback) {
+    if (operation === 'create' && value) {
+      const count: number = await this.countEntities(ctx, {
+        query: { authGroup: value },
+        scope: ['-noParent', '-user'],
+      });
+
+      if (!!count) {
+        return `Tenant with auth group '${value}' already exists`;
+      }
+    }
+
+    return true;
   }
 }

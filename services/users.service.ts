@@ -42,7 +42,6 @@ export interface User {
 const VISIBLE_TO_USER_SCOPE = 'tenant';
 const NOT_ADMINS_SCOPE = 'notAdmins';
 const ADMINS_SCOPE = 'admins';
-
 const AUTH_PROTECTED_SCOPES = [...COMMON_DEFAULT_SCOPES, VISIBLE_TO_USER_SCOPE, NOT_ADMINS_SCOPE];
 
 export const USERS_WITHOUT_AUTH_SCOPES = [`-${VISIBLE_TO_USER_SCOPE}`];
@@ -77,6 +76,8 @@ export const USERS_DEFAULT_SCOPES = [
         type: 'number',
         columnType: 'integer',
         columnName: 'authUserId',
+        immutable: true,
+        validate: 'validateAuthUserId',
         required: true,
         async onRemove({ ctx, entity }: FieldHookCallback) {
           await ctx.call(`${SN_AUTH}.users.remove`, { id: entity.authUserId }, { meta: ctx?.meta });
@@ -95,6 +96,12 @@ export const USERS_DEFAULT_SCOPES = [
             }),
           );
         },
+      },
+      authType: {
+        type: 'string',
+        enum: Object.values(AuthUserRole),
+        default: AuthUserRole.USER,
+        required: true,
       },
       firstName: 'string',
       lastName: 'string',
@@ -223,9 +230,7 @@ export const USERS_DEFAULT_SCOPES = [
               },
               scope: '-noParent',
             });
-
             tenantId = { $in: tenants.map((t) => t.id) };
-
             delete query.tenant;
           }
         } else if (ctx?.meta?.user?.type === UserType.ADMIN) {
@@ -536,6 +541,7 @@ export default class extends moleculer.Service {
       phone: phone || authUser.phone,
       position,
       authStrategy: authStrategy || UserAuthStrategy.PASSWORD,
+      authType: authUser.type,
     };
 
     // let user to customize his phone and email
@@ -735,5 +741,21 @@ export default class extends moleculer.Service {
   @Event()
   async 'cache.clean.users'() {
     await this.broker.cacher?.clean(`${this.fullName}.**`);
+  }
+
+  @Method
+  async validateAuthUserId({ value, operation, ctx }: FieldHookCallback) {
+    if (operation === 'create' && value) {
+      const count: number = await this.countEntities(ctx, {
+        query: { authGroup: value },
+        scope: USERS_WITHOUT_AUTH_SCOPES,
+      });
+
+      if (!!count) {
+        return `User with auth user '${value}' already exists`;
+      }
+    }
+
+    return true;
   }
 }

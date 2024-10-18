@@ -1,6 +1,12 @@
 import Moleculer, { Errors } from 'moleculer';
 import { FieldHookCallback } from './';
 
+export enum AuthUserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
+}
+
 export enum RestrictionType {
   // DEFAULT = USER or ADMIN
   DEFAULT = 'DEFAULT',

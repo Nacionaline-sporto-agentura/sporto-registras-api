@@ -2,9 +2,8 @@
 
 import moleculer, { Context } from 'moleculer';
 import { Action, Service } from 'moleculer-decorators';
-import { RestrictionType } from '../types';
+import { AuthUserRole, RestrictionType } from '../types';
 import { SN_ADMINS, SN_AUTH, SN_USERS } from '../types/serviceNames';
-import { AuthUserRole } from './api.service';
 import { USERS_ADMINS_SCOPE, User } from './users.service';
 
 const scope = USERS_ADMINS_SCOPE;

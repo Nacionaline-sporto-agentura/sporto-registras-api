@@ -22,12 +22,6 @@ export interface UserAuthMeta {
   profile: any;
 }
 
-export enum AuthUserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-  SUPER_ADMIN = 'SUPER_ADMIN',
-}
-
 @Service({
   name: SN_API,
   mixins: [ApiGateway],

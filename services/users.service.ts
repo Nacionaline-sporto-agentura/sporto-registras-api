@@ -3,6 +3,7 @@
 import moleculer, { Context } from 'moleculer';
 import { Action, Event, Method, Service } from 'moleculer-decorators';
 import {
+  AuthUserRole,
   COMMON_DEFAULT_SCOPES,
   COMMON_FIELDS,
   COMMON_SCOPES,
@@ -13,7 +14,7 @@ import {
 
 import DbConnection from '../mixins/database.mixin';
 import { SN_AUTH, SN_TENANTUSERS, SN_USERS } from '../types/serviceNames';
-import { AuthUserRole, UserAuthMeta } from './api.service';
+import { UserAuthMeta } from './api.service';
 import { Tenant } from './tenants/index.service';
 import { TenantUserRole } from './tenantUsers.service';
 

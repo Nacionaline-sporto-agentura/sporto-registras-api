@@ -5,13 +5,14 @@ import { Action, Method, Service } from 'moleculer-decorators';
 // @ts-ignore
 import MinioMixin from 'moleculer-minio';
 import {
+  AuthUserRole,
   MultipartMeta,
   throwNoRightsError,
   throwNotFoundError,
   throwValidationError,
 } from '../types';
 import { SN_FILES } from '../types/serviceNames';
-import { AuthUserRole, UserAuthMeta } from './api.service';
+import { UserAuthMeta } from './api.service';
 
 export const MINIO_BUCKET = process.env.MINIO_BUCKET || 'sporto-registras';
 

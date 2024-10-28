@@ -748,7 +748,7 @@ export default class extends moleculer.Service {
   async validateAuthUserId({ value, operation, ctx }: FieldHookCallback) {
     if (operation === 'create' && value) {
       const count: number = await this.countEntities(ctx, {
-        query: { authGroup: value },
+        query: { authUser: value },
         scope: USERS_WITHOUT_AUTH_SCOPES,
       });
 

@@ -112,7 +112,11 @@ export enum TenantTenantType {
       name: 'string',
       email: 'string',
       phone: 'string',
-      code: 'string',
+      code: {
+        type: 'string',
+        immutable: true,
+        validate: 'validateCompanyCode',
+      },
       address: 'string',
 
       authGroup: {
@@ -623,6 +627,22 @@ export default class extends moleculer.Service {
 
       if (!!count) {
         return `Tenant with auth group '${value}' already exists`;
+      }
+    }
+
+    return true;
+  }
+
+  @Method
+  async validateCompanyCode({ value, operation, ctx }: FieldHookCallback) {
+    if (operation === 'create' && value) {
+      const count: number = await this.countEntities(ctx, {
+        query: { code: value },
+        scope: ['-noParent', '-user'],
+      });
+
+      if (!!count) {
+        return `Tenant with company code '${value}' already exists`;
       }
     }
 

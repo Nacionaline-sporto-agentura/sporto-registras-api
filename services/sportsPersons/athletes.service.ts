@@ -25,6 +25,7 @@ import {
   SN_SCHOLARSHIPS,
   SN_SPORTSPERSONS,
   SN_SPORTSPERSONS_ATHLETES,
+  SN_VIOLATIONS,
 } from '../../types/serviceNames';
 import { tableName } from '../../utils';
 import { Bonus } from '../bonuses/index.service';
@@ -81,7 +82,6 @@ export type SportsPersonAthlete<
         primaryKey: true,
         secure: true,
       },
-
       competitionResults: {
         type: 'array',
         items: { type: 'object' },
@@ -104,7 +104,6 @@ export type SportsPersonAthlete<
           });
         },
       },
-
       bonuses: {
         type: 'array',
         items: { type: 'object' },
@@ -124,7 +123,6 @@ export type SportsPersonAthlete<
           });
         },
       },
-
       scholarships: {
         type: 'array',
         items: { type: 'object' },
@@ -144,7 +142,6 @@ export type SportsPersonAthlete<
           });
         },
       },
-
       rents: {
         type: 'array',
         items: { type: 'object' },
@@ -164,7 +161,6 @@ export type SportsPersonAthlete<
           });
         },
       },
-
       nationalTeams: {
         type: 'array',
         items: { type: 'object' },
@@ -187,7 +183,24 @@ export type SportsPersonAthlete<
           });
         },
       },
+      violations: {
+        type: 'array',
+        items: { type: 'object' },
+        virtual: true,
+        readonly: true,
+        async get({ ctx, entity }: FieldHookCallback) {
+          if (!entity?.id) return [];
 
+          const sportsPerson: SportsPerson = await this.getSportsPerson(ctx, entity.id);
+          if (!sportsPerson?.id) return [];
+
+          const result: any = await ctx.call(`${SN_VIOLATIONS}.bySportsPerson`, {
+            ids: [sportsPerson.id],
+          });
+
+          return result[sportsPerson.id];
+        },
+      },
       memberships: {
         type: 'array',
         items: {
@@ -199,9 +212,7 @@ export type SportsPersonAthlete<
           },
         },
       },
-
       careerEndedAt: 'date',
-
       coaches: {
         type: 'array',
         items: {
@@ -216,7 +227,6 @@ export type SportsPersonAthlete<
           sportsPerson: `${SN_SPORTSPERSONS}.resolve`,
         }),
       },
-
       ...COMMON_FIELDS,
     },
     defaultScopes: [...COMMON_DEFAULT_SCOPES],

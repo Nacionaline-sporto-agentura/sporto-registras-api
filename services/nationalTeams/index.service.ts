@@ -70,7 +70,7 @@ export type NationalTeam<
       },
       name: 'string',
       startAt: { type: 'date', columnType: 'datetime', required: true },
-      endAt: { type: 'date', columnType: 'datetime', required: true },
+      endAt: { type: 'date', columnType: 'datetime' },
       ageGroup: {
         ...TYPE_ID_OR_OBJECT_WITH_ID,
         columnType: 'integer',

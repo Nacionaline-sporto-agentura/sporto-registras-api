@@ -1,7 +1,7 @@
 'use strict';
 import moleculer from 'moleculer';
 import { Service } from 'moleculer-decorators';
-import DbConnection from '../../mixins/database.mixin';
+import DbConnection, { PopulateHandlerFn } from '../../mixins/database.mixin';
 import {
   ACTIONS_MUTATE_ADMIN_ONLY,
   COMMON_DEFAULT_SCOPES,
@@ -10,11 +10,13 @@ import {
   CommonFields,
   CommonPopulates,
   Table,
+  TYPE_ID_OR_OBJECT_WITH_ID,
 } from '../../types';
 import {
   SN_COMPETITIONS_RESULTS,
   SN_SCHOLARSHIPS,
   SN_SPORTSPERSONS,
+  SN_TYPES_SCHOLARSHIPS_REASONS,
 } from '../../types/serviceNames';
 import { tableName } from '../../utils';
 import { CompetitionResult } from '../competitions/results.service';
@@ -98,9 +100,12 @@ const ScholarshipType = {
         type: 'object',
         properties: {
           from: 'date', // required: suspended or terminated
-          reason: 'string', // required: suspended or terminated
+          reason: TYPE_ID_OR_OBJECT_WITH_ID, // required: suspended or terminated
           renewFrom: 'date', // required: suspended
         },
+        populate: PopulateHandlerFn({
+          reason: `${SN_TYPES_SCHOLARSHIPS_REASONS}.resolve`,
+        }),
       },
 
       status: {

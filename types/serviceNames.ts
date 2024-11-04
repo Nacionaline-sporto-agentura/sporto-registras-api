@@ -30,13 +30,7 @@ export const SN_TENANTS_MEMBERSHIPS = 'tenants.memberships';
 export const SN_SPORTSBASES_TECHNICALCONDITIONS = 'types.sportsBases.technicalConditions';
 export const SN_TENANTS_GOVERNINGBODIES = 'tenants.governingBodies';
 export const SN_SPORTSBASES_LEVELS = 'types.sportsBases.levels';
-export const SN_TYPES_SPORTSPERSONS_VIOLATIONS_SANCTIONS =
-  'types.sportsPersons.violationsSanctions';
 export const SN_TENANTS_FUNDINGSOURCES = 'tenants.fundingSources';
-export const SN_TYPES_SPORTSPERSONS_VIOLATIONS_RESULTS_MANIPULATION =
-  'types.sportsPersons.violationsResultsManipulation';
-export const SN_TYPES_SPORTSPERSONS_VIOLATIONS_ANTIDOPING =
-  'types.sportsPersons.violationsAntiDoping';
 export const SN_SPORTSBASES_TENANTS_BASIS = 'types.sportsBases.tenants.basis';
 export const SN_SPORTSBASES_INVESTMENTS_SOURCES = 'types.sportsBases.investments.sources';
 export const SN_TYPES_STUDIES_PROGRAMS = 'types.studies.programs';
@@ -54,12 +48,16 @@ export const SN_TYPES_NATIONAL_TEAM_AGE_GROUP = 'types.nationalTeam.ageGroups';
 export const SN_TYPES_NATIONAL_TEAM_GENDER = 'types.nationalTeam.genders';
 export const SN_SCHOLARSHIPS = 'scholarships';
 export const SN_RENTS = 'rents';
+export const SN_VIOLATIONS = 'violations';
 export const SN_TYPES_RENTS_UNITS = 'types.rents.units';
+export const SN_TYPES_SCHOLARSHIPS_REASONS = 'types.scholarships.reasons';
 export const SN_BONUSES = 'bonuses';
 export const SN_NATIONALTEAMS = 'nationalTeams';
 export const SN_TILES_SPORTSBASES = 'tiles.sportsBases';
 export const SN_TYPES_EDUCATIONAL_COMPANIES = 'types.educationalCompanies';
 export const SN_TYPES_QUALIFICATION_CATEGORIES = 'types.qualificationCategories';
+export const SN_TYPES_VIOLATIONS_DISQUALIFICATION_REASONS =
+  'types.violations.disqualificationReasons';
 export const SN_RC_ADDRESSES = 'rc.addresses';
 export const SN_RC_RESIDENTIAL_AREAS = 'rc.residentialAreas';
 export const SN_RC_ROOMS = 'rc.rooms';

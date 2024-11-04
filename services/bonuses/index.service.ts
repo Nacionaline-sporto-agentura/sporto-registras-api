@@ -15,6 +15,10 @@ import { SN_BONUSES, SN_COMPETITIONS_RESULTS, SN_SPORTSPERSONS } from '../../typ
 import { CompetitionResult } from '../competitions/results.service';
 import { SportsPerson } from '../sportsPersons/index.service';
 
+enum BonusType {
+  NATIONAL = 'NATIONAL',
+  MUNICIPAL = 'MUNICIPAL',
+}
 interface Fields extends CommonFields {
   id: number;
   sportPerson: SportsPerson['id'];
@@ -22,7 +26,7 @@ interface Fields extends CommonFields {
   documentNumber: string;
   date: Date;
   amount: number;
-  type: string;
+  type: BonusType;
 }
 interface Populates extends CommonPopulates {
   sportPerson: SportsPerson;
@@ -34,10 +38,6 @@ export type Bonus<
   F extends keyof (Fields & Populates) = keyof Fields,
 > = Table<Fields, Populates, P, F>;
 
-const BonusType = {
-  NATIONAL: 'NATIONAL',
-  MUNICIPAL: 'MUNICIPAL',
-};
 @Service({
   name: SN_BONUSES,
   mixins: [

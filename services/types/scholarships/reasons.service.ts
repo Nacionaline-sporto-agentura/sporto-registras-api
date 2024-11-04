@@ -9,19 +9,19 @@ import {
   COMMON_SCOPES,
   CommonFields,
 } from '../../../types';
-import { SN_TYPES_SPORTSPERSONS_VIOLATIONS_RESULTS_MANIPULATION } from '../../../types/serviceNames';
+import { SN_TYPES_SCHOLARSHIPS_REASONS } from '../../../types/serviceNames';
 import { TEMP_FAKE_TYPE_NAMES, tableName } from '../../../utils';
 
-export interface ViolationResultsManipulation extends CommonFields {
+export interface TypeScholarshipReason extends CommonFields {
   id: number;
   name: string;
 }
 
 @Service({
-  name: SN_TYPES_SPORTSPERSONS_VIOLATIONS_RESULTS_MANIPULATION,
+  name: SN_TYPES_SCHOLARSHIPS_REASONS,
   mixins: [
     DbConnection({
-      collection: tableName(SN_TYPES_SPORTSPERSONS_VIOLATIONS_RESULTS_MANIPULATION),
+      collection: tableName(SN_TYPES_SCHOLARSHIPS_REASONS),
     }),
   ],
   settings: {
@@ -43,6 +43,6 @@ export interface ViolationResultsManipulation extends CommonFields {
 export default class extends moleculer.Service {
   @Method
   async seedDB() {
-    await this.createEntities(null, TEMP_FAKE_TYPE_NAMES('rezultatų manipuliavimo pažeidimas'));
+    await this.createEntities(null, TEMP_FAKE_TYPE_NAMES('Stipendijos priežastis'));
   }
 }

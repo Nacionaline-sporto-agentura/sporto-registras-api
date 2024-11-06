@@ -190,12 +190,16 @@ export default class extends moleculer.Service {
     },
   })
   async findIdsByUser(ctx: Context<{ id: number; tenant: number }>) {
-    const tenantUsers: TenantUser[] = await ctx.call(`${SN_TENANTUSERS}.find`, {
-      query: {
-        user: ctx.params.id,
-        tenant: ctx.params.tenant,
-      },
-    });
+    const { id, tenant } = ctx.params;
+    const query: any = {
+      user: id,
+    };
+
+    if (tenant) {
+      query.tenant = tenant;
+    }
+
+    const tenantUsers: TenantUser[] = await ctx.call(`${SN_TENANTUSERS}.find`, { query });
 
     return tenantUsers.map((tu) => tu.tenant);
   }

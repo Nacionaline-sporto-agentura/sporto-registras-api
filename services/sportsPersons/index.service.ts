@@ -36,7 +36,7 @@ import {
   SN_TYPES_SPORTTYPES,
   SN_TYPES_STUDIES_PROGRAMS,
 } from '../../types/serviceNames';
-import { tableName } from '../../utils';
+import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE, tableName } from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
 import { SportsBase } from '../sportsBases/index.service';
 import { Tenant } from '../tenants/index.service';
@@ -316,8 +316,11 @@ export type SportsPerson<
       ...TENANT_FIELD,
       ...COMMON_FIELDS,
     },
-    defaultScopes: [...COMMON_DEFAULT_SCOPES],
-    scopes: { ...COMMON_SCOPES },
+    defaultScopes: [...COMMON_DEFAULT_SCOPES, ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.names],
+    scopes: {
+      ...COMMON_SCOPES,
+      ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.scopes,
+    },
   },
   actions: { ...ONLY_GET_REST_ENABLED, ...GET_REST_ONLY_ACCESSIBLE_TO_ADMINS },
 })

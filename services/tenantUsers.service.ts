@@ -186,12 +186,14 @@ export default class extends moleculer.Service {
   @Action({
     params: {
       id: 'number|convert',
+      tenant: 'number|convert|optional',
     },
   })
-  async findIdsByUser(ctx: Context<{ id: number }>) {
+  async findIdsByUser(ctx: Context<{ id: number; tenant: number }>) {
     const tenantUsers: TenantUser[] = await ctx.call(`${SN_TENANTUSERS}.find`, {
       query: {
         user: ctx.params.id,
+        tenant: ctx.params.tenant,
       },
     });
 
@@ -201,9 +203,10 @@ export default class extends moleculer.Service {
   @Action({
     params: {
       id: 'number|convert',
+      tenant: 'number|convert|optional',
     },
   })
-  async findIdsByUserRecursive(ctx: Context<{ id: number }>) {
+  async findIdsByUserRecursive(ctx: Context<{ id: number; tenant: number }>) {
     const tenantIds = await this.actions.findIdsByUser(ctx.params);
 
     let parentIds = tenantIds;

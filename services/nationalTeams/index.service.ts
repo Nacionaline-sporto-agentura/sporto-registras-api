@@ -21,7 +21,7 @@ import {
   SN_TYPES_NATIONAL_TEAM_GENDER,
   SN_TYPES_SPORTTYPES,
 } from '../../types/serviceNames';
-import { tableName } from '../../utils';
+import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE, tableName } from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
 import { SportsPerson } from '../sportsPersons/index.service';
 import { TypeNationalTeamAgeGroup } from '../types/nationalTeams/ageGroups.service';
@@ -113,8 +113,11 @@ export type NationalTeam<
       ...TENANT_FIELD,
       ...COMMON_FIELDS,
     },
-    scopes: { ...COMMON_SCOPES },
-    defaultScopes: [...COMMON_DEFAULT_SCOPES],
+    defaultScopes: [...COMMON_DEFAULT_SCOPES, ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.names],
+    scopes: {
+      ...COMMON_SCOPES,
+      ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.scopes,
+    },
   },
 })
 export default class extends moleculer.Service {

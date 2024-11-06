@@ -20,7 +20,7 @@ import {
   SN_COMPETITIONS_RESULTS,
   SN_TYPES_COMPETITIONS_TYPES,
 } from '../../types/serviceNames';
-import { tableName } from '../../utils';
+import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE, tableName } from '../../utils';
 import { RequestEntityTypes } from '../requests/index.service';
 import { CompetitionType } from '../types/competitions/types.service';
 
@@ -96,8 +96,11 @@ export type Competition<
       ...TENANT_FIELD,
       ...COMMON_FIELDS,
     },
-    scopes: { ...COMMON_SCOPES },
-    defaultScopes: [...COMMON_DEFAULT_SCOPES],
+    defaultScopes: [...COMMON_DEFAULT_SCOPES, ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.names],
+    scopes: {
+      ...COMMON_SCOPES,
+      ...VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE.scopes,
+    },
   },
   actions: { ...ACTIONS_MUTATE_ADMIN_ONLY },
 })

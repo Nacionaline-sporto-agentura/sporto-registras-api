@@ -19,7 +19,7 @@ import {
   Table,
 } from '../../types';
 import { SN_REQUESTS, SN_REQUESTS_HISTORIES, SN_USERS } from '../../types/serviceNames';
-import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE } from '../../utils';
+import { VISIBLE_TO_CREATOR_OR_ADMIN_SCOPE, parseQueryIfNeeded } from '../../utils';
 import { UserAuthMeta } from '../api.service';
 import { SportsBase } from '../sportsBases/index.service';
 import { Tenant } from '../tenants/index.service';
@@ -250,7 +250,8 @@ export default class extends moleculer.Service {
   @Action({
     rest: 'GET /new',
   })
-  async listNewRequests(ctx: Context<{}>) {
+  async listNewRequests(ctx: Context<{ query: any }>) {
+    ctx.params.query = parseQueryIfNeeded(ctx.params.query || {});
     const params = _.merge({}, ctx.params, {
       query: {
         entity: { $exists: false },

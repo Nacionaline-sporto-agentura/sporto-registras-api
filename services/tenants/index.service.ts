@@ -31,6 +31,7 @@ import {
   SN_TENANTUSERS,
   SN_USERS,
 } from '../../types/serviceNames';
+import { parseQueryIfNeeded } from '../../utils';
 import { UserAuthMeta } from '../api.service';
 import { RequestEntityTypes } from '../requests/index.service';
 import { SportsBase } from '../sportsBases/index.service';
@@ -553,7 +554,8 @@ export default class extends moleculer.Service {
   @Action({
     rest: 'GET /organizations',
   })
-  async listOrganizations(ctx: Context<{}>) {
+  async listOrganizations(ctx: Context<{ query: any }>) {
+    ctx.params.query = parseQueryIfNeeded(ctx.params.query || {});
     const params = _.merge({}, ctx.params || {}, {
       scope: '-noParent',
       query: { tenantType: TenantTenantType.ORGANIZATION },
@@ -565,7 +567,8 @@ export default class extends moleculer.Service {
   @Action({
     rest: 'GET /institutions',
   })
-  async listInstitutions(ctx: Context<{}>) {
+  async listInstitutions(ctx: Context<{ query: any }>) {
+    ctx.params.query = parseQueryIfNeeded(ctx.params.query || {});
     const params = _.merge({}, ctx.params || {}, {
       scope: '-noParent',
       query: { tenantType: { $in: [TenantTenantType.MUNICIPALITY] } },

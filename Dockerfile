@@ -53,4 +53,4 @@ EXPOSE 3000
 CMD ["sh", "-c", "yarn start"]
 
 # Healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD wget -qO- http://localhost:3000/api/ping || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD wget -qO- http://127.0.0.1:3000/api/ping || exit 1
